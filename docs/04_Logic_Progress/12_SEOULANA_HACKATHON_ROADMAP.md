@@ -1,10 +1,26 @@
 # Seoulana Hackathon — 11일 구현 로드맵
 > Created: 2026-03-25 14:00
-> Last Updated: 2026-03-25 14:00
+> Last Updated: 2026-03-25 20:00
 
 **기간**: 2026-03-25(수) ~ 2026-04-05(일) 23:59 KST
 **남은 일수**: 11일
 **목표**: WarmUp Seoulana Hackathon MVP 제출
+
+## 현재 진행 상황 (2026-03-25 기준)
+
+| 구성요소 | 상태 | 비고 |
+|:---|:---|:---|
+| Solana 개발 환경 | ✅ 완료 | Devnet 지갑, 패키지, WalletProvider |
+| Actions/Blinks API | ✅ 완료 | gift / subscribe / checkin 3종 |
+| CHOCO Token-2022 | ✅ 배포 완료 | `E2o1MKpnwh5vELG4FDgiX2NA33L11hXPVfAPD3ai4GWf` (1B supply, 1% fee) |
+| Merkle Tree (cNFT) | ✅ 배포 완료 | `AJxCqbFdWLmQ7xMqBQN3AXja9paZJZ9qrqvwViXVkXGF` (depth=14) |
+| cNFT 민팅 API | ✅ 완료 | `POST /api/solana/mint-memory` |
+| AI Agent Kit | ✅ 완료 | LangGraph 5개 Solana 툴 통합 |
+| Blinks 데모 페이지 | ✅ 완료 | `/blinks` 라우트 |
+| WalletButton UI | ✅ 완료 | Profile 페이지 Solana 섹션 |
+| cNFT 메모리 앨범 UI | 🔲 미구현 | `/profile/memories` — DAS API 조회 |
+| Vercel 배포 | 🔲 미완 | 해커톤 제출용 라이브 URL 필요 |
+| 데모 영상 | 🔲 미완 | 제출 마감 4/5 23:59 KST |
 
 ---
 
@@ -19,126 +35,20 @@
 
 ## Day-by-Day 계획
 
-### Day 1 (3/25, 수) — 환경 셋업
-**목표**: Solana 개발 환경 완성 및 기존 코드 영향도 파악
+### ✅ Day 1~9 — 완료 (2026-03-25 일괄 완성)
 
-- [ ] Solana Devnet 지갑 생성 및 SOL 에어드롭
-- [ ] 필수 패키지 설치:
-  ```bash
-  npm install @solana/web3.js @solana/spl-token @solana/wallet-adapter-react
-  npm install @metaplex-foundation/mpl-bubblegum solana-agent-kit
-  ```
-- [ ] `apps/web/App.tsx`에 Solana `WalletProvider` 추가 (기존 EVM 유지)
-- [ ] `.env` 에 `SOLANA_RPC_URL`, `SOLANA_AGENT_PRIVATE_KEY` 추가
-- [ ] 기존 Solana Pay 코드 검토 → 재사용 가능 부분 파악
-
-**완료 기준**: `solana balance` DevNet 지갑 확인, WalletProvider 렌더 에러 없음
-
----
-
-### Day 2 (3/26, 목) — Blinks 기반 셋업
-**목표**: Actions API 엔드포인트 기본 골격 완성
-
-- [ ] `apps/web/app/routes/api/actions/` 디렉토리 생성
-- [ ] `GET /api/actions/gift` — 메타데이터 반환 (JSON)
-- [ ] CORS 헤더 설정 (Actions 표준 필수)
-- [ ] Blink URL 로컬 테스트: `https://dial.to/?action=solana-action:<url>`
-- [ ] `apps/web/app/lib/solana/actions.server.ts` 공통 유틸 작성
-
-**완료 기준**: dial.to에서 Gift Blink 메타데이터 렌더링 확인
-
----
-
-### Day 3 (3/27, 금) — Gift Blink 완성
-**목표**: Gift Action POST — 실제 트랜잭션 생성 및 서명 흐름 완성
-
-- [ ] `POST /api/actions/gift` — Solana Transfer 트랜잭션 생성
-- [ ] 유저 지갑 → 춘심 Treasury로 SOL(또는 CHOCO SPL) 전송 트랜잭션 반환
-- [ ] Phantom 지갑에서 Blink 서명 E2E 테스트
-- [ ] DB에 선물 기록 (`giftLog` 테이블 재사용)
-
-**완료 기준**: Phantom에서 Gift Blink 실행 → Devnet 트랜잭션 확인
-
----
-
-### Day 4 (3/28, 토) — Subscribe Blink + Check-in Blink
-**목표**: 2개 추가 Action 완성
-
-- [ ] `GET/POST /api/actions/subscribe` — 구독 플랜 선택 Action
-- [ ] `GET/POST /api/actions/checkin` — 데일리 체크인 Action (메시지 서명)
-- [ ] 3개 Blink URL을 X 포스트에서 테스트
-- [ ] `apps/web/app/lib/solana/blinks.ts` — Blink URL 공유 헬퍼 완성
-
-**완료 기준**: 3종 Blink가 X(트위터) 포스트에서 인터랙티브 UI로 렌더링
-
----
-
-### Day 5 (3/29, 일) — cNFT 인프라 셋업
-**목표**: Metaplex Bubblegum Merkle Tree 배포
-
-- [ ] `scripts/deploy-merkle-tree.ts` 작성 및 Devnet 배포
-  - depth: 14 (최대 16,384개 NFT)
-  - 비용: ~0.1 SOL
-- [ ] Tree 주소를 `.env`에 저장: `MERKLE_TREE_ADDRESS=`
-- [ ] `apps/web/app/lib/solana/merkle-tree.server.ts` 작성
-- [ ] `apps/web/app/lib/solana/cnft.server.ts` 민팅 함수 초안 작성
-
-**완료 기준**: Devnet에 Merkle Tree 배포 완료, 주소 확인
-
----
-
-### Day 6 (3/30, 월) — cNFT 민팅 API 완성
-**목표**: "기억 새기기" 기능 E2E 작동
-
-- [ ] `POST /api/memory/engrave` API 엔드포인트 작성
-- [ ] 메타데이터 JSON → Cloudinary 업로드 (기존 Cloudinary 재사용)
-- [ ] Bubblegum `mintV1` 호출 → 유저 지갑에 cNFT 발행
-- [ ] DB `message` 테이블에 `nft_mint_address` 컬럼 추가 (Drizzle migration)
-- [ ] 채팅 UI에 "기억 새기기" 버튼 추가 (기존 메시지 버블 컴포넌트)
-
-**완료 기준**: 채팅 메시지 → "기억 새기기" → Devnet cNFT 민팅 → Solana Explorer 확인
-
----
-
-### Day 7 (3/31, 화) — cNFT UI 완성 + 앨범 페이지
-**목표**: 유저가 보유한 메모리 cNFT를 앱에서 확인
-
-- [ ] `/profile/memories` 또는 기존 Album 페이지에 cNFT 목록 표시
-- [ ] Solana RPC `getAssetsByOwner` (Metaplex DAS API) 호출로 보유 cNFT 조회
-- [ ] cNFT 카드 컴포넌트 (이미지, 날짜, 감정 표시)
-- [ ] Solana Explorer 링크 연결
-
-**완료 기준**: 민팅한 cNFT가 앱 내 메모리 앨범에 표시됨
-
----
-
-### Day 8 (4/1, 수) — AI Agent Kit 통합
-**목표**: LangGraph에 Solana 인텐트 노드 추가
-
-- [ ] `apps/web/app/lib/solana/solana-agent.server.ts` 작성
-  - SolanaAgentKit 초기화
-  - `getBalance()`, `transfer()` 메서드 래핑
-- [ ] `apps/web/app/lib/ai/intent-classifier.ts` 작성
-  - 온체인 인텐트 키워드 감지 (잔액/에어드롭/지갑)
-- [ ] `graph.ts` 에 `detectOnchainIntent` 노드 삽입 (노드 2.5)
-- [ ] Devnet에서 "잔액 확인해줘" 대화 테스트
-
-**완료 기준**: 채팅에서 "내 SOL 잔액 확인해줘" → 춘심이 온체인 조회 후 실제 잔액 응답
-
----
-
-### Day 9 (4/2, 목) — CHOCO Token-2022 (데모용)
-**목표**: CHOCO SPL Token-2022 Devnet 발행 + Transfer Fee 데모
-
-- [ ] `scripts/deploy-choco-token.ts` 작성
-  - Token-2022 프로그램으로 CHOCO mint 생성
-  - Transfer Fee: 2% (feeBasisPoints: 200)
-  - Metadata Pointer 설정
-- [ ] Devnet 배포 → mint 주소 `.env`에 저장
-- [ ] 소량 CHOCO 민팅 후 Phantom에서 확인
-- [ ] Transfer Fee 작동 Devnet 검증
-
-**완료 기준**: Solana Explorer에서 CHOCO Token-2022 확인, Transfer Fee 작동 확인
+| 작업 | 결과 |
+|:---|:---|
+| Solana 환경, WalletProvider, .env 설정 | ✅ |
+| `connection.server.ts` + CORS 헬퍼 | ✅ |
+| Gift / Subscribe / Check-in Blinks (3종) | ✅ |
+| `actions.json` Blinks 레지스트리 | ✅ |
+| CHOCO Token-2022 Devnet 배포 | ✅ `E2o1MKpnwh5vELG4FDgiX2NA33L11hXPVfAPD3ai4GWf` |
+| Merkle Tree Devnet 배포 | ✅ `AJxCqbFdWLmQ7xMqBQN3AXja9paZJZ9qrqvwViXVkXGF` |
+| `cnft.server.ts` + `POST /api/solana/mint-memory` | ✅ |
+| AI Agent Kit — LangGraph 5개 툴 통합 | ✅ |
+| `/blinks` 데모 페이지 + WalletButton | ✅ |
+| `verify-solana-stack.ts` 검증 스크립트 | ✅ 10/10 PASS |
 
 ---
 
@@ -196,5 +106,5 @@
 ## Related Documents
 - **Concept_Design**: [Seoulana Pitch](../01_Concept_Design/06_SEOULANA_PITCH.md) - 해커톤 전략 및 포지셔닝
 - **Technical_Specs**: [Solana Integration Specs](../03_Technical_Specs/03_SOLANA_INTEGRATION_SPECS.md) - 기술 구현 명세
-- **Logic_Progress**: [Backlog](./00_BACKLOG.md) - 전체 프로젝트 백로그
 - **Logic_Progress**: [Operations Readiness Checklist](./09_OPERATIONS_READINESS_CHECKLIST.md) - 운영 체크리스트
+- **Logic_Progress**: [Vercel Deployment Checklist](./10_VERCEL_DEPLOYMENT_404_CHECKLIST.md) - Vercel 배포 점검

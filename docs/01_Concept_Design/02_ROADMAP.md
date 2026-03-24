@@ -1,3 +1,8 @@
+---
+Created: 2025-12-01
+Last Updated: 2026-03-25
+---
+
 ## 9. Antigravity Global Rubric Evaluation (성장 지표 및 가치 검증)
 
 본 프로젝트의 성공 가능성을 6가지 핵심 루브릭을 통해 자가 진단하고 전략을 수립합니다.

@@ -12,7 +12,7 @@
 - **Database**: Turso (libSQL) with Prisma ORM
 - **Authentication**: Better Auth (session-based)
 - **AI Integration**: Google Gemini API with LangGraph
-- **Payment Systems**: PayPal, Coinbase Commerce, Solana Pay, CTC EVM (Creditcoin)
+- **Payment Systems**: PayPal, Coinbase Commerce, Solana Pay
 - **Current Status**: User 모델에 `subscriptionTier` 필드가 이미 존재 (기본값: "FREE")
 - **Credit System**: User 모델에 `credits` 필드 추가 예정 (기본값: 100)
 
@@ -68,7 +68,6 @@
 *   **PayPal**: 3.5% + $0.30 (국제 거래)
 *   **Coinbase Commerce**: 약 1% (암호화폐 자동 변환 포함)
 *   **Solana Pay**: 거의 무료 ($0.00025 미만, 사용자 부담)
-*   **CTC EVM (Creditcoin)**: 매우 저렴 (약 $0.001, 사용자 부담)
 
 **평균 결제 수수료**: 소액 결제($4.99) 기준 약 **$0.47** (9.4%), 대액 결제($29.99) 기준 약 **$1.35** (4.5%)
 

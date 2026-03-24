@@ -14,7 +14,7 @@
 | 결제 | Solana Pay (기존 구현) | + Blinks Actions API |
 | NFT | 없음 | Metaplex Bubblegum (cNFT) |
 | 토큰 | CHOCO (DB 포인트) | CHOCO → SPL Token-2022 |
-| 지갑 | EVM wallet (CC3용) | Solana wallet (Phantom, Solflare) |
+| 지갑 | EVM wallet (Solana용) | Solana wallet (Phantom, Solflare) |
 | SDK | @solana/web3.js (기존) | + @metaplex-foundation/mpl-bubblegum, @solana/spl-token |
 
 ---

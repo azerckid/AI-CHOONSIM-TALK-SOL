@@ -3,7 +3,7 @@
 > Created: 2026-02-11
 > Last Updated: 2026-03-13 (Phase 0-4, 1-1, 1-2 전 항목 완료)
 
-**목적**: Phase 0-4(CTC Deposit), Phase 1-1(Shop 시드), Phase 1-2(402 E2E)를 권장 순서대로 정리한다.
+**목적**: Phase 0-4(Solana Deposit), Phase 1-1(Shop 시드), Phase 1-2(402 E2E)를 권장 순서대로 정리한다.
 
 **관련 문서**: [03_BM_IMPLEMENTATION_PLAN.md](./03_BM_IMPLEMENTATION_PLAN.md)
 
@@ -13,38 +13,14 @@
 
 | 순서 | 단계 | 내용 | 완료 |
 |------|------|------|------|
-| 1 | Phase 0-4 | CTC Deposit Engine 환경변수 및 로컬 테스트 | ✅ 2026-03-13 |
-| 2 | Phase 1-1 | Shop 아이템 시드 실행 + 페이월 ID 검증 | ✅ 2026-03-13 |
-| 3 | Phase 1-2 | 402 흐름 E2E 수동 검증 | ✅ 2026-03-13 |
+| 1 | Phase 1-1 | Shop 아이템 시드 실행 + 페이월 ID 검증 | ✅ 2026-03-13 |
+| 2 | Phase 1-2 | 402 흐름 E2E 수동 검증 | ✅ 2026-03-13 |
 
 **검증 스크립트**:
 - `npx tsx scripts/verify-shop-items.ts` — 8종 아이템 존재 확인
-- `npx tsx scripts/verify-ctc-env.ts` — Phase 0-4 환경변수 설정 확인
-- `npx tsx scripts/test-ctc-sweep.ts` — ctc-sweep API 호출 테스트 (로컬 서버 실행 후)
 
 ---
 
-## 1. Phase 0-4: CTC Deposit Engine
-
-상세 절차는 [05_CTC_DEPOSIT_ENGINE_SETUP_AND_TEST.md](./05_CTC_DEPOSIT_ENGINE_SETUP_AND_TEST.md) 참조.
-
-### 1.1 환경변수 (`.env.development` 또는 `.env`)
-
-```
-CTC_RPC_URL=https://...
-CTC_TREASURY_ADDRESS=0x...
-CRON_SECRET=your-secret-string
-CTC_PRICE_API_URL=...  # 선택
-```
-
-### 1.2 체크리스트
-
-- [x] `CTC_RPC_URL`, `CTC_TREASURY_ADDRESS`, `CRON_SECRET` 로컬 설정
-- [x] `CTC_PRICE_API_URL` 설정 (CoinGecko, 파서 업데이트 포함)
-- [x] Vercel 대시보드 4종 등록 완료 (구 NEAR 변수 6종 제거)
-- [x] 로컬 E2E: 10,000 CTC 입금 → 1,554,740 CHOCO 적립 → Treasury 스윕 확인
-
----
 
 ## 2. Phase 1-1: Shop 아이템 시드
 
@@ -105,5 +81,4 @@ npx tsx scripts/seed-shop-items.ts
 
 ## Related Documents
 
-- [05_CTC_DEPOSIT_ENGINE_SETUP_AND_TEST.md](./05_CTC_DEPOSIT_ENGINE_SETUP_AND_TEST.md) — Phase 0-4 상세
 - [08_SHOP_ITEMS_IMPLEMENTATION_PRIORITY.md](./08_SHOP_ITEMS_IMPLEMENTATION_PRIORITY.md) — Shop 아이템 우선순위

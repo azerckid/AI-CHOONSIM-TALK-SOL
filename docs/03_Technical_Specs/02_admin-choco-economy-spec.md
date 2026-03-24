@@ -17,10 +17,8 @@ CHOCO 토큰이 프로젝트의 핵심 화폐로 자리 잡음에 따라, 관리
 ## 2. 주요 모니터링 지표 (KPI)
 
 ### 2.1 서비스 지갑 현황 (Service Wallet)
-- **지갑 주소**: `CTC_TREASURY_ADDRESS` (CTC EVM Treasury 지갑 — 스윕 수신 주소)
 - **CHOCO 잔액**: DB 내 전체 유저 `chocoBalance` 합계 (오프체인 포인트 기반)
-- **CTC 잔액**: Treasury 지갑의 실제 CTC EVM 체인 잔액 (스윕 입금액)
-- **유동성 경고**: CHOCO 총량 또는 CTC 잔액이 설정된 임계치 이하로 떨어질 경우 시각적 경고 표시
+- **유동성 경고**: CHOCO 총량이 설정된 임계치 이하로 떨어질 경우 시각적 경고 표시
 
 ### 2.2 사용자 경제 지표 (User Economy)
 - **총 유통량 (Total Circulating Supply)**: 모든 사용자의 DB `chocoBalance` 합계
@@ -46,9 +44,6 @@ CHOCO 토큰이 프로젝트의 핵심 화폐로 자리 잡음에 따라, 관리
    - `User` 테이블: `select sum(chocoBalance) from User`
    - `Payment` 테이블: `select sum(amount) from Payment where type='TOPUP' and status='COMPLETED'`
    - `TokenTransfer` 테이블: `select sum(amount) from TokenTransfer where status='COMPLETED'`
-2. **CTC EVM On-chain Call**:
-   - `provider.getBalance(CTC_TREASURY_ADDRESS)`를 사용하여 Treasury CTC 잔액 조회 (ethers.js)
-   - `lib/ctc/deposit-engine.server.ts`의 잔액 조회 로직 재사용
 
 ### 3.3 UI/UX 디자인 (Aesthetics)
 - **Rich Cards**: 상단에 주요 지표(서비스 잔액, 유통량 등)를 스타일리시한 카드로 배치
@@ -62,7 +57,6 @@ CHOCO 토큰이 프로젝트의 핵심 화폐로 자리 잡음에 따라, 관리
 ## 4. 기술적 세부사항
 
 ### 4.1 필요한 API 유틸리티
-- `app/lib/ctc/deposit-engine.server.ts`: Treasury 지갑 잔액 조회를 위한 `getServiceWalletStats()` 추가
 - `app/lib/admin/stats.server.ts`: DB 집계 로직을 담당하는 서버 유틸리티 생성
 
 ### 4.2 보안 사항
