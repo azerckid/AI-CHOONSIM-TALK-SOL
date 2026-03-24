@@ -761,7 +761,7 @@ export default function ChatRoom() {
                       const canAfford = currentUserChocoBalance >= price;
                       if (!canAfford) {
                         toast.error("CHOCO 잔액이 부족합니다.", {
-                          action: { label: "안내 보기", onClick: () => window.location.href = "/guide#earn" },
+                          action: { label: "⚡ Blinks로 충전", onClick: () => window.location.href = "/blinks" },
                         });
                         return;
                       }
@@ -780,7 +780,7 @@ export default function ChatRoom() {
                           revalidator.revalidate();
                         } else {
                           toast.error(data.error || "구매에 실패했습니다.", data.error === "Insufficient CHOCO balance" ? {
-                            action: { label: "안내 보기", onClick: () => window.location.href = "/guide#earn" },
+                            action: { label: "⚡ Blinks로 충전", onClick: () => window.location.href = "/blinks" },
                           } : undefined);
                         }
                       } catch (e) {
