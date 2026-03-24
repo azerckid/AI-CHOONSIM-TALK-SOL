@@ -6,6 +6,7 @@ import { StateGraph, END, Annotation, START } from "@langchain/langgraph";
 import { DateTime } from "luxon";
 import { db } from "../db.server";
 import * as schema from "../../db/schema";
+import { eq } from "drizzle-orm";
 import { logger } from "../logger.server";
 import {
     CORE_CHUNSIM_PERSONA,
@@ -16,6 +17,7 @@ import {
     type SubscriptionTier,
 } from "./prompts";
 import { model, urlToBase64 } from "./model";
+import { Connection, PublicKey } from "@solana/web3.js";
 
 // 그래프 상태 정의
 const ChatStateAnnotation = Annotation.Root({
@@ -168,6 +170,52 @@ const analyzePersonaNode = async (state: typeof ChatStateAnnotation.State) => {
     return { systemInstruction };
 };
 
+// ── Solana 도구 정의 (Gemini function calling format) ────────────────────────
+
+const checkChocoBalanceTool = {
+    name: "checkChocoBalance",
+    description: "사용자의 현재 CHOCO 토큰 잔액을 조회합니다. 사용자가 잔액을 물어볼 때 사용하세요.",
+    parameters: { type: "object", properties: {}, required: [] },
+};
+
+const getSolBalanceTool = {
+    name: "getSolBalance",
+    description: "특정 Solana 지갑의 SOL 잔액을 조회합니다 (Devnet).",
+    parameters: {
+        type: "object",
+        properties: {
+            walletAddress: { type: "string", description: "조회할 Solana 지갑 주소 (Base58)" },
+        },
+        required: ["walletAddress"],
+    },
+};
+
+const getCheckinBlinkTool = {
+    name: "getCheckinBlink",
+    description: "오늘의 일일 체크인 Blink URL을 안내합니다. 사용자가 체크인이나 CHOCO를 무료로 받고 싶다고 할 때 사용하세요.",
+    parameters: { type: "object", properties: {}, required: [] },
+};
+
+const getGiftBlinkTool = {
+    name: "getGiftBlink",
+    description: "CHOCO 선물 Blink URL을 생성하여 안내합니다.",
+    parameters: {
+        type: "object",
+        properties: {
+            amount: { type: "number", description: "선물할 CHOCO 수량" },
+        },
+        required: ["amount"],
+    },
+};
+
+const getMemoryNFTInfoTool = {
+    name: "getMemoryNFTInfo",
+    description: "cNFT 메모리 각인 기능을 안내합니다. 사용자가 추억을 NFT로 남기고 싶어할 때 사용하세요.",
+    parameters: { type: "object", properties: {}, required: [] },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * 도구 1: 여행 계획 저장 루틴
  */
@@ -187,10 +235,66 @@ const saveTravelPlanTool = {
 };
 
 /**
+ * Solana 도구 실행 헬퍼
+ */
+async function executeSolanaTool(name: string, args: Record<string, unknown>, userId: string | null): Promise<string | null> {
+    const baseUrl = process.env.BETTER_AUTH_URL || "";
+
+    if (name === "checkChocoBalance") {
+        if (!userId) return "잔액을 확인하려면 로그인이 필요합니다.";
+        try {
+            const user = await db.query.user.findFirst({
+                where: eq(schema.user.id, userId),
+                columns: { chocoBalance: true },
+            });
+            const balance = parseFloat(user?.chocoBalance ?? "0");
+            return `현재 CHOCO 잔액: ${balance} CHOCO 🍫`;
+        } catch {
+            return "잔액 조회 중 오류가 발생했습니다.";
+        }
+    }
+
+    if (name === "getSolBalance") {
+        const walletAddress = args.walletAddress as string;
+        try {
+            const conn = new Connection(process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com", "confirmed");
+            const pubkey = new PublicKey(walletAddress);
+            const balance = await conn.getBalance(pubkey);
+            return `${walletAddress}의 SOL 잔액: ${(balance / 1e9).toFixed(4)} SOL (Devnet)`;
+        } catch {
+            return "잘못된 지갑 주소이거나 잔액 조회에 실패했습니다.";
+        }
+    }
+
+    if (name === "getCheckinBlink") {
+        return `오늘의 체크인 Blink 💕\n${baseUrl}/api/actions/checkin\n체크인하면 50 CHOCO를 받을 수 있어요!`;
+    }
+
+    if (name === "getGiftBlink") {
+        const amount = (args.amount as number) || 100;
+        return `🍫 ${amount} CHOCO 선물 Blink:\n${baseUrl}/api/actions/gift?amount=${amount}\nX(Twitter)에 공유하면 팬들이 바로 선물받을 수 있어요!`;
+    }
+
+    if (name === "getMemoryNFTInfo") {
+        return `🎖️ 메모리 NFT 각인 안내\n비용: 200 CHOCO\n지갑 주소와 이름을 알려주면 온체인에 영원히 기록됩니다!\nAPI: POST /api/solana/mint-memory`;
+    }
+
+    return null;
+}
+
+/**
  * 노드 2: AI 응답 생성
  */
 const callModelNode = async (state: typeof ChatStateAnnotation.State) => {
-    const modelWithTools = model.bindTools([saveTravelPlanTool]);
+    const allTools = [
+        saveTravelPlanTool,
+        checkChocoBalanceTool,
+        getSolBalanceTool,
+        getCheckinBlinkTool,
+        getGiftBlinkTool,
+        getMemoryNFTInfoTool,
+    ];
+    const modelWithTools = model.bindTools(allTools);
 
     const messages: BaseMessage[] = [
         new SystemMessage(state.systemInstruction),
@@ -201,21 +305,37 @@ const callModelNode = async (state: typeof ChatStateAnnotation.State) => {
 
     if (response.tool_calls && response.tool_calls.length > 0) {
         for (const toolCall of response.tool_calls) {
+            const args = toolCall.args as Record<string, unknown>;
+
             if (toolCall.name === "saveTravelPlan" && state.userId) {
-                const args = toolCall.args as { title: string; description?: string; startDate?: string; endDate?: string };
+                const travelArgs = args as { title: string; description?: string; startDate?: string; endDate?: string };
                 try {
                     await db.insert(schema.travelPlan).values({
                         id: crypto.randomUUID(),
                         userId: state.userId,
-                        title: args.title,
-                        description: args.description || "춘심이와 함께 만든 여행 계획",
-                        startDate: args.startDate ? new Date(args.startDate) : null,
-                        endDate: args.endDate ? new Date(args.endDate) : null,
+                        title: travelArgs.title,
+                        description: travelArgs.description || "춘심이와 함께 만든 여행 계획",
+                        startDate: travelArgs.startDate ? new Date(travelArgs.startDate) : null,
+                        endDate: travelArgs.endDate ? new Date(travelArgs.endDate) : null,
                         updatedAt: new Date(),
                     });
-                    logger.info({ category: "SYSTEM", message: `Travel plan '${args.title}' saved for user ${state.userId}` });
+                    logger.info({ category: "SYSTEM", message: `Travel plan '${travelArgs.title}' saved for user ${state.userId}` });
                 } catch (e) {
                     logger.error({ category: "SYSTEM", message: "Failed to save travel plan via tool:", stackTrace: (e as Error).stack });
+                }
+            } else {
+                // Solana 도구 처리
+                const result = await executeSolanaTool(toolCall.name, args, state.userId);
+                if (result) {
+                    // 도구 결과를 AIMessage content에 추가
+                    const toolResultContent = `[${toolCall.name} 결과]\n${result}`;
+                    if (typeof response.content === "string") {
+                        response.content = response.content
+                            ? `${response.content}\n\n${toolResultContent}`
+                            : toolResultContent;
+                    } else {
+                        response.content = toolResultContent;
+                    }
                 }
             }
         }
