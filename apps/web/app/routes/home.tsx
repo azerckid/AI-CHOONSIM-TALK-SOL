@@ -339,13 +339,13 @@ export default function HomeScreen() {
             <span className="text-xs font-medium text-gray-300">Missions</span>
           </button>
           <button
-            onClick={() => navigate("/fandom")}
+            onClick={() => navigate("/blinks")}
             className="flex flex-col items-center gap-2 group"
           >
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-dark border border-white/10 group-active:scale-95 transition-all text-[#4CAF50]">
-              <span className="material-symbols-outlined text-[28px]">photo_library</span>
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-dark border border-white/10 group-active:scale-95 transition-all text-[#9945FF]">
+              <span className="material-symbols-outlined text-[28px]">bolt</span>
             </div>
-            <span className="text-xs font-medium text-gray-300">Gallery</span>
+            <span className="text-xs font-medium text-gray-300">Blinks</span>
           </button>
           <button
             onClick={() => navigate("/shop")}

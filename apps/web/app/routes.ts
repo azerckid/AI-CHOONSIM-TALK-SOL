@@ -95,10 +95,12 @@ export default [
   route("api/context/:characterId/export", "routes/api/context/$characterId.export.ts"),
 
   // Solana Actions & Blinks
+  route("blinks", "routes/blinks.tsx"),
   route("actions.json", "routes/actions.json.ts"),
   route("api/actions/gift", "routes/api/actions/gift.ts"),
   route("api/actions/subscribe", "routes/api/actions/subscribe.ts"),
   route("api/actions/checkin", "routes/api/actions/checkin.ts"),
+  route("api/actions/checkin/verify", "routes/api/actions/checkin.verify.ts"),
 
   // Solana cNFT
   route("api/solana/mint-memory", "routes/api/solana/mint-memory.ts"),

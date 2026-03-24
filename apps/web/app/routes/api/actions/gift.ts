@@ -20,13 +20,9 @@ import {
   createAssociatedTokenAccountInstruction,
 } from "@solana/spl-token";
 import { solanaConnection, ACTIONS_CORS_HEADERS } from "~/lib/solana/connection.server";
-import { db } from "~/lib/db.server";
-import * as schema from "~/db/schema";
-import { eq } from "drizzle-orm";
 
 // CHOCO Token-2022 상수
 const CHOCO_DECIMALS = 6;
-const CHOCO_PER_SOL_LAMPORTS = 0.001 * LAMPORTS_PER_SOL; // 0.001 SOL = 최소 수수료
 
 /** OPTIONS preflight */
 export function loader({ request }: LoaderFunctionArgs) {
