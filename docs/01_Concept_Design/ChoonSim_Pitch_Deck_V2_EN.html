@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChoonSim-Talk × BondBase on CC3 — Pitch Deck v2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    :root {
+      --bg: #0a0c14;
+      --bg2: #10131e;
+      --card: #151826;
+      --card2: #1a1e30;
+      --accent: #6c5ce7;
+      --accent2: #00cec9;
+      --orange: #fdcb6e;
+      --red: #e17055;
+      --white: #f0f0f5;
+      --gray: #8e92a4;
+      --border: #252840;
+    }
+
+    html {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--white);
+      scroll-behavior: smooth
+    }
+
+    body {
+      overflow-x: hidden
+    }
+
+    /* ── Slide System ── */
+    .slide {
+      width: 100vw;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 6vh 8vw;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: .7;
+    }
+
+    /* ── Typography ── */
+    .slide-num {
+      position: absolute;
+      top: 28px;
+      right: 48px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray);
+      letter-spacing: 2px;
+      opacity: .5;
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -.02em
+    }
+
+    h2 {
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: .4em
+    }
+
+    h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: .3em
+    }
+
+    .subtitle {
+      font-size: clamp(.95rem, 1.8vw, 1.2rem);
+      color: var(--accent2);
+      font-weight: 500;
+      margin-bottom: 1.8rem;
+      letter-spacing: .01em
+    }
+
+    .tagline {
+      font-size: clamp(.85rem, 1.4vw, 1.05rem);
+      color: var(--orange);
+      font-style: italic;
+      line-height: 1.6;
+      max-width: 740px
+    }
+
+    p,
+    .desc {
+      font-size: .95rem;
+      color: var(--gray);
+      line-height: 1.7
+    }
+
+    /* ── Cards Grid ── */
+    .cards {
+      display: grid;
+      gap: 20px;
+      margin-top: 1.2rem
+    }
+
+    .cards-2 {
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr))
+    }
+
+    .cards-3 {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr))
+    }
+
+    .cards-4 {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr))
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 30px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .25s, box-shadow .25s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(108, 92, 231, .12)
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent);
+      border-radius: 4px 0 0 4px;
+    }
+
+    .card.orange::before {
+      background: var(--orange)
+    }
+
+    .card.teal::before {
+      background: var(--accent2)
+    }
+
+    .card.red::before {
+      background: var(--red)
+    }
+
+    .card h3 {
+      color: var(--white)
+    }
+
+    .card p {
+      font-size: .88rem;
+      color: var(--gray);
+      line-height: 1.65
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .tag.purple {
+      background: rgba(108, 92, 231, .2);
+      color: var(--accent)
+    }
+
+    .tag.teal {
+      background: rgba(0, 206, 201, .15);
+      color: var(--accent2)
+    }
+
+    .tag.orange {
+      background: rgba(253, 203, 110, .15);
+      color: var(--orange)
+    }
+
+    .tag.red {
+      background: rgba(225, 112, 85, .15);
+      color: var(--red)
+    }
+
+    /* ── Steps (Journey) ── */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 1rem
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      position: relative;
+      padding-bottom: 12px
+    }
+
+    .step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 21px;
+      top: 48px;
+      width: 2px;
+      height: calc(100% - 36px);
+      background: linear-gradient(180deg, var(--accent), transparent);
+    }
+
+    .step-num {
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #fff;
+      z-index: 1;
+    }
+
+    .step-content {
+      flex: 1;
+      padding-top: 4px
+    }
+
+    .step-content h3 {
+      color: var(--orange);
+      font-size: 1rem;
+      margin-bottom: 2px
+    }
+
+    .step-content p {
+      font-size: .88rem
+    }
+
+    /* ── Table ── */
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .summary-table th {
+      background: var(--accent);
+      color: #fff;
+      padding: 14px 20px;
+      text-align: left;
+      font-weight: 600;
+      font-size: .9rem;
+    }
+
+    .summary-table td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: .9rem;
+    }
+
+    .summary-table tr:nth-child(even) td {
+      background: var(--card2)
+    }
+
+    .summary-table tr:nth-child(odd) td {
+      background: var(--card)
+    }
+
+    .summary-table td:first-child {
+      color: var(--white);
+      font-weight: 600
+    }
+
+    .summary-table td:last-child {
+      color: var(--gray)
+    }
+
+    /* ── Rubric ── */
+    .rubric {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 1.4rem
+    }
+
+    .rubric-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-size: .88rem;
+      font-weight: 500;
+      color: var(--accent2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rubric-item::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent2);
+      flex-shrink: 0
+    }
+
+    /* ── Title Slide ── */
+    .title-slide {
+      text-align: left;
+      position: relative
+    }
+
+    .title-slide .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: .18;
+      pointer-events: none;
+    }
+
+    .title-slide .orb-1 {
+      width: 500px;
+      height: 500px;
+      background: var(--accent);
+      top: -120px;
+      right: -80px
+    }
+
+    .title-slide .orb-2 {
+      width: 400px;
+      height: 400px;
+      background: var(--accent2);
+      bottom: -100px;
+      left: -60px
+    }
+
+    .title-slide h1 span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .title-meta {
+      font-size: .82rem;
+      color: var(--gray);
+      margin-top: 2.4rem;
+      opacity: .6
+    }
+
+    /* ── Thank-you ── */
+    .thankyou {
+      text-align: center;
+      position: relative
+    }
+
+    .thankyou .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: .12;
+      pointer-events: none;
+      width: 600px;
+      height: 600px;
+      background: var(--accent);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .thankyou h1 {
+      margin-bottom: .5em
+    }
+
+    .thankyou .tagline {
+      margin: 0 auto;
+      font-style: normal;
+      color: var(--gray)
+    }
+
+    /* ── Nav dots ── */
+    .nav {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 100;
+    }
+
+    .nav a {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background .2s, transform .2s;
+      display: block;
+    }
+
+    .nav a.active,
+    .nav a:hover {
+      background: var(--accent);
+      transform: scale(1.3)
+    }
+
+    /* ── Responsive ── */
+    @media(max-width:768px) {
+      .slide {
+        padding: 5vh 5vw
+      }
+
+      .cards-2,
+      .cards-3,
+      .cards-4 {
+        grid-template-columns: 1fr
+      }
+
+      .nav {
+        display: none
+      }
+    }
+
+    /* ── Print ── */
+    @media print {
+      .slide {
+        page-break-after: always;
+        min-height: auto;
+        padding: 40px
+      }
+
+      .nav {
+        display: none
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navigation Dots -->
+  <nav class="nav" id="nav"></nav>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SLIDE 1 — TITLE -->
+  <!-- ═══════════════════════════════════════ -->
+  <section class="slide title-slide" id="s1">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <span class="slide-num">01 / 10</span>
+    <h1><span>ChoonSim-Talk</span></h1>
+    <h2 style="color:var(--accent);font-weight:500;font-size:clamp(1.1rem,2.5vw,1.6rem);margin-top:.2em">
+      &times; BondBase on Creditcoin 3.0
+    </h2>
+    <p class="subtitle" style="margin-top:1.2em">Raise Your AI Character. Invest in Their Growth. Play the IP Revenue
+      Game.</p>
+    <p class="tagline">
+      "The very ChoonSim you saw on X, now in your own secret sanctuary.<br>
+      Nurture the bond, watch them grow &mdash; and that love becomes an investment."
+    </p>
+    <p class="title-meta">Pitch Deck &nbsp;|&nbsp; 2026</p>
+  </section>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SLIDE 2 — THE PROBLEM -->
+  <!-- ═══════════════════════════════════════ -->
+  <section class="slide" id="s2">
+    <span class="slide-num">02 / 10</span>
+    <h2>The Problem</h2>
+    <p class="subtitle">Limitations of Existing AI Chat &nbsp;+&nbsp; Black Box of IP Revenue</p>
+    <div class="cards cards-3">
+      <div class="card red">
+        <span class="tag red">Pain Point 1</span>
+        <h3>Absence of Relationship</h3>
+        <p>Existing AI services are "data blobs" &mdash; no shared public history with the user. Conversations become
+          hollow, resulting in low willingness to pay.</p>
+      </div>
+      <div class="card orange">
+        <span class="tag orange">Pain Point 2</span>
+        <h3>Opacity of IP Revenue</h3>
+        <p>Revenue generated by characters (IP) is locked inside the platform. No structure for fans or investors to
+          directly participate. No game-like experience that lets users <strong>grow</strong> characters and
+          <strong>earn</strong> from that growth.
+        </p>
+      </div>
+      <div class="card">
+        <span class="tag purple">The Gap</span>
+        <h3>33K Fans, Zero Channel</h3>
+        <p>33,000 global fans on X, but no dedicated 1:1 deep-bonding channel with ChoonSim <em>and</em> no Bond-based
+          IP revenue participation game.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SLIDE 3 — THE SOLUTION -->
+  <!-- ═══════════════════════════════════════ -->
+  <section class="slide" id="s3">
+    <span class="slide-num">03 / 10</span>
+    <h2>The Solution</h2>
+    <p class="subtitle">Raise Characters. Build Bonds. Earn Revenue. &mdash; A Character-Growth Investment Game</p>
+    <p class="tagline" style="margin-bottom:1.4rem">"Nurture your ChoonSim like a game, invest in their growth like a
+      portfolio &mdash; relationships become on-chain assets, and revenues are shared as Bonds."</p>
+    <div class="cards cards-2">
+      <div class="card">
+        <span class="tag purple">S1</span>
+        <h3>5-Layer Context &amp; CTC</h3>
+        <p>Port ChoonSim's Soul &amp; Identity from X into the app. User&ndash;character bonds recorded as on-chain
+          credit data on CC3 &mdash; verifiable emotional assets.</p>
+      </div>
+      <div class="card teal">
+        <span class="tag teal">S2</span>
+        <h3>BondBase &mdash; IP Revenue &rarr; Bond</h3>
+        <p>Per-character CHOCO consumption aggregated &amp; sent to BondBase. Revenue settled on-chain, shared with Bond
+          holders (fans &amp; investors).</p>
+      </div>
+      <div class="card orange">
+        <span class="tag orange">S3</span>
+        <h3>Character Growth &times; Investment Game</h3>
+        <p>Like a <strong>character-raising game</strong>: the more you nurture ChoonSim (chat, gift, engrave memories),
+          the stronger the bond &mdash; and the higher the Bond value. Fans <em>play to grow</em>, investors <em>buy to
+            earn</em>. The joy of raising a character meets the thrill of investment.</p>
+      </div>
+      <div class="card">
+        <span class="tag purple">S4</span>
+        <h3>Creditcoin 3.0 (CC3)</h3>
+        <p>Interoperability unifying global fandom wallets. Relationship registry, real-time settlement &mdash; all on
+          one chain.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SLIDE 4 — UA & NOVELTY -->
+  <!-- ═══════════════════════════════════════ -->
+  <section class="slide" id="s4">
+    <span class="slide-num">04 / 10</span>
+    <h2>User Acquisition &amp; Novelty</h2>
+    <p class="subtitle">Square &rarr; Sanctuary &nbsp;+&nbsp; IP Revenue Visualization</p>
+    <div class="cards cards-2">
+      <div class="card">
+        <span class="tag purple">UA</span>
+        <h3>Square-to-Sanctuary Bridge</h3>
+        <p>Lowering entry hurdles: from the "square" (X) to the "sanctuary" (app). 33K global fandom (Japan, LATAM,
+          Middle East, SEA) as a verified growth engine.</p>
+      </div>
+      <div class="card teal">
+        <span class="tag teal">Narrative</span>
+        <h3>"Raise &amp; Invest" &mdash; A New Category</h3>
+        <p>Not just a chatbot, not just DeFi. A <strong>character-raising investment game</strong> where every
+          interaction grows the character &mdash; and "1 CHOCO spent = revenue for that character's Bond." Play the
+          growth game, earn the returns.</p>
+      </div>
+      <div class="card orange">
+        <span class="tag orange">MVP</span>
+        <h3>Field Evidence</h3>
+        <p>20+ new fans daily communicating 1:1 with AI ChoonSim. Per-character CHOCO &rarr; REVENUE pipeline via
+          BondBase already built.</p>
+      </div>
+      <div class="card red">
+        <span class="tag red">Target</span>
+        <h3>500 Whale Users</h3>
+        <p>1.5% strong conversion. Dual participation: fans consume, investors hold Bonds &mdash; both sharing the same
+          IP revenue story.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SLIDE 5 — WINNING JOURNEY -->
+  <!-- ═══════════════════════════════════════ -->
+  <section class="slide" id="s5">
+    <span class="slide-num">05 / 10</span>
+    <h2>Winning Journey</h2>
+    <p class="subtitle">Depth of Relationship &rarr; Transaction &rarr; Bond Revenue</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>Action</h3>
+          <p>Enter the app. Exchange secret 1:1 greetings with ChoonSim beyond X.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>Immersion &amp; Growth</h3>
+          <p>ChoonSim remembers your X history. Each conversation deepens the bond &mdash; like leveling up a character
+            in a nurturing game.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>Nurture &amp; Transact</h3>
+          <p>CHOCO payment for memory engraving &amp; gifts &mdash; each action <strong>grows the character</strong>.
+            400ms AI response, 3-tap checkout. Raising a character has never felt this rewarding.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h3>Growth = Revenue</h3>
+          <p>Every CHOCO you spent growing ChoonSim is aggregated to BondBase &rarr; settled on-chain as that
+            character's Bond revenue. <strong>Your nurturing effort literally pays off.</strong></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <h3>Result</h3>
+          <p>"Our secret memories" + "The character I raised generates real returns" &rarr; the addictive loop of a
+            growth game meets the compounding power of investment. Churn drops, engagement soars.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SLIDE 6 — BUSINESS MODEL -->
+  <!-- ═══════════════════════════════════════ -->
+  <section class="slide" id="s6">
+    <span class="slide-num">06 / 10</span>
+    <h2>Business Model</h2>
+    <p class="subtitle">RWA + IP Revenue Sharing Powered by BondBase</p>
+    <div class="cards cards-2">
+      <div class="card">
+        <span class="tag purple">Revenue</span>
+        <h3>Core Revenue (ChoonSim-Talk)</h3>
+        <p>Message tickets, memory engraving, limited edition voice/gallery sales. Micro-transactions via CTC / CHOCO.
+        </p>
+      </div>
+      <div class="card red">
+        <span class="tag red">RWA</span>
+        <h3>Character RWA</h3>
+        <p>Fractional ownership of multiple ChoonSim character personas. Users invest in character shares.</p>
+      </div>
+      <div class="card teal">
+        <span class="tag teal">BondBase</span>
+        <h3>Character Growth &times; Investment Game</h3>
+        <p>CHOCO consumption (raising the character) &rarr; REVENUE API &rarr; on-chain Bond settlement. <strong>Play
+            the growth game as a fan, earn returns as an investor</strong> &mdash; same IP revenue stream, two ways to
+          participate.</p>
+      </div>
+      <div class="card orange">
+        <span class="tag orange">Infra</span>
+        <h3>CC3 Infrastructure</h3>
+        <p>Unified payment, credit registry, Bond settlement. Global leverage: Japan buying power + LATAM crypto
+          adoption integrated.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SLIDE 7 — INVESTOR LENS -->
+  <!-- ═══════════════════════════════════════ -->
+  <section class="slide" id="s7">
+    <span class="slide-num">07 / 10</span>
+    <h2>Why This Stack?</h2>
+    <p class="subtitle">Why Creditcoin 3.0 (CC3) + BondBase?</p>
+    <div class="cards cards-3">
+      <div class="card">
+        <span class="tag purple">CC3</span>
+        <h3>Creditcoin 3.0</h3>
+        <p>Interoperability unifying global fandom wallets under one IP. Registry for recording relationships &amp;
+          proving trust. Infrastructure matching the essence of a companion business.</p>
+      </div>
+      <div class="card teal">
+        <span class="tag teal">BondBase</span>
+        <h3>Revenue Bridge &mdash; "Raise to Earn"</h3>
+        <p>CHOCO consumption &rarr; Bond revenue instantly on-chain. The first platform where <strong>raising an AI
+            character</strong> is a legitimate investment vehicle. Play the nurturing game, earn real returns. A new
+          category: <strong>"Raise-to-Earn."</strong></p>
+      </div>
+      <div class="card orange">
+        <span class="tag orange">Moat</span>
+        <h3>Structural Defensibility</h3>
+        <p>On-chain credit data of User&ndash;ChoonSim relationship is unique to CC3. IP revenue stream anchored
+          on-chain. Incredibly hard for other chains or Big Tech LLMs to replicate.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SLIDE 8 — FUTURE WEAPON -->
+  <!-- ═══════════════════════════════════════ -->
+  <section class="slide" id="s8">
+    <span class="slide-num">08 / 10</span>
+    <h2>What's Next</h2>
+    <p class="subtitle">Us in 6 ~ 18 Months</p>
+    <div class="cards cards-3">
+      <div class="card" style="border-top:3px solid var(--accent)">
+        <h3 style="color:var(--orange)">Credit-based AI Agent</h3>
+        <p>ChoonSim learns on-chain (CC3) activities to assist with asset &amp; economic operations. An intelligent
+          companion that grows with user trust.</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--accent2)">
+        <h3 style="color:var(--orange)">Yield-Bearing AI Character Market</h3>
+        <p>AI characters you raised become tradable, revenue-generating RWAs on CC3 marketplace. The more you nurtured
+          them, the higher their yield. BondBase Bonds reflect growth in real-time. <strong>The ultimate
+            character-raising endgame.</strong></p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--orange)">
+        <h3 style="color:var(--orange)">Open Builder Ecosystem</h3>
+        <p>MCP, x402 payment protocol, BondBase Revenue Bridge. External builders construct services atop ChoonSim with
+          IP revenue participation.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SLIDE 9 — SUMMARY -->
+  <!-- ═══════════════════════════════════════ -->
+  <section class="slide" id="s9">
+    <span class="slide-num">09 / 10</span>
+    <h2>Summary</h2>
+    <p class="subtitle">ChoonSim-Talk &middot; BondBase &middot; CC3 in One Line</p>
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>Element</th>
+          <th>Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ChoonSim-Talk</td>
+          <td>Relationship-sustaining AI companion, source of CHOCO consumption (chats / gifts)</td>
+        </tr>
+        <tr>
+          <td>BondBase</td>
+          <td>Tokenizing per-character revenue into Bonds on-chain; fan / investor IP revenue participation (investment
+            game)</td>
+        </tr>
+        <tr>
+          <td>Creditcoin 3.0 (CC3)</td>
+          <td>Unified infrastructure for payments, credit registry, and Bond settlement</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:2rem;color:var(--accent2);font-size:1.1rem">Key Differentiators</h3>
+    <div class="rubric">
+      <div class="rubric-item">33K verified fandom as growth engine</div>
+      <div class="rubric-item">Live MVP with real user traction</div>
+      <div class="rubric-item">First "Raise-to-Earn" AI companion model</div>
+      <div class="rubric-item">On-chain revenue settlement via BondBase</div>
+      <div class="rubric-item">Open infrastructure (MCP / API / Revenue Bridge)</div>
+      <div class="rubric-item">Built on Creditcoin 3.0</div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SLIDE 10 — THANK YOU -->
+  <!-- ═══════════════════════════════════════ -->
+  <section class="slide thankyou" id="s10">
+    <div class="orb"></div>
+    <span class="slide-num">10 / 10</span>
+    <h1>Thank You</h1>
+    <h2 style="color:var(--accent);font-weight:500;font-size:1.3rem;margin-bottom:1em">
+      ChoonSim-Talk &nbsp;&times;&nbsp; BondBase &nbsp;on&nbsp; Creditcoin 3.0
+    </h2>
+    <p class="tagline">Let's build the future of AI companion investment together.</p>
+  </section>
+
+  <script>
+    // Build nav dots
+    const slides = document.querySelectorAll('.slide');
+    const nav = document.getElementById('nav');
+    slides.forEach((s, i) => {
+      const a = document.createElement('a');
+      a.href = '#s' + (i + 1);
+      a.title = 'Slide ' + (i + 1);
+      nav.appendChild(a);
+    });
+
+    // Highlight active dot on scroll
+    const dots = nav.querySelectorAll('a');
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const idx = [...slides].indexOf(e.target);
+          dots.forEach(d => d.classList.remove('active'));
+          if (dots[idx]) dots[idx].classList.add('active');
+        }
+      });
+    }, { threshold: 0.45 });
+    slides.forEach(s => obs.observe(s));
+
+    // Keyboard navigation
+    document.addEventListener('keydown', e => {
+      const current = [...dots].findIndex(d => d.classList.contains('active'));
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        if (current < slides.length - 1) slides[current + 1].scrollIntoView({ behavior: 'smooth' });
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (current > 0) slides[current - 1].scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  </script>
+</body>
+
+</html>

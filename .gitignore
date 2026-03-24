@@ -1,0 +1,44 @@
+
+.DS_Store
+# Env: 실제 값이 들어간 파일은 제외, 템플릿만 커밋
+.secret.env
+.env
+.env.local
+.env.development
+.env.development.local
+.env.production
+.env.production.local
+!.env.example
+
+/.vscode/
+node_modules/
+
+# React Router
+.react-router/
+build/
+
+/generated/prisma
+
+# /docs/
+
+dev.db
+
+
+# Database backups
+*.sql
+backups/
+.vercel
+*.log
+build_debug.log
+
+
+.agent
+.claude
+
+# Turbo
+.turbo
+
+# 예비창업패키지 관련 문서 (외부 제출용, 미추적)
+docs/01_Concept_Design/22_YECHANGPAE_BUSINESS_PLAN_DRAFT.md
+docs/*.docx
+docs/**/*.docx

@@ -1,0 +1,97 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1767648337463,
+      "tag": "0000_slimy_stone_men",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1767962172597,
+      "tag": "0001_funny_vulcan",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1768061805076,
+      "tag": "0002_complex_human_fly",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1768066683839,
+      "tag": "0003_complete_franklin_richards",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1768075144135,
+      "tag": "0004_early_wilson_fisk",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1768105888813,
+      "tag": "0005_deep_mentor",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1768108602490,
+      "tag": "0006_clumsy_molten_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1769089740490,
+      "tag": "0007_add_system_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1769104823181,
+      "tag": "0008_early_shooting_star",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1770274596333,
+      "tag": "0009_burly_colleen_wing",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1770537974566,
+      "tag": "0010_gifted_robbie_robertson",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1771747299982,
+      "tag": "0011_volatile_gorgon",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1771937379109,
+      "tag": "0012_add_evm_wallet_columns",
+      "breakpoints": true
+    }
+  ]
+}

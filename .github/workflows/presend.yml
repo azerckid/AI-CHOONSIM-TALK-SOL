@@ -1,0 +1,23 @@
+name: Presend (선톡)
+
+on:
+  schedule:
+    - cron: '0 0 * * *'   # 09:00 KST (midnight UTC)
+  workflow_dispatch:       # 수동 트리거 (테스트용)
+
+jobs:
+  presend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Call presend cron
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/presend")
+          echo "HTTP Status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "Presend cron failed with status $STATUS"
+            exit 1
+          fi

@@ -1,0 +1,23 @@
+name: Mock Users - Grant Choco
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 매일 00:00 UTC
+  workflow_dispatch:
+
+jobs:
+  grant:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call mock-grant
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/mock-grant")
+          echo "HTTP Status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "Cron failed with status $STATUS"
+            exit 1
+          fi
