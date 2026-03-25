@@ -381,6 +381,17 @@ export default function ProfileScreen() {
               </div>
               <span className="material-symbols-outlined text-[16px] text-white/30">chevron_right</span>
             </button>
+            {/* 기억 앨범 바로가기 */}
+            <button
+              onClick={() => navigate("/profile/memories")}
+              className="w-full flex items-center justify-between hover:bg-white/5 rounded-xl p-2 -mx-2 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#9945FF]">auto_awesome</span>
+                <span className="text-sm font-medium text-white/80">온체인 기억 앨범</span>
+              </div>
+              <span className="material-symbols-outlined text-[16px] text-white/30">chevron_right</span>
+            </button>
             {/* CHOCO Token 정보 */}
             <div className="flex items-center justify-between px-2">
               <div className="flex items-center gap-2">
