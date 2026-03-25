@@ -84,8 +84,8 @@
 ---
 
 ## Related Documents
-- **Concept_Design**: [Roadmap](./04_ROADMAP.md) - 단계별 실행 전략
-- **Concept_Design**: [Monetization Strategy](./08_MONETIZATION_STRATEGY.md) - 수익 모델 상세
-- **Concept_Design**: [Seoulana Pitch](./06_SEOULANA_PITCH.md) - 해커톤 전략 및 Solana 4-Stack
+- **Concept_Design**: [Roadmap](./02_ROADMAP.md) - 단계별 실행 전략
+- **Concept_Design**: [Monetization Strategy](./05_MONETIZATION_STRATEGY.md) - 수익 모델 상세
+- **Concept_Design**: [Seoulana Pitch](./03_SEOULANA_PITCH.md) - 해커톤 전략 및 Solana 4-Stack
 - **Technical_Specs**: [Solana Integration Specs](../03_Technical_Specs/02_SOLANA_INTEGRATION_SPECS.md) - 기술 구현 명세
 - **UI_Screens**: [UI Design](../02_UI_Screens/01_UI_DESIGN.md) - 앱 UI/UX 디자인 가이드

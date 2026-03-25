@@ -89,7 +89,7 @@
 
 ## Related Documents
 - **Concept_Design**: [Core Pitch Deck](./01_CORE_PITCH_DECK.md) - 투자자 피치 및 핵심 비즈니스 비전
-- **Concept_Design**: [Seoulana Pitch](./06_SEOULANA_PITCH.md) - 해커톤 전략
-- **Concept_Design**: [Monetization Strategy](./08_MONETIZATION_STRATEGY.md) - 수익 모델 상세
+- **Concept_Design**: [Seoulana Pitch](./03_SEOULANA_PITCH.md) - 해커톤 전략
+- **Concept_Design**: [Monetization Strategy](./05_MONETIZATION_STRATEGY.md) - 수익 모델 상세
 - **Logic_Progress**: [Seoulana Hackathon Roadmap](../04_Logic_Progress/04_SEOULANA_HACKATHON_ROADMAP.md) - 11일 구현 계획
 - **Technical_Specs**: [Solana Integration Specs](../03_Technical_Specs/02_SOLANA_INTEGRATION_SPECS.md) - 기술 구현 명세
