@@ -2,7 +2,7 @@
 > Created: 2026-02-11  
 > Last Updated: 2026-02-11  
 
-**Base Document**: [00_CORE_PITCH_DECK.md](./00_CORE_PITCH_DECK.md)  
+**Base Document**: [01_CORE_PITCH_DECK.md](./01_CORE_PITCH_DECK.md)  
 **v2 Differentiator**: Specification of IP revenue gamification via **BondBase** based on ChoonSim-Talk, and **Solana (Solana)** infrastructure.
 
 ---
@@ -95,8 +95,8 @@
 ---
 
 ## Related Documents
-- **Concept_Design**: [Core Pitch Deck v1](./00_CORE_PITCH_DECK.md) — Pre-BondBase/Solana reflective version
-- **Concept_Design**: [Roadmap](./02_ROADMAP.md) — Phased execution strategy
+- **Concept_Design**: [Core Pitch Deck v1](./01_CORE_PITCH_DECK.md) — Pre-BondBase/Solana reflective version
+- **Concept_Design**: [Roadmap](./04_ROADMAP.md) — Phased execution strategy
 - **Logic_Progress**: [BondBase Bridge Plan](../04_Logic_Progress/06_BONDBASE_BRIDGE_PLAN.md) — BondBase integration implementation plan
 - **Logic_Progress**: [ChoonSim–BondBase Integration Status](../04_Logic_Progress/04_CHOONSIM_BONDBASE_INTEGRATION_STATUS.md) — Integration status
 - **Logic_Progress**: [Backlog](../04_Logic_Progress/00_BACKLOG.md) — Current implementation progress

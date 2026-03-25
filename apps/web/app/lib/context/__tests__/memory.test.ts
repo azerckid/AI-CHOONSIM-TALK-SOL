@@ -64,4 +64,6 @@ async function runTests(): Promise<void> {
     }
 }
 
-runTests();
+if (!process.env.VITEST) {
+    runTests();
+}

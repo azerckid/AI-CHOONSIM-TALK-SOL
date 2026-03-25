@@ -401,4 +401,6 @@ async function runAllTests(): Promise<void> {
 }
 
 // Run tests if this file is executed directly
-runAllTests();
+if (!process.env.VITEST) {
+    runAllTests();
+}

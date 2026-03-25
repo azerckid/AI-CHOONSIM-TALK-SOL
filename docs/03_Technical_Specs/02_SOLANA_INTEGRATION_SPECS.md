@@ -274,6 +274,6 @@ SOLANA_RPC_URL=https://api.devnet.solana.com  # 해커톤 데모용 Devnet
 
 ## Related Documents
 - **Concept_Design**: [Seoulana Pitch](../01_Concept_Design/06_SEOULANA_PITCH.md) - 전략 및 비즈니스 모델
-- **Logic_Progress**: [Seoulana Hackathon Roadmap](../04_Logic_Progress/12_SEOULANA_HACKATHON_ROADMAP.md) - 11일 구현 일정
-- **Technical_Specs**: [Admin CHOCO Economy Spec](./02_admin-choco-economy-spec.md) - 기존 CHOCO 정책
+- **Logic_Progress**: [Seoulana Hackathon Roadmap](../04_Logic_Progress/04_SEOULANA_HACKATHON_ROADMAP.md) - 11일 구현 일정
+- **Technical_Specs**: [Admin CHOCO Economy Spec](./01_admin-choco-economy-spec.md) - 기존 CHOCO 정책
 - **Technical_Specs**: [Gift Items](./19_gift-items.md) - 선물 아이템 정의

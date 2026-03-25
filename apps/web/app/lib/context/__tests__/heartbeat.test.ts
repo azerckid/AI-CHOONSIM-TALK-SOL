@@ -39,4 +39,6 @@ async function runTests() {
     }
 }
 
-runTests();
+if (!process.env.VITEST) {
+    runTests();
+}

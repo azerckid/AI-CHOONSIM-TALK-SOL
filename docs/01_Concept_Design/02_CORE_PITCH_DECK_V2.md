@@ -2,7 +2,7 @@
 > Created: 2026-02-11  
 > Last Updated: 2026-02-11  
 
-**기준 문서**: [00_CORE_PITCH_DECK.md](./00_CORE_PITCH_DECK.md)  
+**기준 문서**: [01_CORE_PITCH_DECK.md](./01_CORE_PITCH_DECK.md)  
 **v2 차별점**: 춘심톡 기반에 **BondBase**를 통한 IP 수익의 투자 게임화, 및 **Solana (Solana)** 인프라 명시.
 
 ---
@@ -95,8 +95,8 @@
 ---
 
 ## Related Documents
-- **Concept_Design**: [Core Pitch Deck v1](./00_CORE_PITCH_DECK.md) — BondBase/Solana 반영 전 버전
-- **Concept_Design**: [Roadmap](./02_ROADMAP.md) — 단계별 실행 전략
+- **Concept_Design**: [Core Pitch Deck v1](./01_CORE_PITCH_DECK.md) — BondBase/Solana 반영 전 버전
+- **Concept_Design**: [Roadmap](./04_ROADMAP.md) — 단계별 실행 전략
 - **Logic_Progress**: [BondBase Bridge Plan](../04_Logic_Progress/06_BONDBASE_BRIDGE_PLAN.md) — BondBase 연동 구현 계획
 - **Logic_Progress**: [ChoonSim–BondBase Integration Status](../04_Logic_Progress/04_CHOONSIM_BONDBASE_INTEGRATION_STATUS.md) — 연동 현황
 - **Logic_Progress**: [Backlog](../04_Logic_Progress/00_BACKLOG.md) — 현재 구현 진행 상황

@@ -105,6 +105,6 @@
 
 ## Related Documents
 - **Concept_Design**: [Seoulana Pitch](../01_Concept_Design/06_SEOULANA_PITCH.md) - 해커톤 전략 및 포지셔닝
-- **Technical_Specs**: [Solana Integration Specs](../03_Technical_Specs/03_SOLANA_INTEGRATION_SPECS.md) - 기술 구현 명세
-- **Logic_Progress**: [Operations Readiness Checklist](./09_OPERATIONS_READINESS_CHECKLIST.md) - 운영 체크리스트
-- **Logic_Progress**: [Vercel Deployment Checklist](./10_VERCEL_DEPLOYMENT_404_CHECKLIST.md) - Vercel 배포 점검
+- **Technical_Specs**: [Solana Integration Specs](../03_Technical_Specs/02_SOLANA_INTEGRATION_SPECS.md) - 기술 구현 명세
+- **Logic_Progress**: [Operations Readiness Checklist](./01_OPERATIONS_READINESS_CHECKLIST.md) - 운영 체크리스트
+- **Logic_Progress**: [Vercel Deployment Checklist](./02_VERCEL_DEPLOYMENT_404_CHECKLIST.md) - Vercel 배포 점검

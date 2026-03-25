@@ -228,6 +228,6 @@
 
 ## Related Documents
 - **Logic_Progress**: [BM 구현 계획](../04_Logic_Progress/03_BM_IMPLEMENTATION_PLAN.md) - Phase 2-3에 구현 위치 명시
-- **Concept_Design**: [Monetization Strategy](../01_Concept_Design/19_MONETIZATION_STRATEGY.md) - 아이템 가격 및 효과 원본
-- **Technical_Specs**: [Admin CHOCO Economy Spec](./02_admin-choco-economy-spec.md) - CHOCO 경제 설계 상세
+- **Concept_Design**: [Monetization Strategy](../01_Concept_Design/08_MONETIZATION_STRATEGY.md) - 아이템 가격 및 효과 원본
+- **Technical_Specs**: [Admin CHOCO Economy Spec](./01_admin-choco-economy-spec.md) - CHOCO 경제 설계 상세
 - **Logic_Progress**: [Backlog](../04_Logic_Progress/00_BACKLOG.md) - 전체 백로그

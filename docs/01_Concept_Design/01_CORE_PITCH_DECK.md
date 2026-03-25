@@ -84,9 +84,9 @@
 ---
 
 ## Related Documents
-- **Concept_Design**: [Roadmap](./02_ROADMAP.md) - 단계별 실행 전략
+- **Concept_Design**: [Roadmap](./04_ROADMAP.md) - 단계별 실행 전략
 - **UI_Screens**: [UI Design](../02_UI_Screens/01_UI_DESIGN.md) - 앱 UI/UX 디자인 가이드
-- **Concept_Design**: [Monetization Strategy](./19_MONETIZATION_STRATEGY.md) - 수익 모델 상세
+- **Concept_Design**: [Monetization Strategy](./08_MONETIZATION_STRATEGY.md) - 수익 모델 상세
 - **Technical_Specs**: [Token Issuance Spec](../03_Technical_Specs/00_ARCHIVE/09_token-issuance-spec.md) - Solana 토큰 발행 기술 명세 (구현 완료, archive)
 - **Technical_Specs**: [Crypto Payment](../03_Technical_Specs/00_ARCHIVE/08_crypto-payment.md) - 크립토 결제 기술 명세 (구현 완료, archive)
 - **Logic_Progress**: [Backlog](../04_Logic_Progress/00_BACKLOG.md) - 현재 구현 진행 상황

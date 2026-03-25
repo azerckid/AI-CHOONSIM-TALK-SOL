@@ -13,6 +13,11 @@ export default defineConfig({
   },
   test: {
     include: ["app/**/*.{test,spec}.{ts,tsx}"],
+    exclude: [
+      "**/heartbeat.test.ts",
+      "**/isolation.test.ts",
+      "**/memory.test.ts",
+    ],
     globals: true,
     watch: false,
   },
