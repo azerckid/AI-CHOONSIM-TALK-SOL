@@ -16,7 +16,7 @@ const connectionConfig = {
 
 async function main() {
   const client = createClient(connectionConfig);
-  const sqlPath = join(__dirname, "../drizzle/0013_add_ctc_last_balance.sql");
+  const sqlPath = join(__dirname, "../../drizzle/0013_add_ctc_last_balance.sql");
   const sql = readFileSync(sqlPath, "utf-8");
   const statements = sql
     .split(/;--> statement-breakpoint\n?/)

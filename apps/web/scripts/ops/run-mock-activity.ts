@@ -10,7 +10,7 @@ import * as dotenv from "dotenv";
 
 dotenv.config({ path: ".env.development" });
 
-const CHARACTERS = ["chunsim", "rina"];
+const CHARACTERS = ["choonsim", "rina"];
 const TOKENS_MIN = 500;
 const TOKENS_MAX = 2000;
 const DEFAULT_ROUNDS = 1;

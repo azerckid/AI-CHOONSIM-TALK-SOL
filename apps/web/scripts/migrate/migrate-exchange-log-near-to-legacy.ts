@@ -4,7 +4,7 @@
  */
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
-import * as schema from "../app/db/schema";
+import * as schema from "../../app/db/schema";
 import * as dotenv from "dotenv";
 import { eq } from "drizzle-orm";
 

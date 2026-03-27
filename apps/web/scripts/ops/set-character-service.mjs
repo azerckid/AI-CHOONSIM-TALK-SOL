@@ -19,7 +19,7 @@ if (!url) {
 }
 
 const client = createClient({ url, authToken: authToken || undefined });
-const IN_SERVICE_IDS = ["chunsim", "rina"];
+const IN_SERVICE_IDS = ["choonsim", "rina"];
 
 async function main() {
     await client.execute({

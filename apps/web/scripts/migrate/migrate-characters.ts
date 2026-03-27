@@ -1,6 +1,6 @@
-import { db } from "../app/lib/db.server";
-import * as schema from "../app/db/schema";
-import { CHARACTERS } from "../app/lib/characters";
+import { db } from "../../app/lib/db.server";
+import * as schema from "../../app/db/schema";
+import { CHARACTERS } from "../../app/lib/characters";
 import { eq } from "drizzle-orm";
 
 async function migrate() {

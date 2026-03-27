@@ -141,7 +141,7 @@ async function main() {
     console.log("[DB Reset] 시드 실행: characters, missions...");
     const { execSync } = await import("child_process");
     try {
-        execSync("npx tsx scripts/seed-remote-chars.ts", {
+        execSync("npx tsx scripts/seed/seed-remote-chars.ts", {
             cwd: process.cwd(),
             stdio: "inherit",
             env: { ...process.env, TURSO_DATABASE_URL: url, TURSO_AUTH_TOKEN: authToken || "" },
@@ -150,7 +150,7 @@ async function main() {
         console.warn("[DB Reset] seed-remote-chars 실패 (수동 실행 권장):", e);
     }
     try {
-        execSync("npx tsx scripts/seed-remote-missions.ts", {
+        execSync("npx tsx scripts/seed/seed-remote-missions.ts", {
             cwd: process.cwd(),
             stdio: "inherit",
             env: { ...process.env, TURSO_DATABASE_URL: url, TURSO_AUTH_TOKEN: authToken || "" },

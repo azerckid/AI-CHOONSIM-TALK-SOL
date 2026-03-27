@@ -3,7 +3,7 @@
  */
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
-import * as schema from "../app/db/schema";
+import * as schema from "../../app/db/schema";
 import * as dotenv from "dotenv";
 
 dotenv.config({ path: ".env.development" });

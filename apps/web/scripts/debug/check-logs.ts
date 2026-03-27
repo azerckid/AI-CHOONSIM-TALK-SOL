@@ -1,6 +1,6 @@
 
-import { db } from "../app/lib/db.server";
-import { exchangeLog } from "../app/db/schema";
+import { db } from "../../app/lib/db.server";
+import { exchangeLog } from "../../app/db/schema";
 import { desc } from "drizzle-orm";
 
 async function main() {

@@ -1,7 +1,7 @@
 /**
  * Phase 9: User.bio → 5계층 마이그레이션
  *
- * User.bio JSON의 memory 문자열을 추출해, 기본 캐릭터(chunsim)에 대해
+ * User.bio JSON의 memory 문자열을 추출해, 기본 캐릭터(choonsim)에 대해
  * UserContext 및 UserMemoryItem 1건을 생성한다.
  * 이미 해당 유저·캐릭터에 memory가 있으면 건너뛴다.
  *
@@ -10,15 +10,15 @@
  */
 
 import "dotenv/config";
-import { db } from "../app/lib/db.server";
-import * as schema from "../app/db/schema";
+import { db } from "../../app/lib/db.server";
+import * as schema from "../../app/db/schema";
 import {
     getOrCreateUserContext,
     addMemoryItem,
     getMemoryItemCount,
-} from "../app/lib/context/db";
+} from "../../app/lib/context/db";
 
-const DEFAULT_CHARACTER_ID = "chunsim";
+const DEFAULT_CHARACTER_ID = "choonsim";
 
 interface BioData {
     memory?: string;

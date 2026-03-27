@@ -1,5 +1,5 @@
-import { db } from "../app/lib/db.server";
-import * as schema from "../app/db/schema";
+import { db } from "../../app/lib/db.server";
+import * as schema from "../../app/db/schema";
 import { desc } from "drizzle-orm";
 
 async function main() {

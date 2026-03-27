@@ -1,7 +1,7 @@
 /**
  * Phase 9 롤백: 5계층 memory → User.bio 역이전
  *
- * chunsim 캐릭터에 대한 UserMemoryItem을 읽어, content를 합쳐
+ * choonsim 캐릭터에 대한 UserMemoryItem을 읽어, content를 합쳐
  * User.bio.memory에 넣는다. (필요 시 복구용으로만 사용)
  * User.bio는 덮어쓰며, 기존 bio의 다른 필드(personaMode 등)는 유지한다.
  *
@@ -10,12 +10,12 @@
  */
 
 import "dotenv/config";
-import { db } from "../app/lib/db.server";
-import * as schema from "../app/db/schema";
+import { db } from "../../app/lib/db.server";
+import * as schema from "../../app/db/schema";
 import { eq } from "drizzle-orm";
-import { getMemoryItems } from "../app/lib/context/db";
+import { getMemoryItems } from "../../app/lib/context/db";
 
-const DEFAULT_CHARACTER_ID = "chunsim";
+const DEFAULT_CHARACTER_ID = "choonsim";
 
 async function rollback() {
     console.log("Phase 9 롤백: 5계층 memory → User.bio 역이전\n");

@@ -1,9 +1,9 @@
 
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
-import * as schema from "../app/db/schema";
+import * as schema from "../../app/db/schema";
 import * as dotenv from "dotenv";
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 dotenv.config({ path: ".env.development" });
 
@@ -14,7 +14,13 @@ async function main() {
     });
     const db = drizzle(client, { schema });
 
-    const logs = await db.select().from(schema.exchangeLog).where(eq(schema.exchangeLog.userId, "pQgfd2MfcDVQCVMkXTe9gfJ5TVUZWSpk"));
+    const logs = await db.select().from(schema.exchangeLog).where(
+        and(
+            eq(schema.exchangeLog.fromChain, "LEGACY"),
+            sql`${schema.exchangeLog.status} IN ('FAILED', 'PENDING_SWEEP')`
+        )
+    );
+    console.log(`Found ${logs.length} failed/pending LEGACY sweeps:`);
     console.log(JSON.stringify(logs, null, 2));
 }
 

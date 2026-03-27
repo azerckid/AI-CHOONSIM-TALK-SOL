@@ -1,5 +1,5 @@
 import { createClient } from "@libsql/client";
-import { CHARACTERS } from "../app/lib/characters";
+import { CHARACTERS } from "../../app/lib/characters";
 import path from "path";
 import fs from "fs";
 

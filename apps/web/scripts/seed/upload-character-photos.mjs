@@ -4,11 +4,11 @@
  * 캐릭터 사진을 Cloudinary에 업로드하고 characters.ts를 업데이트하는 스크립트
  * 
  * 사용법:
- * 1. 캐릭터 사진 파일들을 준비 (예: chunsim-photo1.jpg, chunsim-photo2.jpg)
+ * 1. 캐릭터 사진 파일들을 준비 (예: choonsim-photo1.jpg, choonsim-photo2.jpg)
  * 2. 이 스크립트 실행: node scripts/upload-character-photos.mjs <characterId> <photoPath1> [photoPath2] ...
  * 
  * 예시:
- * node scripts/upload-character-photos.mjs chunsim ./photos/chunsim-1.jpg ./photos/chunsim-2.jpg
+ * node scripts/upload-character-photos.mjs choonsim ./photos/choonsim-1.jpg ./photos/choonsim-2.jpg
  */
 
 import { v2 as cloudinary } from "cloudinary";
@@ -33,7 +33,7 @@ async function uploadPhoto(filePath, characterId) {
         const base64 = `data:image/jpeg;base64,${fileBuffer.toString("base64")}`;
         
         const result = await cloudinary.uploader.upload(base64, {
-            folder: `chunsim-chat/characters/${characterId}`,
+            folder: `choonsim-chat/characters/${characterId}`,
             public_id: `photo_${Date.now()}`,
             overwrite: false,
         });
@@ -90,11 +90,11 @@ async function main() {
 사용법: node scripts/upload-character-photos.mjs <characterId> <photoPath1> [photoPath2] ...
 
 예시:
-  node scripts/upload-character-photos.mjs chunsim ./photos/chunsim-1.jpg ./photos/chunsim-2.jpg
+  node scripts/upload-character-photos.mjs choonsim ./photos/choonsim-1.jpg ./photos/choonsim-2.jpg
   node scripts/upload-character-photos.mjs mina ./photos/mina-1.jpg
 
 캐릭터 ID:
-  - chunsim
+  - choonsim
   - mina
   - yuna
   - sora
