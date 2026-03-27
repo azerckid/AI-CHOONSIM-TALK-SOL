@@ -249,7 +249,7 @@ export function getChoonsimSolanaTools(userId: string) {
       async ({ memoryTitle }) => {
         const user = await db.query.user.findFirst({
           where: eq(schema.user.id, userId),
-          columns: { solanaWallet: true, chocoBalance: true },
+          columns: { solanaWallet: true, chocoBalance: true, id: true },
         });
 
         if (!user?.solanaWallet) return PHANTOM_GUIDE;
@@ -323,7 +323,7 @@ export function getChoonsimSolanaTools(userId: string) {
       async ({ amount }) => {
         const user = await db.query.user.findFirst({
           where: eq(schema.user.id, userId),
-          columns: { solanaWallet: true },
+          columns: { solanaWallet: true, id: true },
         });
 
         if (!user?.solanaWallet) return PHANTOM_GUIDE;
