@@ -358,7 +358,7 @@ export function getChoonsimSolanaTools(userId: string) {
           "유저가 CHOCO를 구매하고 싶을 때. " +
           "'초코 살게', '초코 구매', '초코 [숫자]개 사고 싶어' 표현 감지.",
         schema: z.object({
-          amount: z.number().int().positive().optional().default(100).describe("구매할 CHOCO 수량 (기본값 100)"),
+          amount: z.number().int().positive().describe("구매할 CHOCO 수량"),
         }),
       }
     ),

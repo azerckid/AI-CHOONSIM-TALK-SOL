@@ -408,8 +408,8 @@ async function executeSlashCommand(rawMessage: string, userId: string): Promise<
 
         switch (command) {
             case "/choco": {
-                const amount = args[0] ? parseInt(args[0], 10) : 100;
-                if (isNaN(amount) || amount <= 0) return "숫자를 입력해줘! 예: /choco 500";
+                const raw = args[0] ? parseInt(args[0], 10) : 100;
+                const amount = isNaN(raw) || raw <= 0 ? 100 : raw;
                 return await run("buyChoco", { amount });
             }
             case "/balance":
@@ -426,7 +426,8 @@ async function executeSlashCommand(rawMessage: string, userId: string): Promise<
                 return null; // 알 수 없는 커맨드 → AI 응답으로 넘김
         }
     } catch (e) {
-        logger.error({ category: "SYSTEM", message: "Slash command error:", stackTrace: (e as Error).stack });
+        const msg = e instanceof Error ? e.message : String(e);
+        logger.error({ category: "SYSTEM", message: `Slash command error [${rawMessage}]: ${msg}`, stackTrace: e instanceof Error ? e.stack : undefined });
         return "커맨드 실행 중 오류가 발생했어. 잠시 후 다시 시도해줘!";
     }
 }
