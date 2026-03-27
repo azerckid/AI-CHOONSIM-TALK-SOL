@@ -36,6 +36,9 @@ export default [
   route("profile/saved", "routes/profile/saved.tsx"),
   route("profile", "routes/profile/index.tsx"),
 
+  // CHOCO 구매
+  route("buy-choco", "routes/buy-choco.tsx"),
+
   // 상점 & 알림
   route("shop", "routes/shop/index.tsx"),
   route("notifications", "routes/notifications/index.tsx"),
@@ -83,6 +86,8 @@ export default [
   route("api/payment/coinbase/create-charge", "routes/api/payment/coinbase/create-charge.ts"),
   route("api/webhooks/coinbase", "routes/api/webhooks/coinbase.ts"),
   route("api/payment/solana/create-request", "routes/api/payment/solana/create-request.ts"),
+  route("api/payment/solana/create-tx", "routes/api/payment/solana/create-tx.ts"),
+  route("api/payment/solana/verify-sig", "routes/api/payment/solana/verify-sig.ts"),
   route("api/payment/solana/verify", "routes/api/payment/solana/verify.ts"),
   // Context API
   route("api/context", "routes/api/context/index.ts"), // DELETE all context (full, confirm required)
