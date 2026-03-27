@@ -14,7 +14,7 @@ type Tab = "about" | "voice" | "gallery";
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const session = await auth.api.getSession({ headers: request.headers });
   const userId = session?.user?.id;
-  const characterId = params.id || "chunsim";
+  const characterId = params.id || "choonsim";
 
   // 1. Character & Media & Stats
   const character = await db.query.character.findFirst({

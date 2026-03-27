@@ -15,7 +15,7 @@ const en = {
     edit: "Edit",
   },
   character: {
-    chunsim: { name: "Choonsim", role: "Main AI" },
+    choonsim: { name: "Choonsim", role: "Main AI" },
     mina: { name: "Mina", role: "K-Pop Idol - Main Vocal" },
     yuna: { name: "Yuna", role: "Singer Songwriter" },
     sora: { name: "Sora", role: "Visual & Rapper" },

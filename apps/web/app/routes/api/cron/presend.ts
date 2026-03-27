@@ -100,7 +100,7 @@ async function runPresend(): Promise<number> {
             .insert(schema.conversation)
             .values({
               id: crypto.randomUUID(),
-              characterId: "chunsim",
+              characterId: "choonsim",
               title: "춘심이와의 대화",
               userId: user.id,
               updatedAt: new Date(),

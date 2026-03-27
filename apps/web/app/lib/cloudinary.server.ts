@@ -10,7 +10,7 @@ cloudinary.config({
 export async function uploadImage(file: string) {
     try {
         const result = await cloudinary.uploader.upload(file, {
-            folder: "chunsim-chat",
+            folder: "choonsim-chat",
         });
         return result.secure_url;
     } catch (error) {

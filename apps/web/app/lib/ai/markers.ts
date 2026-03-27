@@ -10,7 +10,7 @@ import { eq } from "drizzle-orm";
 /**
  * AI 응답에서 [PHOTO:index] 마커를 감지하고 이미지 URL을 추출
  */
-export async function extractPhotoMarker(content: string, characterId: string = "chunsim"): Promise<{ content: string; photoUrl: string | null }> {
+export async function extractPhotoMarker(content: string, characterId: string = "choonsim"): Promise<{ content: string; photoUrl: string | null }> {
     // [PHOTO:0], [PHOTO:O], [PHOTO:o] 모두 인식 (O/o는 0으로 처리)
     const photoMarkerRegex = /\[PHOTO:([0-9Oo]+)\]/gi;
     const matches = Array.from(content.matchAll(photoMarkerRegex));

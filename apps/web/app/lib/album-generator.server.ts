@@ -20,7 +20,7 @@ export interface AlbumMessage {
 
 /**
  * 사용자의 최근 30일 대화에서 앨범용 메시지를 선별한다.
- * - chunsim(춘심) 대화 우선, 없으면 가장 많은 대화 캐릭터
+ * - choonsim(춘심) 대화 우선, 없으면 가장 많은 대화 캐릭터
  * - 메시지 수 제한(MAX_MESSAGES)으로 PDF 크기 관리
  */
 export async function selectAlbumMessages(userId: string): Promise<AlbumMessage[]> {
@@ -34,7 +34,7 @@ export async function selectAlbumMessages(userId: string): Promise<AlbumMessage[
   if (conversations.length === 0) return [];
 
   const convIds = conversations.map((c) => c.id);
-  const charIds = [...new Set(conversations.map((c) => c.characterId || "chunsim"))];
+  const charIds = [...new Set(conversations.map((c) => c.characterId || "choonsim"))];
 
   const messages = await db.query.message.findMany({
     where: and(
@@ -45,7 +45,7 @@ export async function selectAlbumMessages(userId: string): Promise<AlbumMessage[
     columns: { id: true, role: true, content: true, createdAt: true, conversationId: true },
   });
 
-  const convMap = new Map(conversations.map((c) => [c.id, c.characterId || "chunsim"]));
+  const convMap = new Map(conversations.map((c) => [c.id, c.characterId || "choonsim"]));
   const characters = await db.query.character.findMany({
     where: inArray(schema.character.id, charIds),
     columns: { id: true, name: true },
@@ -53,7 +53,7 @@ export async function selectAlbumMessages(userId: string): Promise<AlbumMessage[
   const charNameMap = new Map(characters.map((c) => [c.id, c.name]));
 
   const withChar: AlbumMessage[] = messages.slice(0, MAX_MESSAGES).map((m) => {
-    const charId = convMap.get(m.conversationId) || "chunsim";
+    const charId = convMap.get(m.conversationId) || "choonsim";
     return {
       id: m.id,
       role: m.role as "user" | "assistant",

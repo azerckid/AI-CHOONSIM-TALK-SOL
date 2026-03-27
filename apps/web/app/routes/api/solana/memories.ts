@@ -56,7 +56,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       .map((asset) => {
         const meta = asset.content?.metadata ?? {};
         const attrs: { trait_type: string; value: string }[] = asset.content?.metadata?.attributes ?? [];
-        const characterId = attrs.find((a) => a.trait_type === "character")?.value ?? "chunsim";
+        const characterId = attrs.find((a) => a.trait_type === "character")?.value ?? "choonsim";
         const image = asset.content?.links?.image ?? asset.content?.files?.[0]?.uri ?? "";
 
         return {

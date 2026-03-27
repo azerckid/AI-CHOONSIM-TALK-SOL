@@ -224,7 +224,7 @@ export const userMemoryItem = sqliteTable("UserMemoryItem", {
 
 export const conversation = sqliteTable("Conversation", {
     id: text("id").primaryKey(),
-    characterId: text("characterId").notNull().default("chunsim"),
+    characterId: text("characterId").notNull().default("choonsim"),
     title: text("title").notNull(),
     userId: text("userId"),
     personaMode: text("personaMode").notNull().default("lover"),

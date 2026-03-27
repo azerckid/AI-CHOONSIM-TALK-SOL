@@ -265,7 +265,7 @@ export default function EditCharacter() {
                                         name="id"
                                         defaultValue={character?.id}
                                         readOnly={!isNew}
-                                        placeholder="e.g. chunsim"
+                                        placeholder="e.g. choonsim"
                                         className={cn(
                                             "w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-primary/50 transition-all font-bold",
                                             !isNew && "opacity-50 cursor-not-allowed"

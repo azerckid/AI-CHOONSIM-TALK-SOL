@@ -44,7 +44,7 @@ export function buildStreamSystemInstruction(params: StreamSystemInstructionPara
     if (character.personaPrompt) {
         systemInstruction = character.personaPrompt;
 
-        if (characterId === "chunsim") {
+        if (characterId === "choonsim") {
             const modePrompt = PERSONA_PROMPTS[personaMode] || PERSONA_PROMPTS.hybrid;
             const memoryInfo = currentSummary ? `\n\n이전 대화 요약: ${currentSummary}` : "";
             systemInstruction = `${character.personaPrompt}\n\n${modePrompt}${memoryInfo}`;
@@ -150,7 +150,7 @@ export async function* streamAIResponse(
     currentSummary: string = "",
     mediaUrl: string | null = null,
     userId: string | null = null,
-    characterId: string = "chunsim",
+    characterId: string = "choonsim",
     subscriptionTier: SubscriptionTier = "FREE",
     giftContext?: { amount: number; itemId: string; countInSession?: number },
     abortSignal?: AbortSignal,

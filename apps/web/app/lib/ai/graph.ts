@@ -47,7 +47,7 @@ const ChatStateAnnotation = Annotation.Root({
     }),
     characterId: Annotation<string>({
         reducer: (x, y) => y ?? x,
-        default: () => "chunsim",
+        default: () => "choonsim",
     }),
     characterName: Annotation<string | null>({
         reducer: (x, y) => y ?? x,
@@ -88,7 +88,7 @@ const analyzePersonaNode = async (state: typeof ChatStateAnnotation.State) => {
     if (state.personaPrompt) {
         systemInstruction = state.personaPrompt;
 
-        if (state.characterId === "chunsim") {
+        if (state.characterId === "choonsim") {
             let effectiveMode = state.personaMode;
             const travelKeywords = ["여행", "비행기", "호텔", "숙소", "일정", "가고 싶어", "추천해줘", "도쿄", "오사카", "제주도"];
             if (travelKeywords.some(kw => lastMessageText.includes(kw))) {
@@ -399,7 +399,7 @@ export async function generateAIResponse(
     currentSummary: string = "",
     mediaUrl: string | null = null,
     userId: string | null = null,
-    characterId: string = "chunsim",
+    characterId: string = "choonsim",
     subscriptionTier: SubscriptionTier = "FREE",
     giftContext?: { amount: number; itemId: string; countInSession?: number },
     characterName?: string | null,

@@ -29,7 +29,7 @@ const chatSchema = z.object({
     conversationId: z.string().uuid(),
     personality: z.enum(["idol", "lover", "hybrid", "roleplay"]).optional(),
     mediaUrl: z.string().optional().nullable().transform(val => val === "" ? null : val),
-    characterId: z.string().optional().default("chunsim"),
+    characterId: z.string().optional().default("choonsim"),
     giftContext: z.object({
         amount: z.number(),
         itemId: z.string(),

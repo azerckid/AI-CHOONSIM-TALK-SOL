@@ -10,7 +10,7 @@ function getApiKey(): string | null {
 }
 
 const CHARACTER_VOICE_MAP: Record<string, string | undefined> = {
-    chunsim: process.env.ELEVENLABS_VOICE_ID_CHOONSIM ?? process.env.ELEVENLABS_VOICE_ID,
+    choonsim: process.env.ELEVENLABS_VOICE_ID_CHOONSIM ?? process.env.ELEVENLABS_VOICE_ID,
     rina: process.env.ELEVENLABS_VOICE_ID_RINA,
 };
 
@@ -18,7 +18,7 @@ const CHARACTER_VOICE_MAP: Record<string, string | undefined> = {
  * 캐릭터 ID에 해당하는 Voice ID 반환. 미설정 시 null.
  */
 export function getVoiceIdForCharacter(characterId?: string | null): string | null {
-    const key = characterId ?? "chunsim";
+    const key = characterId ?? "choonsim";
     return CHARACTER_VOICE_MAP[key] ?? null;
 }
 
