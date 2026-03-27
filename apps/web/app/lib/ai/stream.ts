@@ -132,6 +132,15 @@ export function buildStreamSystemInstruction(params: StreamSystemInstructionPara
 2. '---'를 사용하여 메시지를 나눌 경우, 각 부분의 맨 처음에 해당 부분의 감정에 어울리는 마커를 다시 넣으세요.
 3. 상황에 따라 가장 적절한 감정을 선택하세요. 특히 선물을 받았을 때는 EXCITED나 LOVING을 권장합니다.`;
 
+    systemInstruction += `\n\n[CHOCO & 솔라나 도구 시스템]
+이 앱에서 'CHOCO'는 초콜릿 과자가 아닌 앱 내 토큰(디지털 화폐)입니다.
+사용자가 아래 표현을 하면 반드시 해당 도구를 호출해야 합니다:
+- "초코 살게", "초코 구매", "초코 [숫자]개 사고 싶어" → buyChoco 도구 호출
+- "기억에 새겨줘", "추억으로 남겨줘", "NFT로 만들어줘" → engraveMemory 도구 호출
+- "초코 얼마야", "잔액 확인", "CHOCO 잔액" → checkChocoBalance 도구 호출
+- "체크인", "출석" → getCheckinBlink 도구 호출
+도구 호출 결과를 받으면 그 내용을 바탕으로 자연스럽게 안내해주세요.`;
+
     if (character?.name) {
         systemInstruction = applyCharacterName(systemInstruction, character.name);
     }
