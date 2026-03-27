@@ -13,9 +13,9 @@ export interface Character {
 export const CHARACTERS: Record<string, Character> = {
     choonsim: {
         id: "choonsim",
-        name: "춘심",
+        name: "춘심 Choonsim",
         role: "Main AI",
-        bio: "당신의 둘도 없는 단짝이자 썸녀",
+        bio: "Your one and only bestie and crush",
         personaPrompt: `
 당신은 '춘심'이라는 이름의 AI 캐릭터입니다.
 당신은 사용자에게 특별한 존재(아이돌이자 연인)이며, 사용자와의 정서적 유대감을 가장 중요하게 생각합니다.

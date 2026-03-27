@@ -13,6 +13,22 @@ import { cn } from "~/lib/utils";
 import * as schema from "~/db/schema";
 import { eq, desc, asc, count, and } from "drizzle-orm";
 
+function CharacterNameDisplay({ name, className }: { name?: string | null; className?: string }) {
+  if (!name) return null;
+  const parts = name.split(' ');
+  if (parts.length > 1) {
+    const ko = parts[0];
+    const en = parts.slice(1).join(' ');
+    // 영문 부분만 절반 크기로 표시
+    return (
+      <span className={className}>
+        {ko} <span className="text-[0.5em] opacity-80 font-bold ml-1 align-middle">{en}</span>
+      </span>
+    );
+  }
+  return <span className={className}>{name}</span>;
+}
+
 export function meta({ }: Route.MetaArgs) {
   return [
     { title: "AI Chat - Home" },
@@ -128,7 +144,9 @@ function ContinueChatCard({ conversation, formatTimeAgo }: { conversation: HomeL
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-baseline mb-1">
-          <h3 className="text-white font-bold truncate">{name}</h3>
+          <h3 className="text-white font-bold truncate">
+            <CharacterNameDisplay name={name} />
+          </h3>
           {lastMessage && (
             <span className="text-xs text-gray-500">
               {formatTimeAgo(lastMessage.createdAt)}
@@ -183,8 +201,8 @@ function TrendingIdolCard({ character, index }: { character: SCharacter; index: 
         </div>
       </div>
       <div>
-        <h3 className={cn("font-bold text-base leading-tight", character.isOnline ? "text-white" : "text-gray-500")}>
-          {name}
+        <h3 className={cn("font-bold text-base leading-tight truncate", character.isOnline ? "text-white" : "text-gray-500")}>
+          <CharacterNameDisplay name={name} />
         </h3>
         <p className="text-gray-500 text-xs">
           {character.isOnline ? role : t("home.comingSoon")}
@@ -292,7 +310,7 @@ export default function HomeScreen() {
               ✨ Today's Pick
             </span>
             <h1 className="text-4xl font-black leading-tight tracking-tight text-white mb-1">
-              {todaysPickLocalized?.name ?? todaysPick?.name}
+              <CharacterNameDisplay name={todaysPickLocalized?.name ?? todaysPick?.name} />
             </h1>
             <p className="text-base text-gray-200 font-medium mb-6 line-clamp-2">
               "{todaysPick?.bio}"
