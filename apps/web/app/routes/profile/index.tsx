@@ -1,15 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BottomNavigation } from "~/components/layout/BottomNavigation";
-import { WalletButton } from "~/components/solana/WalletButton";
 import { WalletAddressForm } from "~/components/solana/WalletAddressForm";
+import { WalletButton } from "~/components/solana/WalletButton";
 
-/** 프로필 내 지갑 버튼 — useWallet이 없으면 조용히 null 반환 */
+/** 프로필 내 지갑 버튼 — SSR에서는 null 반환 (useWallet은 Provider 컨텍스트 필요) */
 function WalletButtonInline() {
-  try {
-    return <WalletButton />;
-  } catch {
-    return null;
-  }
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted) return null;
+  return <WalletButton />;
 }
 import { db } from "~/lib/db.server";
 import { auth } from "~/lib/auth.server";
