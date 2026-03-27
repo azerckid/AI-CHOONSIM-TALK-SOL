@@ -1,7 +1,7 @@
 /**
  * AI 스트리밍 응답 — buildStreamSystemInstruction + streamAIResponse
  */
-import { HumanMessage, SystemMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
+import { HumanMessage, SystemMessage, AIMessage, ToolMessage, BaseMessage } from "@langchain/core/messages";
 import { DateTime } from "luxon";
 import { logger } from "../logger.server";
 import {
@@ -206,6 +206,114 @@ export async function* streamAIResponse(
     messages.push(lastMessage);
 
     try {
+        // ── Solana 도구 바인딩 (userId가 있는 경우) ──────────────────────────
+        // 선물/이미지 전용 메시지는 도구 불필요 → 스킵
+        const shouldUseSolanaTools = !!userId && !!userMessage.trim() && !giftContext;
+        let solanaTools: Array<{ name: string; invoke(input: unknown): Promise<unknown> }> = [];
+
+        if (shouldUseSolanaTools) {
+            try {
+                const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
+                solanaTools = getChoonsimSolanaTools(userId) as typeof solanaTools;
+            } catch (e) {
+                logger.error({ category: "SYSTEM", message: "Failed to load Solana tools:", stackTrace: (e as Error).stack });
+            }
+        }
+
+        // ── Phase 1: 도구 호출 여부 확인 (non-streaming invoke) ─────────────
+        // 도구가 있을 때만 tool-bound 모델로 먼저 invoke해서 tool_calls 감지
+        if (solanaTools.length > 0) {
+            let toolCheckResponse;
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const modelWithTools = model.bindTools(solanaTools as any);
+                toolCheckResponse = await modelWithTools.invoke(messages);
+            } catch (e) {
+                logger.error({ category: "SYSTEM", message: "Tool-bound invoke failed, falling back to stream:", stackTrace: (e as Error).stack });
+                toolCheckResponse = null;
+            }
+
+            if (
+                toolCheckResponse &&
+                Array.isArray(toolCheckResponse.tool_calls) &&
+                toolCheckResponse.tool_calls.length > 0
+            ) {
+                // ── Phase 2a: 도구 실행 후 최종 응답 스트리밍 ───────────────
+                const toolResultMessages: BaseMessage[] = [...messages, toolCheckResponse];
+
+                for (const toolCall of toolCheckResponse.tool_calls) {
+                    const tool = solanaTools.find((t) => t.name === toolCall.name);
+                    if (!tool) continue;
+                    try {
+                        const result = await tool.invoke(toolCall.args as unknown);
+                        toolResultMessages.push(
+                            new ToolMessage({
+                                content: String(result),
+                                tool_call_id: toolCall.id ?? toolCall.name,
+                            })
+                        );
+                        logger.info({ category: "SYSTEM", message: `[Tool] ${toolCall.name} executed` });
+                    } catch (e) {
+                        logger.error({ category: "SYSTEM", message: `[Tool] ${toolCall.name} failed:`, stackTrace: (e as Error).stack });
+                        toolResultMessages.push(
+                            new ToolMessage({
+                                content: "도구 실행 중 오류가 발생했어. 잠시 후 다시 시도해줘!",
+                                tool_call_id: toolCall.id ?? toolCall.name,
+                            })
+                        );
+                    }
+                }
+
+                // 도구 결과를 포함한 최종 응답 스트리밍
+                const finalStream = await model.stream(toolResultMessages, { signal: abortSignal });
+                let lastChunkTool: unknown = null;
+
+                for await (const chunk of finalStream) {
+                    if (abortSignal?.aborted) break;
+                    if ((chunk as { content?: unknown }).content) {
+                        const cleaned = removeEmojis((chunk as { content: { toString(): string } }).content.toString());
+                        if (cleaned) yield { type: 'content' as const, content: cleaned };
+                    }
+                    lastChunkTool = chunk;
+                }
+
+                // 사용량 추출
+                if (lastChunkTool && !abortSignal?.aborted) {
+                    const lc = lastChunkTool as Record<string, unknown>;
+                    type UsageMeta = { input_tokens?: number; output_tokens?: number; total_tokens?: number };
+                    const usage = ((lc.response_metadata as Record<string, unknown>)?.usage_metadata
+                        || (lc.kwargs as Record<string, unknown>)?.usage_metadata
+                        || lc.usage_metadata) as UsageMeta | null;
+                    if (usage) {
+                        yield { type: 'usage' as const, usage: {
+                            promptTokens: usage.input_tokens || 0,
+                            completionTokens: usage.output_tokens || 0,
+                            totalTokens: usage.total_tokens || (usage.input_tokens || 0) + (usage.output_tokens || 0),
+                        }};
+                    }
+                }
+                return; // 도구 실행 완료
+            }
+
+            // 도구 호출 없음 → toolCheckResponse의 content를 그대로 사용
+            if (toolCheckResponse?.content) {
+                const cleaned = removeEmojis(String(toolCheckResponse.content));
+                if (cleaned) yield { type: 'content' as const, content: cleaned };
+
+                const meta = ((toolCheckResponse as unknown) as Record<string, unknown>).usage_metadata as
+                    { input_tokens?: number; output_tokens?: number; total_tokens?: number } | undefined;
+                if (meta) {
+                    yield { type: 'usage' as const, usage: {
+                        promptTokens: meta.input_tokens || 0,
+                        completionTokens: meta.output_tokens || 0,
+                        totalTokens: meta.total_tokens || (meta.input_tokens || 0) + (meta.output_tokens || 0),
+                    }};
+                }
+                return;
+            }
+        }
+
+        // ── Phase 2b: 도구 없음 → 일반 스트리밍 ────────────────────────────
         const stream = await model.stream(messages, { signal: abortSignal });
         let lastChunk: unknown = null;
 
