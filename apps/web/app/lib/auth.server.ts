@@ -153,6 +153,16 @@ export const auth = betterAuth({
             create: {
                 after: async (user) => {
                     logger.info({ category: "AUTH", message: `New user created: ${user.id} (${user.email})` });
+                    // 가입 보너스: 100 CHOCO 즉시 지급
+                    try {
+                        await db
+                            .update(schema.user)
+                            .set({ chocoBalance: "100", updatedAt: new Date() })
+                            .where(eq(schema.user.id, user.id));
+                        logger.info({ category: "AUTH", message: `Welcome bonus granted: 100 CHOCO → ${user.id}` });
+                    } catch (e) {
+                        logger.error({ category: "AUTH", message: `Failed to grant welcome bonus for ${user.id}:`, stackTrace: (e as Error).stack });
+                    }
                 }
             }
         },
