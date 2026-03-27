@@ -3,6 +3,13 @@ import { cn } from "~/lib/utils";
 import { GiftSelector } from "./GiftSelector";
 import type { SItem, SUserInventory } from "~/lib/types/routes";
 
+const SLASH_COMMANDS = [
+  { command: "/choco", args: "[수량]", desc: "CHOCO 구매" },
+  { command: "/balance", args: "", desc: "CHOCO 잔액 확인" },
+  { command: "/engrave", args: "[제목]", desc: "기억 각인 (200 CHOCO)" },
+  { command: "/checkin", args: "", desc: "오늘의 체크인" },
+] as const;
+
 interface MessageInputProps {
   onSend?: (message: string, mediaUrl?: string) => void;
   onGift?: (itemId: string, amount: number) => Promise<void>;
@@ -34,6 +41,13 @@ export function MessageInput({
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [isGiftOpen, setIsGiftOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 슬래시 커맨드 힌트
+  const showSlashHint = message === "/" || (message.startsWith("/") && !message.includes(" "));
+  const slashFilter = message.slice(1).toLowerCase();
+  const filteredCommands = SLASH_COMMANDS.filter((c) =>
+    c.command.slice(1).startsWith(slashFilter)
+  );
 
   const handleSend = () => {
     if ((message.trim() || uploadedUrl) && !disabled && !isUploading && onSend) {
@@ -108,6 +122,26 @@ export function MessageInput({
           userInventory={userInventory}
           heartItem={heartItem}
         />
+      )}
+
+      {/* 슬래시 커맨드 힌트 팝업 */}
+      {showSlashHint && filteredCommands.length > 0 && (
+        <div className="absolute bottom-full left-3 right-3 mb-1 bg-surface-dark border border-white/10 rounded-2xl overflow-hidden shadow-xl z-50">
+          {filteredCommands.map((cmd) => (
+            <button
+              key={cmd.command}
+              type="button"
+              onClick={() => setMessage(cmd.args ? `${cmd.command} ` : cmd.command)}
+              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
+            >
+              <span className="text-sm font-mono text-primary font-bold shrink-0">
+                {cmd.command}
+                {cmd.args && <span className="text-white/40 font-normal"> {cmd.args}</span>}
+              </span>
+              <span className="text-xs text-white/50 truncate">{cmd.desc}</span>
+            </button>
+          ))}
+        </div>
       )}
 
       {previewUrl && (

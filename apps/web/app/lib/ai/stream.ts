@@ -215,6 +215,16 @@ export async function* streamAIResponse(
     messages.push(lastMessage);
 
     try {
+        // ── 슬래시 커맨드 처리 (/choco, /balance, /engrave, /checkin) ────────
+        // AI 모델 호출 없이 도구를 직접 실행 → 즉각 응답
+        if (userId && userMessage.startsWith("/")) {
+            const cmdResult = await executeSlashCommand(userMessage.trim(), userId);
+            if (cmdResult !== null) {
+                yield { type: "content" as const, content: cmdResult };
+                return;
+            }
+        }
+
         // ── Solana 도구 바인딩 (userId가 있는 경우) ──────────────────────────
         // 선물/이미지 전용 메시지는 도구 불필요 → 스킵
         const shouldUseSolanaTools = !!userId && !!userMessage.trim() && !giftContext;
@@ -369,5 +379,54 @@ export async function* streamAIResponse(
         }
         logger.error({ category: "SYSTEM", message: "Stream Error:", stackTrace: (error as Error).stack });
         yield { type: 'content' as const, content: "아... 갑자기 머리가 핑 돌아... 미안해, 잠시만 이따가 다시 불러줄래?" };
+    }
+}
+
+// ── 슬래시 커맨드 실행 ─────────────────────────────────────────────────────
+/**
+ * /choco [수량]   — CHOCO 구매 안내 (buyChoco 도구)
+ * /balance        — CHOCO 잔액 확인 (checkChocoBalance 도구)
+ * /engrave [제목] — cNFT 기억 각인 (engraveMemory 도구, 200 CHOCO)
+ * /checkin        — 일일 체크인 Blink 안내 (getCheckinBlink 도구)
+ *
+ * 인식된 커맨드면 결과 문자열 반환, 아니면 null 반환
+ */
+async function executeSlashCommand(rawMessage: string, userId: string): Promise<string | null> {
+    const parts = rawMessage.split(/\s+/);
+    const command = parts[0].toLowerCase();
+    const args = parts.slice(1);
+
+    try {
+        const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
+        const tools = getChoonsimSolanaTools(userId) as Array<{ name: string; invoke(input: unknown): Promise<unknown> }>;
+
+        const run = (name: string, input: unknown) => {
+            const tool = tools.find((t) => t.name === name);
+            if (!tool) return null;
+            return tool.invoke(input).then(String);
+        };
+
+        switch (command) {
+            case "/choco": {
+                const amount = args[0] ? parseInt(args[0], 10) : 100;
+                if (isNaN(amount) || amount <= 0) return "숫자를 입력해줘! 예: /choco 500";
+                return run("buyChoco", { amount });
+            }
+            case "/balance":
+                return run("checkChocoBalance", {});
+
+            case "/engrave": {
+                const title = args.join(" ") || undefined;
+                return run("engraveMemory", { memoryTitle: title });
+            }
+            case "/checkin":
+                return run("getCheckinBlink", {});
+
+            default:
+                return null; // 알 수 없는 커맨드 → AI 응답으로 넘김
+        }
+    } catch (e) {
+        logger.error({ category: "SYSTEM", message: "Slash command error:", stackTrace: (e as Error).stack });
+        return "커맨드 실행 중 오류가 발생했어. 잠시 후 다시 시도해줘!";
     }
 }
