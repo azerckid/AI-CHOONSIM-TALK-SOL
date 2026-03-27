@@ -400,27 +400,27 @@ async function executeSlashCommand(rawMessage: string, userId: string): Promise<
         const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
         const tools = getChoonsimSolanaTools(userId) as Array<{ name: string; invoke(input: unknown): Promise<unknown> }>;
 
-        const run = (name: string, input: unknown) => {
+        const run = async (name: string, input: unknown): Promise<string | null> => {
             const tool = tools.find((t) => t.name === name);
             if (!tool) return null;
-            return tool.invoke(input).then(String);
+            return String(await tool.invoke(input));
         };
 
         switch (command) {
             case "/choco": {
                 const amount = args[0] ? parseInt(args[0], 10) : 100;
                 if (isNaN(amount) || amount <= 0) return "숫자를 입력해줘! 예: /choco 500";
-                return run("buyChoco", { amount });
+                return await run("buyChoco", { amount });
             }
             case "/balance":
-                return run("checkChocoBalance", {});
+                return await run("checkChocoBalance", {});
 
             case "/engrave": {
                 const title = args.join(" ") || undefined;
-                return run("engraveMemory", { memoryTitle: title });
+                return await run("engraveMemory", { memoryTitle: title });
             }
             case "/checkin":
-                return run("getCheckinBlink", {});
+                return await run("getCheckinBlink", {});
 
             default:
                 return null; // 알 수 없는 커맨드 → AI 응답으로 넘김
