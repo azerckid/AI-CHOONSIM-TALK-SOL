@@ -1,4 +1,46 @@
 import { cn } from "~/lib/utils";
+import { ChocoPayCard } from "~/components/payment/ChocoPayCard";
+
+// [PHANTOM:100] 마커 파싱
+const PHANTOM_MARKER = /\[PHANTOM:(\d+)\]/;
+
+const URL_PATTERN = /(https?:\/\/[^\s]+)/g;
+
+function isUrl(s: string) {
+  return /^https?:\/\/[^\s]+$/.test(s);
+}
+
+function RichContent({ text }: { text: string }) {
+  const lines = text.split("\n");
+  return (
+    <>
+      {lines.map((line, i) => {
+        const parts = line.split(URL_PATTERN);
+        return (
+          <span key={i}>
+            {parts.map((part, j) =>
+              isUrl(part) ? (
+                <a
+                  key={j}
+                  href={part}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline break-all hover:opacity-80 transition-opacity"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {part}
+                </a>
+              ) : (
+                part
+              )
+            )}
+            {i < lines.length - 1 && "\n"}
+          </span>
+        );
+      })}
+    </>
+  );
+}
 
 interface MessageBubbleProps {
   sender: "user" | "ai";
@@ -119,11 +161,15 @@ export function MessageBubble({
             <img src={mediaUrl} alt="AI shared" className="w-full h-auto max-h-60 object-cover" />
           </div>
         )}
-        <div className="px-5 py-3 bg-white dark:bg-surface-dark rounded-2xl rounded-tl-sm text-slate-800 dark:text-gray-100 shadow-sm text-[15px] leading-relaxed relative">
-          {content}
+        <div className="px-5 py-3 bg-white dark:bg-surface-dark rounded-2xl rounded-tl-sm text-slate-800 dark:text-gray-100 shadow-sm text-[15px] leading-relaxed relative whitespace-pre-wrap break-words">
+          <RichContent text={content.replace(PHANTOM_MARKER, "").trimEnd()} />
           {isStreaming && (
             <span className="inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse align-middle" />
           )}
+          {(() => {
+            const m = PHANTOM_MARKER.exec(content);
+            return m ? <ChocoPayCard choco={parseInt(m[1], 10)} /> : null;
+          })()}
         </div>
         {timestamp && (
           <div className="flex items-center gap-2 ml-1">
