@@ -14,6 +14,7 @@ const MENU_ITEMS = [
     { name: "Users", icon: "group", href: "/admin/users" },
     { name: "Payments", icon: "payments", href: "/admin/payments" },
     { name: "Content", icon: "article", href: "/admin/content" },
+    { name: "Blinks", icon: "link", href: "/admin/blinks" },
     { name: "System", icon: "monitoring", href: "/admin/system" },
 ];
 

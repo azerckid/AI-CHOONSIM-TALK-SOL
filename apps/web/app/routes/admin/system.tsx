@@ -394,6 +394,39 @@ export default function AdminSystem() {
                                 <p className="text-[10px] text-white/40 font-medium">All administrative endpoints are protected by MFA/Session validation.</p>
                             </div>
                         </div>
+
+                        <div className="bg-[#1A1821] border border-white/5 rounded-[40px] p-8 space-y-6">
+                            <h3 className="text-xs font-black text-white/60 uppercase tracking-[0.3em] flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary text-sm font-bold">lan</span>
+                                On-chain Info (Devnet)
+                            </h3>
+                            <div className="space-y-4 text-[11px] font-mono">
+                                <div className="space-y-1">
+                                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">CHOCO Token</p>
+                                    <a
+                                        href="https://explorer.solana.com/address/E2o1MKpnwh5vELG4FDgiX2NA33L11hXPVfAPD3ai4GWf?cluster=devnet"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1.5 text-primary/60 hover:text-primary transition-colors break-all"
+                                    >
+                                        E2o1MKpnwh5vELG4FDgiX2NA33L11hXPVfAPD3ai4GWf
+                                        <span className="material-symbols-outlined text-[12px] shrink-0">open_in_new</span>
+                                    </a>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">Merkle Tree</p>
+                                    <a
+                                        href="https://explorer.solana.com/address/AJxCqbFdWLmQ7xMqBQN3AXja9paZJZ9qrqvwViXVkXGF?cluster=devnet"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1.5 text-primary/60 hover:text-primary transition-colors break-all"
+                                    >
+                                        AJxCqbFdWLmQ7xMqBQN3AXja9paZJZ9qrqvwViXVkXGF
+                                        <span className="material-symbols-outlined text-[12px] shrink-0">open_in_new</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

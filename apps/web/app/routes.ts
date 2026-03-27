@@ -127,6 +127,7 @@ export default [
   route("admin/content/missions", "routes/admin/missions/index.tsx"),
   route("admin/content/missions/new", "routes/admin/missions/edit.tsx", { id: "admin-mission-new" }),
   route("admin/content/missions/:id", "routes/admin/missions/edit.tsx", { id: "admin-mission-edit" }),
+  route("admin/blinks", "routes/admin/blinks.tsx"),
   route("admin/system", "routes/admin/system.tsx"),
   route("admin/*", "routes/admin/$.tsx"),
 
