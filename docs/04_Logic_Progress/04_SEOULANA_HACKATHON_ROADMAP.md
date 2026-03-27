@@ -16,7 +16,7 @@
 | Merkle Tree (cNFT) | ✅ 배포 완료 | `AJxCqbFdWLmQ7xMqBQN3AXja9paZJZ9qrqvwViXVkXGF` (depth=14) |
 | cNFT 민팅 API | ✅ 완료 | `POST /api/solana/mint-memory` |
 | AI Agent Kit | ✅ 완료 | LangGraph 5개 Solana 툴 통합 |
-| Blinks 데모 페이지 | ✅ 완료 | `/blinks` 라우트 |
+| Blinks 관리 페이지 | ✅ 완료 | `/admin/blinks` 라우트 (어드민 전용) |
 | WalletButton UI | ✅ 완료 | Profile 페이지 Solana 섹션 |
 | cNFT 메모리 앨범 UI | 🔲 미구현 | `/profile/memories` — DAS API 조회 |
 | Vercel 배포 | 🔲 미완 | 해커톤 제출용 라이브 URL 필요 |
@@ -47,7 +47,7 @@
 | Merkle Tree Devnet 배포 | ✅ `AJxCqbFdWLmQ7xMqBQN3AXja9paZJZ9qrqvwViXVkXGF` |
 | `cnft.server.ts` + `POST /api/solana/mint-memory` | ✅ |
 | AI Agent Kit — LangGraph 5개 툴 통합 | ✅ |
-| `/blinks` 데모 페이지 + WalletButton | ✅ |
+| `/admin/blinks` 관리 페이지 + WalletButton | ✅ |
 | `verify-solana-stack.ts` 검증 스크립트 | ✅ 10/10 PASS |
 
 ---
