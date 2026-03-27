@@ -7,6 +7,7 @@ import { findReference, validateTransfer } from "@solana/pay";
 import { eq, sql } from "drizzle-orm";
 import BigNumber from "bignumber.js";
 import { logger } from "~/lib/logger.server";
+import { transferChocoSPL } from "~/lib/solana/agent-kit.server";
 
 // Solana RPC Connection (기본적으로 메인넷 사용, 테스트 시 devnet으로 변경 가능)
 const SOLANA_RPC_ENDPOINT = process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com";
@@ -64,6 +65,8 @@ export async function action({ request }: ActionFunctionArgs) {
             });
 
             // 4. 검증 성공 시 DB 업데이트 및 크레딧 지급
+            const chocoGranted = paymentRecord.creditsGranted ?? 0;
+
             await db.transaction(async (tx) => {
                 // 결제 상태 업데이트
                 await tx.update(schema.payment)
@@ -77,17 +80,45 @@ export async function action({ request }: ActionFunctionArgs) {
                 // 유저 크레딧 충전
                 await tx.update(schema.user)
                     .set({
-                        credits: sql`${schema.user.credits} + ${paymentRecord.creditsGranted}`
+                        credits: sql`${schema.user.credits} + ${chocoGranted}`,
+                        // CHOCO 잔액도 DB에 반영 (SPL 전송과 함께 동기화)
+                        chocoBalance: sql`CAST(CAST(${schema.user.chocoBalance} AS REAL) + ${chocoGranted} AS TEXT)`,
+                        updatedAt: new Date(),
                     })
                     .where(eq(schema.user.id, paymentRecord.userId));
             });
 
-            logger.info({ category: "PAYMENT", message: `[SolanaPay] Payment COMPLETED: user=${paymentRecord.userId}, signature=${signatureInfo.signature}` });
+            logger.info({ category: "PAYMENT", message: `[SolanaPay] Payment COMPLETED: user=${paymentRecord.userId}, choco=${chocoGranted}, signature=${signatureInfo.signature}` });
+
+            // 5. 유저 지갑으로 CHOCO SPL 전송 (지갑이 등록된 경우)
+            // DB 트랜잭션과 별도로 실행 — SPL 전송 실패가 결제 완료를 롤백하지 않음
+            let chocoTxSignature: string | null = null;
+            if (chocoGranted > 0) {
+                try {
+                    const user = await db.query.user.findFirst({
+                        where: eq(schema.user.id, paymentRecord.userId),
+                        columns: { solanaWallet: true },
+                    });
+
+                    if (user?.solanaWallet) {
+                        const result = await transferChocoSPL(user.solanaWallet, chocoGranted);
+                        chocoTxSignature = result.signature;
+                        logger.info({ category: "PAYMENT", message: `[SolanaPay] CHOCO SPL sent: ${chocoGranted} → ${user.solanaWallet}, tx=${chocoTxSignature}` });
+                    } else {
+                        logger.info({ category: "PAYMENT", message: `[SolanaPay] No solanaWallet for user ${paymentRecord.userId}, skipping SPL transfer` });
+                    }
+                } catch (splErr) {
+                    // SPL 전송 실패는 로그만 남기고 결제는 완료 처리
+                    logger.error({ category: "PAYMENT", message: `[SolanaPay] CHOCO SPL transfer failed (payment still completed):`, stackTrace: (splErr as Error).stack });
+                }
+            }
 
             return Response.json({
                 success: true,
                 status: "COMPLETED",
-                signature: signatureInfo.signature
+                signature: signatureInfo.signature,
+                chocoGranted,
+                ...(chocoTxSignature ? { chocoTxSignature } : {}),
             });
 
         } catch (validationError) {
