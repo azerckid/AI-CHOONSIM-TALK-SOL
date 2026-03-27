@@ -36,6 +36,8 @@ export const user = sqliteTable("User", {
     heartsCount: integer("heartsCount").notNull().default(0),
     /** Phase 3-1: BASIC+ 주 1회 무료 선톡 쿼터. 해당 주에 무료 선톡 사용한 시각. */
     lastFreePresendAt: integer("lastFreePresendAt", { mode: "timestamp" }),
+    /** Solana Phantom 지갑 주소 (Base58). cNFT 민팅 및 SPL CHOCO 전송에 사용. */
+    solanaWallet: text("solanaWallet"),
 });
 
 export const account = sqliteTable("account", {

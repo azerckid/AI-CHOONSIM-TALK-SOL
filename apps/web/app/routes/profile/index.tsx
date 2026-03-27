@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { BottomNavigation } from "~/components/layout/BottomNavigation";
 import { WalletButton } from "~/components/solana/WalletButton";
+import { WalletAddressForm } from "~/components/solana/WalletAddressForm";
 
 /** 프로필 내 지갑 버튼 — useWallet이 없으면 조용히 null 반환 */
 function WalletButtonInline() {
@@ -361,26 +362,22 @@ export default function ProfileScreen() {
         <section className="px-4 mb-6">
           <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3 ml-2">Solana</h3>
           <div className="bg-surface-dark/50 border border-white/5 rounded-2xl p-4 backdrop-blur-sm space-y-3">
-            {/* Wallet Connect */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-[#9945FF]">account_balance_wallet</span>
-                <span className="text-sm font-semibold text-white/90">Wallet</span>
+
+            {/* Phantom 지갑 연결 & 주소 등록 */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px] text-[#9945FF]">account_balance_wallet</span>
+                  <span className="text-sm font-semibold text-white/90">Phantom Wallet</span>
+                </div>
+                <WalletButtonInline />
               </div>
-              <WalletButtonInline />
+
+              {/* 지갑 주소 등록 폼 */}
+              <WalletAddressForm currentWallet={user?.solanaWallet ?? null} />
             </div>
+
             <div className="h-px bg-white/5" />
-            {/* Blinks 바로가기 */}
-            <button
-              onClick={() => navigate("/blinks")}
-              className="w-full flex items-center justify-between hover:bg-white/5 rounded-xl p-2 -mx-2 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-[#9945FF]">bolt</span>
-                <span className="text-sm font-medium text-white/80">Try Blinks</span>
-              </div>
-              <span className="material-symbols-outlined text-[16px] text-white/30">chevron_right</span>
-            </button>
             {/* 기억 앨범 바로가기 */}
             <button
               onClick={() => navigate("/profile/memories")}

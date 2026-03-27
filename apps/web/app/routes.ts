@@ -63,6 +63,7 @@ export default [
   route("api/cron/mock-seed", "routes/api/cron/mock-seed.ts"),
   route("api/cron/mock-grant", "routes/api/cron/mock-grant.ts"),
   route("api/cron/mock-activity", "routes/api/cron/mock-activity.ts"),
+  route("api/user/wallet", "routes/api/user/wallet.ts"),
   route("api/account/delete", "routes/api/account/delete.ts"),
   route("api/push-subscription", "routes/api/push-subscription.ts"),
   route("api/stats/usage", "routes/api/stats/usage.ts"),
