@@ -272,6 +272,54 @@ SOLANA_RPC_URL=https://api.devnet.solana.com  # 해커톤 데모용 Devnet
 
 ---
 
+## 8. 현재 구현 현황 및 아키텍처
+
+> Last Updated: 2026-03-27
+
+### 8.1 Solana 용어 — Program
+
+Solana에서는 Ethereum의 "스마트컨트랙트(Smart Contract)"에 해당하는 개념을 **Program** 이라고 부른다. 온체인에 배포되어 실행되는 코드 단위를 지칭하는 Solana 공식 용어다.
+
+### 8.2 현재 구현된 Solana 기능
+
+| 기능 | 구현 파일 | 설명 |
+|:---|:---|:---|
+| 지갑 연결 | `components/solana/SolanaWalletProvider.tsx` | Phantom 지갑 연결 (wallet-adapter) |
+| Solana Pay | `components/payment/SolanaPayButton.tsx` | QR 코드 결제 → CHOCO 충전 |
+| Blinks/Actions | `routes/blinks.tsx` | 체크인, CHOCO 선물, 구독 (온체인 트랜잭션) |
+| cNFT 메모리 앨범 | `lib/solana/cnft.server.ts` | Bubblegum으로 특별한 순간을 cNFT로 발행 |
+
+### 8.3 사용 중인 공인 Program
+
+현재 프로젝트에는 **직접 작성한 온체인 Program이 없다.** 클라이언트 레이어만 존재하며, Solana 생태계에서 공인된 표준 Program들을 호출하는 방식으로 구현되어 있다.
+
+| Program | 운영 주체 | 위상 | 사용 목적 |
+|:---|:---|:---|:---|
+| **System Program** | Solana Labs (내장) | Solana 네이티브 프로그램 | SOL 전송 기반 |
+| **SPL Token Program** | Solana Labs | Solana 공식 토큰 표준 | CHOCO 토큰 처리 |
+| **Memo Program** | Solana Labs | Solana 공식 내장 프로그램 | 체크인 온체인 기록 |
+| **Metaplex Bubblegum** | Metaplex Foundation | Solana cNFT 표준 제정 기관 | cNFT 메모리 발행 |
+
+Ethereum에서 ERC-20 표준 컨트랙트를 사용하는 것과 동일한 맥락이다. System Program / SPL Token / Memo는 Solana 프로토콜에 내장된 수준이며, Metaplex는 Solana Foundation과 협력하는 NFT 표준 재단이다.
+
+### 8.4 아키텍처 요약
+
+```
+[클라이언트 레이어] — 직접 작성한 코드
+  ├── React UI (wallet-adapter, SolanaPayButton, BlinksPage)
+  └── Server API (cnft.server.ts, actions/*)
+
+[온체인 레이어] — 남의 공인 Program 호출
+  ├── Metaplex Bubblegum → cNFT 발행
+  ├── System Program      → SOL 전송
+  ├── SPL Token Program   → 토큰 처리
+  └── Memo Program        → 온체인 기록
+```
+
+자체 Anchor Program 개발 계획은 없으며, 현재 기능 세트로 완결된 상태다.
+
+---
+
 ## Related Documents
 - **Concept_Design**: [Seoulana Pitch](../01_Concept_Design/03_SEOULANA_PITCH.md) - 전략 및 비즈니스 모델
 - **Logic_Progress**: [Seoulana Hackathon Roadmap](../04_Logic_Progress/04_SEOULANA_HACKATHON_ROADMAP.md) - 11일 구현 일정
