@@ -328,28 +328,11 @@ export function getChoonsimSolanaTools(userId: string) {
 
         if (!user?.solanaWallet) return PHANTOM_GUIDE;
 
-        const baseUrl = process.env.BETTER_AUTH_URL || "";
-        const shopUrl = `${baseUrl}/shop`;
-
-        // SOL 가격 안내 (Devnet 기준)
-        const priceMap: Record<number, string> = {
-          100: "0.001 SOL",
-          500: "0.004 SOL",
-          1000: "0.007 SOL",
-          5000: "0.030 SOL",
-        };
-
-        const nearest = [100, 500, 1000, 5000].reduce((prev, curr) =>
-          Math.abs(curr - amount) < Math.abs(prev - amount) ? curr : prev
-        );
-        const solPrice = priceMap[nearest] || "확인 필요";
-
         return (
           `${amount} CHOCO 구매할게! 🍫\n` +
-          `가격: ${solPrice} (Devnet)\n` +
-          `지갑: ${user.solanaWallet.slice(0, 4)}...${user.solanaWallet.slice(-4)}\n\n` +
-          `아래 링크에서 구매하면 바로 지갑으로 전송해줄게!\n` +
-          `${shopUrl}`
+          `지갑: ${user.solanaWallet.slice(0, 6)}…${user.solanaWallet.slice(-4)}\n` +
+          `아래 버튼으로 Phantom에서 바로 결제해줘! 💕\n` +
+          `[PHANTOM:${amount}]`
         );
       },
       {
