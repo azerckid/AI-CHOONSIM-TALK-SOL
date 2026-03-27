@@ -225,6 +225,17 @@ export async function* streamAIResponse(
             }
         }
 
+        // ── 자연어 CHOCO 의도 감지 (AI 재작성 없이 도구 직접 실행) ───────────
+        // Gemini가 도구 결과를 재작성하면 [PHANTOM:N] 마커가 사라지므로
+        // 자연어에서 의도를 직접 감지해 슬래시 커맨드처럼 처리
+        if (userId) {
+            const nlResult = await executeNaturalLanguageCommand(userMessage, userId);
+            if (nlResult !== null) {
+                yield { type: "content" as const, content: nlResult };
+                return;
+            }
+        }
+
         // ── Solana 도구 바인딩 (userId가 있는 경우) ──────────────────────────
         // 선물/이미지 전용 메시지는 도구 불필요 → 스킵
         const shouldUseSolanaTools = !!userId && !!userMessage.trim() && !giftContext;
@@ -380,6 +391,106 @@ export async function* streamAIResponse(
         logger.error({ category: "SYSTEM", message: "Stream Error:", stackTrace: (error as Error).stack });
         yield { type: 'content' as const, content: "아... 갑자기 머리가 핑 돌아... 미안해, 잠시만 이따가 다시 불러줄래?" };
     }
+}
+
+// ── 자연어 CHOCO 의도 감지 ────────────────────────────────────────────────
+/**
+ * 자연어에서 Solana 도구 호출 의도를 감지하고 직접 실행.
+ * Gemini의 도구 재작성 문제를 우회하기 위해 슬래시 커맨드와 동일하게 처리.
+ *
+ * 감지 패턴:
+ *   구매: "초코 100개 살게", "100 CHOCO 구매", "초코 살게", "CHOCO 500 사고 싶어"
+ *   잔액: "초코 얼마야", "잔액 확인", "CHOCO 잔액"
+ *   각인: "기억에 새겨줘", "추억으로 남겨줘", "NFT로 만들어줘"
+ *   체크인: "체크인", "출석"
+ */
+async function executeNaturalLanguageCommand(
+    message: string,
+    userId: string
+): Promise<string | null> {
+    const m = message.toLowerCase();
+
+    // ── 구매 의도 감지 ─────────────────────────────────────────────────────
+    const buyKeywords = ["살게", "살거야", "살래", "사고 싶", "사고싶", "구매", "충전", "buy", "purchase"];
+    const chocoKeywords = ["초코", "choco"];
+    const isChocoMention = chocoKeywords.some((k) => m.includes(k));
+    const isBuyIntent = buyKeywords.some((k) => m.includes(k));
+
+    if (isChocoMention && isBuyIntent) {
+        // 수량 추출 (숫자 중 가장 큰 것 or 첫 번째)
+        const numbers = message.match(/\d+/g)?.map(Number) ?? [];
+        const amount = numbers.length > 0 ? Math.max(...numbers) : 100;
+        const safeAmount = amount > 0 && amount <= 100000 ? amount : 100;
+
+        try {
+            const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
+            const tools = getChoonsimSolanaTools(userId) as Array<{ name: string; invoke(input: unknown): Promise<unknown> }>;
+            const tool = tools.find((t) => t.name === "buyChoco");
+            if (tool) return String(await tool.invoke({ amount: safeAmount }));
+        } catch (e) {
+            logger.error({ category: "SYSTEM", message: `[NL] buyChoco failed: ${e}` });
+        }
+        return null;
+    }
+
+    // ── 잔액 확인 의도 ─────────────────────────────────────────────────────
+    const balancePatterns = [
+        /초코.*얼마/,
+        /잔액.*확인/,
+        /잔액이.*얼마/,
+        /choco.*balance/i,
+        /balance.*choco/i,
+        /내.*초코.*있/,
+    ];
+    if (isChocoMention && balancePatterns.some((p) => p.test(m))) {
+        try {
+            const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
+            const tools = getChoonsimSolanaTools(userId) as Array<{ name: string; invoke(input: unknown): Promise<unknown> }>;
+            const tool = tools.find((t) => t.name === "checkChocoBalance");
+            if (tool) return String(await tool.invoke({}));
+        } catch (e) {
+            logger.error({ category: "SYSTEM", message: `[NL] checkChocoBalance failed: ${e}` });
+        }
+        return null;
+    }
+
+    // ── 기억 각인 의도 ─────────────────────────────────────────────────────
+    const engravePatterns = [
+        /기억.*새겨/,
+        /추억.*남겨/,
+        /nft.*만들/,
+        /온체인.*기록/,
+        /기록.*남겨/,
+    ];
+    if (engravePatterns.some((p) => p.test(m))) {
+        // 제목 추출: "기억에 새겨줘 [제목]" 형태
+        const titleMatch = message.match(/(?:기억|추억|nft|기록).*?[줘게]\s*(.+)?$/i);
+        const title = titleMatch?.[1]?.trim() || undefined;
+        try {
+            const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
+            const tools = getChoonsimSolanaTools(userId) as Array<{ name: string; invoke(input: unknown): Promise<unknown> }>;
+            const tool = tools.find((t) => t.name === "engraveMemory");
+            if (tool) return String(await tool.invoke({ memoryTitle: title }));
+        } catch (e) {
+            logger.error({ category: "SYSTEM", message: `[NL] engraveMemory failed: ${e}` });
+        }
+        return null;
+    }
+
+    // ── 체크인 의도 ────────────────────────────────────────────────────────
+    if (/체크인|출석/.test(m)) {
+        try {
+            const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
+            const tools = getChoonsimSolanaTools(userId) as Array<{ name: string; invoke(input: unknown): Promise<unknown> }>;
+            const tool = tools.find((t) => t.name === "getCheckinBlink");
+            if (tool) return String(await tool.invoke({}));
+        } catch (e) {
+            logger.error({ category: "SYSTEM", message: `[NL] getCheckinBlink failed: ${e}` });
+        }
+        return null;
+    }
+
+    return null; // 감지 안 됨 → AI 응답으로 넘김
 }
 
 // ── 슬래시 커맨드 실행 ─────────────────────────────────────────────────────
