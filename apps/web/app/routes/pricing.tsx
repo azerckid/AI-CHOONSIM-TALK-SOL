@@ -77,7 +77,7 @@ export default function PricingPage() {
     const handlePlanClick = (plan: SubscriptionPlan) => {
         if (user?.subscriptionTier === plan.tier || plan.tier === "FREE") {
             if (plan.tier === "FREE" && user?.subscriptionTier !== "FREE") {
-                toast.info("무료 플랜은 구독 만료 후 자동으로 적용됩니다.");
+                toast.info("The free plan will be applied automatically after your subscription expires.");
             }
             return;
         }
@@ -100,7 +100,7 @@ export default function PricingPage() {
 
     const handleTossSubscription = async () => {
         if (!tossClientKey || !selectedPlan || isProcessing) {
-            if (!tossClientKey) toast.error("토스페이먼츠 설정 오류");
+            if (!tossClientKey) toast.error("Toss Payments configuration error");
             return;
         }
 
@@ -120,21 +120,21 @@ export default function PricingPage() {
             await tossPayments.requestPayment("카드", {
                 amount: selectedPlan.monthlyPriceKRW,
                 orderId: orderId,
-                orderName: `${selectedPlan.name} 멤버십 (1개월)`,
+                orderName: `${selectedPlan.name} Membership (1 Month)`,
                 successUrl: `${window.location.origin}/payment/toss/success?type=SUBSCRIPTION&tier=${selectedPlan.tier}&amount=${selectedPlan.monthlyPriceKRW}`,
                 failUrl: `${window.location.origin}/payment/toss/fail?from=subscription`,
                 windowTarget: isMobile ? "self" : undefined,
             });
         } catch (error) {
             console.error("Toss Subscription Error:", error);
-            toast.error("결제 준비 중 오류가 발생했습니다.");
+            toast.error("An error occurred while preparing payment.");
             setIsProcessing(false);
         }
     };
 
     if (fetcher.data?.success && isModalOpen) {
         setIsModalOpen(false);
-        toast.success("구독이 활성화되었습니다! 환영합니다.");
+        toast.success("Subscription activated! Welcome!");
         navigate("/profile");
     } else if (fetcher.data?.error && isModalOpen) {
         toast.error(fetcher.data.error);
@@ -265,7 +265,7 @@ export default function PricingPage() {
                             </DialogTitle>
                             <DialogDescription className="text-white/60 font-medium pt-2">
                                 {paymentMethod === "TOSS" ? (
-                                    <><span className="text-primary text-lg font-bold">₩{selectedPlan?.monthlyPriceKRW.toLocaleString()}</span> / 월</>
+                                    <><span className="text-primary text-lg font-bold">₩{selectedPlan?.monthlyPriceKRW.toLocaleString()}</span> / mo</>
                                 ) : (
                                     <><span className="text-primary text-lg font-bold">${selectedPlan?.monthlyPrice}</span> / month</>
                                 )}
@@ -282,7 +282,7 @@ export default function PricingPage() {
                                     paymentMethod === "TOSS" ? "bg-white text-black shadow-lg" : "text-white/50 hover:text-white"
                                 )}
                             >
-                                국내 결제 (토스)
+                                Domestic (Toss)
                             </button>
                             <button
                                 onClick={() => setPaymentMethod("PAYPAL")}
@@ -319,11 +319,11 @@ export default function PricingPage() {
                                             }}
                                             onApprove={handleApproveSubscription}
                                             onCancel={() => {
-                                                toast.info("결제가 취소되었습니다.");
+                                                toast.info("Payment was canceled.");
                                             }}
                                             onError={(err) => {
                                                 console.error("PayPal Error:", err);
-                                                toast.error("결제 처리 중 오류가 발생했습니다.");
+                                                toast.error("An error occurred while processing payment.");
                                             }}
                                         />
                                     </PayPalScriptProvider>
@@ -346,14 +346,14 @@ export default function PricingPage() {
                                     ) : (
                                         <>
                                             <span className="material-symbols-outlined text-[20px]">payments</span>
-                                            멤버십 시작하기
+                                            Start Membership
                                         </>
                                     )}
                                 </Button>
                             )}
                             <p className="text-[10px] text-slate-400 text-center mt-3 px-1 leading-tight">
-                                결제 시 이용약관에 동의하게 됩니다.
-                                <br />언제든지 해지할 수 있습니다.
+                                By completing payment you agree to our Terms of Service.
+                                <br />You can cancel anytime.
                             </p>
                         </div>
                     </div>

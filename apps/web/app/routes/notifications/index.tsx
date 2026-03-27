@@ -79,10 +79,10 @@ function formatTimeAgo(date: Date): string {
   const t = DateTime.fromJSDate(new Date(date));
   const diff = now.diff(t, ["minutes", "hours", "days"]);
 
-  if (diff.minutes < 1) return "방금 전";
-  if (diff.minutes < 60) return `${Math.floor(diff.minutes)}분 전`;
-  if (diff.hours < 24) return `${Math.floor(diff.hours)}시간 전`;
-  if (diff.days < 7) return `${Math.floor(diff.days)}일 전`;
+  if (diff.minutes < 1) return "just now";
+  if (diff.minutes < 60) return `${Math.floor(diff.minutes)}m ago`;
+  if (diff.hours < 24) return `${Math.floor(diff.hours)}h ago`;
+  if (diff.days < 7) return `${Math.floor(diff.days)}d ago`;
   return t.toFormat("MM/dd");
 }
 
@@ -120,14 +120,14 @@ export default function NotificationsPage() {
         >
           <span className="material-symbols-outlined text-[24px]">arrow_back</span>
         </button>
-        <h1 className="text-white text-lg font-bold flex-1">알림</h1>
+        <h1 className="text-white text-lg font-bold flex-1">Notifications</h1>
         {unreadCount > 0 && (
           <button
             onClick={handleReadAll}
             disabled={fetcher.state === "submitting"}
             className="text-primary text-sm font-semibold hover:text-primary/80 transition-colors disabled:opacity-50"
           >
-            모두 읽음
+            Mark all as read
           </button>
         )}
       </div>
@@ -139,9 +139,9 @@ export default function NotificationsPage() {
             <span className="material-symbols-outlined text-[56px] text-white/20">
               notifications_off
             </span>
-            <p className="text-white/40 font-bold text-base">아직 알림이 없어요</p>
+            <p className="text-white/40 font-bold text-base">No notifications yet</p>
             <p className="text-white/20 text-sm text-center">
-              새로운 소식이 오면 여기에 알려드릴게요!
+              We'll let you know when something new arrives!
             </p>
           </div>
         ) : (

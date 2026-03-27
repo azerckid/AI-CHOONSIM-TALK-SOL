@@ -158,11 +158,7 @@ export default function ChatListScreen() {
     }
   };
 
-  // 춘심 1번, Rina 2번, 나머지 순서 (미서비스는 비활성)
-  const chunsim = allCharacters.find((c) => c.id === "chunsim");
-  const rina = allCharacters.find((c) => c.id === "rina");
-  const rest = allCharacters.filter((c) => c.id !== "chunsim" && c.id !== "rina");
-  const orderedChars = [chunsim, rina, ...rest].filter((c): c is SCharacter => c != null);
+  const orderedChars = allCharacters.filter((c): c is SCharacter => c != null);
   const onlineIdols = orderedChars.map((char) => ({
     id: char.id,
     name: char.name,

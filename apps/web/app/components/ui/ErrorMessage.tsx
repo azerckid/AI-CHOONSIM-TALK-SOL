@@ -8,7 +8,7 @@ interface ErrorMessageProps {
 }
 
 export function ErrorMessage({
-  title = "오류가 발생했습니다",
+  title = "An error occurred",
   message,
   onRetry,
   className,
@@ -36,7 +36,7 @@ export function ErrorMessage({
           onClick={onRetry}
           className="px-6 py-3 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl transition-colors"
         >
-          다시 시도
+          Retry
         </button>
       )}
     </div>

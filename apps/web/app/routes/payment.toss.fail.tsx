@@ -14,17 +14,17 @@ export default function TossFailPage() {
     const getFriendlyMessage = (code: string | null) => {
         switch (code) {
             case "PAY_PROCESS_CANCELED":
-                return "결제가 중단되었습니다. 다시 시도해 주세요.";
+                return "Payment was canceled. Please try again.";
             case "REJECT_CARD_COMPANY":
-                return "카드사에서 결제를 거절했습니다. 다른 카드를 사용해 주세요.";
+                return "Your card was declined. Please use a different card.";
             case "EXCEED_MAX_DAILY_PAYMENT_COUNT":
-                return "일일 결제 횟수 제한을 초과했습니다.";
+                return "Daily payment limit exceeded.";
             case "NOT_ENOUGH_BALANCE":
-                return "계좌 잔액이 부족합니다.";
+                return "Insufficient account balance.";
             case "INVALID_CARD_NUMBER":
-                return "카드 번호가 유효하지 않습니다.";
+                return "Invalid card number.";
             default:
-                return message || "결제 중 알 수 없는 오류가 발생했습니다.";
+                return message || "An unknown error occurred during payment.";
         }
     };
 
@@ -40,7 +40,7 @@ export default function TossFailPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <h1 className="text-2xl font-black text-white italic uppercase tracking-tight">결제 실패</h1>
+                        <h1 className="text-2xl font-black text-white italic uppercase tracking-tight">Payment Failed</h1>
                         <p className="text-white/60 text-sm font-medium leading-relaxed">
                             {getFriendlyMessage(code)}
                         </p>
@@ -56,18 +56,18 @@ export default function TossFailPage() {
                             onClick={() => navigate(returnUrl, { replace: true })}
                             className="w-full py-4 bg-primary text-[#0B0A10] rounded-2xl font-black uppercase text-sm shadow-[0_4px_20px_rgba(255,0,255,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
                         >
-                            다시 시도하기
+                            Try Again
                         </button>
                         <button
                             onClick={() => navigate("/profile/subscription", { replace: true })}
                             className="w-full py-4 bg-white/5 hover:bg-white/10 text-white/80 rounded-2xl font-bold text-sm transition-all"
                         >
-                            구독 관리로 돌아가기
+                            Go Back to Subscription
                         </button>
                     </div>
 
                     <p className="text-[11px] text-white/30 pt-4 font-medium">
-                        지속적으로 문제가 발생할 경우 고객센터로 문의해 주세요.
+                        If the problem persists, please contact customer support.
                     </p>
                 </div>
             </div>

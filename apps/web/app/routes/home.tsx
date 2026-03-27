@@ -16,7 +16,7 @@ import { eq, desc, asc, count, and } from "drizzle-orm";
 export function meta({ }: Route.MetaArgs) {
   return [
     { title: "AI Chat - Home" },
-    { name: "description", content: "AI 아이돌과의 특별한 일상 대화" },
+    { name: "description", content: "Special everyday conversations with your AI idol" },
   ];
 }
 
@@ -69,20 +69,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
   });
 
-  // 서비스 중인 캐릭터만 (춘심, rina 등 isOnline=true)
+  // 서비스 중인 캐릭터만 (isOnline=true)
   const serviceCharacters = allCharacters.filter((c: { isOnline: boolean }) => c.isOnline);
 
-  // Today's Pick: 날짜(ordinal) 기반 매일 교체 (chunsim ↔ rina)
+  // Today's Pick: 서비스 중인 첫 번째 캐릭터
   const now = DateTime.now().setZone("Asia/Seoul");
-  const chunsimPick = serviceCharacters.find((c: { id: string }) => c.id === "chunsim");
-  const rinaPick = serviceCharacters.find((c: { id: string }) => c.id === "rina");
-  const todaysPick = (now.ordinal % 2 === 1 ? chunsimPick || rinaPick : rinaPick || chunsimPick) || serviceCharacters[0];
+  const todaysPick = serviceCharacters[0] || allCharacters[0];
 
-  // Trending Idols: 춘심 1번, Rina 2번, 나머지 순서 유지 (미서비스는 회색 처리)
-  const chunsim = allCharacters.find((c: { id: string }) => c.id === "chunsim");
-  const rina = allCharacters.find((c: { id: string }) => c.id === "rina");
-  const rest = allCharacters.filter((c: { id: string }) => c.id !== "chunsim" && c.id !== "rina");
-  const trendingIdols = [chunsim, rina, ...rest].filter(Boolean).slice(0, 6);
+  // Trending Idols: 순서 유지
+  const trendingIdols = allCharacters.slice(0, 6);
 
   // 공지사항 및 이벤트 가져오기
   const notices = await db.query.notice.findMany({
@@ -235,10 +230,10 @@ export default function HomeScreen() {
     const messageTime = DateTime.fromJSDate(new Date(date));
     const diff = now.diff(messageTime, ["minutes", "hours", "days"]);
 
-    if (diff.minutes < 1) return "방금 전";
-    if (diff.minutes < 60) return `${Math.floor(diff.minutes)}분 전`;
-    if (diff.hours < 24) return `${Math.floor(diff.hours)}시간 전`;
-    if (diff.days < 7) return `${Math.floor(diff.days)}일 전`;
+    if (diff.minutes < 1) return "just now";
+    if (diff.minutes < 60) return `${Math.floor(diff.minutes)}m ago`;
+    if (diff.hours < 24) return `${Math.floor(diff.hours)}h ago`;
+    if (diff.days < 7) return `${Math.floor(diff.days)}d ago`;
     return messageTime.toFormat("MM/dd");
   };
 

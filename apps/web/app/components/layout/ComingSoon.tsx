@@ -38,7 +38,7 @@ export function ComingSoon({ title, subtitle, icon = "construction", iconBgColor
 
             {/* Title */}
             <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
-              준비 중이에요!
+              Coming Soon
             </h3>
 
             {/* Subtitle */}
@@ -48,7 +48,7 @@ export function ComingSoon({ title, subtitle, icon = "construction", iconBgColor
               </p>
             ) : (
               <p className="text-base text-slate-500 dark:text-slate-400 mb-8">
-                곧 만나볼 수 있을 거예요. 조금만 기다려주세요!
+                Check back soon. Hang tight!
               </p>
             )}
 

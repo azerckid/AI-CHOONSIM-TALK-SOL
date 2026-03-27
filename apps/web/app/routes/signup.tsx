@@ -20,7 +20,7 @@ export default function SignUpScreen() {
       });
 
       if (signUpError) {
-        throw new Error(signUpError.message || "회원가입에 실패했습니다.");
+        throw new Error(signUpError.message || "Sign up failed.");
       }
 
       setIsLoading(false);
@@ -58,7 +58,7 @@ export default function SignUpScreen() {
                 <img
                   alt="AI Idol Avatar Abstract"
                   className="w-full h-full object-cover"
-                  src="/illustrations/rina.png"
+                  src="/illustrations/choonsim.png"
                 />
               </div>
               <div className="ml-4 flex flex-col justify-center">

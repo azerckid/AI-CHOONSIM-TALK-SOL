@@ -66,13 +66,13 @@ export default function SettingsScreen() {
       await signOut({
         fetchOptions: {
           onSuccess: () => {
-            toast.success("로그아웃되었습니다");
+            toast.success("Logged out");
             navigate("/home");
           },
         },
       });
     } catch (err) {
-      toast.error("로그아웃 중 오류가 발생했습니다");
+      toast.error("An error occurred while logging out");
     }
   };
 
@@ -82,20 +82,20 @@ export default function SettingsScreen() {
       const res = await fetch("/api/account/delete", { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error || "계정 탈퇴에 실패했습니다.");
+        toast.error(data.error || "Failed to delete account.");
         return;
       }
       setDeleteAccountDialogOpen(false);
       await signOut({
         fetchOptions: {
           onSuccess: () => {
-            toast.success("계정이 삭제되었습니다.");
+            toast.success("Account deleted");
             navigate("/login");
           },
         },
       });
     } catch (err) {
-      toast.error("계정 탈퇴 중 오류가 발생했습니다.");
+      toast.error("An error occurred while deleting the account.");
     } finally {
       setIsDeletingAccount(false);
     }
@@ -111,15 +111,15 @@ export default function SettingsScreen() {
       const data = await response.json();
 
       if (!response.ok) {
-        setExportError(data.message || data.error || "프라이빗 키를 가져오는데 실패했습니다.");
+        setExportError(data.message || data.error || "Failed to retrieve the private key.");
         return;
       }
 
       setPrivateKey(data.privateKey);
-      toast.success("프라이빗 키를 불러왔습니다. 안전하게 보관하세요.");
+      toast.success("Private key loaded. Keep it in a safe place.");
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      setExportError(errorMessage || "프라이빗 키를 가져오는데 실패했습니다.");
+      setExportError(errorMessage || "Failed to retrieve the private key.");
     } finally {
       setIsLoadingPrivateKey(false);
     }
@@ -129,9 +129,9 @@ export default function SettingsScreen() {
     if (!privateKey) return;
     try {
       await navigator.clipboard.writeText(privateKey);
-      toast.success("프라이빗 키가 클립보드에 복사되었습니다.");
+      toast.success("Private key copied to clipboard.");
     } catch (error) {
-      toast.error("복사에 실패했습니다.");
+      toast.error("Copy failed.");
     }
   };
 
@@ -148,7 +148,7 @@ export default function SettingsScreen() {
             </span>
           </button>
           <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-10">
-            설정
+            Settings
           </h2>
         </header>
 
@@ -170,10 +170,10 @@ export default function SettingsScreen() {
             </div>
             <div className="flex flex-col justify-center flex-1 min-w-0">
               <p className="text-slate-900 dark:text-white text-lg font-bold leading-tight truncate">
-                {user?.name || "사용자"}
+                {user?.name || "User"}
               </p>
               <p className="text-primary text-sm font-medium leading-normal truncate">
-                {user?.id?.includes('-') ? "VVIP 팬 멤버십" : "Basic Member"}
+                {user?.id?.includes('-') ? "VVIP Fan Membership" : "Basic Member"}
               </p>
             </div>
           </div>
@@ -182,13 +182,13 @@ export default function SettingsScreen() {
         {/* --- App Settings --- */}
         <div className="px-4 pt-2 pb-2">
           <h3 className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pb-2">
-            앱 설정
+            App Settings
           </h3>
           <div className="flex flex-col overflow-hidden rounded-2xl bg-surface-light dark:bg-surface-dark shadow-sm dark:shadow-none border border-black/5 dark:border-white/5">
             <SettingsItem
               icon="notifications"
               iconBgColor="bg-orange-400"
-              label="알림 설정"
+              label="Notification Settings"
               rightElement={
                 <SettingsToggle
                   checked={notificationsEnabled}
@@ -200,7 +200,7 @@ export default function SettingsScreen() {
             <SettingsItem
               icon="dark_mode"
               iconBgColor="bg-indigo-500"
-              label="다크 모드"
+              label="Dark Mode"
               rightElement={
                 <SettingsToggle
                   checked={darkModeEnabled}
@@ -211,7 +211,7 @@ export default function SettingsScreen() {
             <SettingsItem
               icon="chat_bubble"
               iconBgColor="bg-green-500"
-              label="채팅 화면 설정"
+              label="Chat Display Settings"
               href="/settings/chat"
             />
           </div>
@@ -220,7 +220,7 @@ export default function SettingsScreen() {
         {/* --- Wallet Management (Legacy) --- */}
         <div className="px-4 pt-4 pb-2">
           <h3 className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pb-2">
-            고급설정 (Advanced)
+            Advanced
           </h3>
           <div className="flex flex-col overflow-hidden rounded-2xl bg-surface-light dark:bg-surface-dark shadow-sm dark:shadow-none border border-black/5 dark:border-white/5">
             <Dialog open={exportWalletDialogOpen} onOpenChange={setExportWalletDialogOpen}>
@@ -234,7 +234,7 @@ export default function SettingsScreen() {
                   </div>
                   <div className="flex flex-col">
                     <p className="text-slate-900 dark:text-white text-base font-medium">
-                      지갑 키 관리
+                      Wallet Key Management
                     </p>
                   </div>
                 </div>
@@ -242,9 +242,9 @@ export default function SettingsScreen() {
               </button>
               <DialogContent className="max-w-md">
                 <DialogHeader>
-                  <DialogTitle>지갑 내보내기</DialogTitle>
+                  <DialogTitle>Export Wallet</DialogTitle>
                   <DialogDescription>
-                    지갑의 프라이빗 키를 확인하고 내보낼 수 있습니다.
+                    View and export your wallet's private key.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -253,11 +253,11 @@ export default function SettingsScreen() {
                       <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <h4 className="text-sm font-semibold text-red-900 dark:text-red-100 mb-1">
-                          보안 경고
+                          Security Warning
                         </h4>
                         <p className="text-xs text-red-800 dark:text-red-200">
-                          프라이빗 키는 극비 정보입니다. 절대 공유하지 마시고, 안전한 곳에 보관하세요.
-                          누군가 이 키를 알게 되면 지갑의 모든 자산을 제어할 수 있습니다.
+                          Your private key is strictly confidential. Never share it and keep it in a safe place.
+                          Anyone who knows this key can control all assets in your wallet.
                         </p>
                       </div>
                     </div>
@@ -269,13 +269,13 @@ export default function SettingsScreen() {
                       className="w-full"
                       variant="outline"
                     >
-                      프라이빗 키 불러오기
+                      Load Private Key
                     </Button>
                   )}
 
                   {isLoadingPrivateKey && (
                     <div className="text-center py-4">
-                      <p className="text-sm text-slate-500 dark:text-slate-400">프라이빗 키를 불러오는 중...</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">Loading private key...</p>
                     </div>
                   )}
 
@@ -285,7 +285,7 @@ export default function SettingsScreen() {
                         <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
                         <div className="flex-1">
                           <h4 className="text-sm font-semibold text-red-900 dark:text-red-100 mb-1">
-                            오류
+                            Error
                           </h4>
                           <p className="text-xs text-red-800 dark:text-red-200">
                             {exportError}
@@ -299,7 +299,7 @@ export default function SettingsScreen() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <label className="text-sm font-medium text-slate-900 dark:text-white">
-                          프라이빗 키
+                          Private Key
                         </label>
                         <Button
                           onClick={handleCopyPrivateKey}
@@ -308,7 +308,7 @@ export default function SettingsScreen() {
                           className="h-7"
                         >
                           <Copy className="w-3 h-3 mr-1" />
-                          복사
+                          Copy
                         </Button>
                       </div>
                       <Input
@@ -318,7 +318,7 @@ export default function SettingsScreen() {
                         className="font-mono text-xs"
                       />
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        프라이빗 키를 복사하여 안전한 곳에 보관하세요. 다른 지갑으로 자산을 옮기려면 이 키를 사용할 수 있습니다.
+                        Copy your private key and store it in a safe place. You can use this key to transfer assets to another wallet.
                       </p>
                     </div>
                   )}
@@ -332,7 +332,7 @@ export default function SettingsScreen() {
                       setExportError(null);
                     }}
                   >
-                    닫기
+                    Close
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -342,19 +342,19 @@ export default function SettingsScreen() {
 
         <div className="px-4 pt-4 pb-2">
           <h3 className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pb-2">
-            개인정보 및 보안
+            Privacy & Security
           </h3>
           <div className="flex flex-col overflow-hidden rounded-2xl bg-surface-light dark:bg-surface-dark shadow-sm dark:shadow-none border border-black/5 dark:border-white/5">
             <SettingsItem
               icon="lock"
               iconBgColor="bg-blue-500"
-              label="개인정보 처리방침"
+              label="Privacy Policy"
               href="/privacy"
             />
             <SettingsItem
               icon="block"
               iconBgColor="bg-rose-500"
-              label="차단 관리"
+              label="Blocked Users"
               href="/settings/blocked"
             />
           </div>
@@ -362,19 +362,19 @@ export default function SettingsScreen() {
 
         <div className="px-4 pt-4 pb-2">
           <h3 className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pb-2">
-            지원
+            Support
           </h3>
           <div className="flex flex-col overflow-hidden rounded-2xl bg-surface-light dark:bg-surface-dark shadow-sm dark:shadow-none border border-black/5 dark:border-white/5">
             <SettingsItem
               icon="help"
               iconBgColor="bg-slate-500"
-              label="도움말 / FAQ"
+              label="Help / FAQ"
               href="/help"
             />
             <SettingsItem
               icon="info"
               iconBgColor="bg-teal-500"
-              label="오픈소스 라이선스"
+              label="Open Source Licenses"
               href="/license"
             />
           </div>
@@ -392,15 +392,15 @@ export default function SettingsScreen() {
                     <span className="material-symbols-outlined text-[18px]">logout</span>
                   </div>
                   <p className="text-primary text-base font-medium flex-1 truncate">
-                    로그아웃
+                    Log Out
                   </p>
                 </div>
               </button>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>로그아웃</DialogTitle>
+                  <DialogTitle>Log Out</DialogTitle>
                   <DialogDescription>
-                    정말 로그아웃하시겠습니까?
+                    Are you sure you want to log out?
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
@@ -408,10 +408,10 @@ export default function SettingsScreen() {
                     variant="outline"
                     onClick={() => setLogoutDialogOpen(false)}
                   >
-                    취소
+                    Cancel
                   </Button>
                   <Button onClick={handleLogout} variant="destructive">
-                    로그아웃
+                    Log Out
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -426,18 +426,18 @@ export default function SettingsScreen() {
                     <span className="material-symbols-outlined text-[18px]">person_off</span>
                   </div>
                   <p className="text-red-500 dark:text-red-400 text-base font-medium flex-1 truncate">
-                    계정 탈퇴
+                    Delete Account
                   </p>
                 </div>
               </button>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>계정 삭제</DialogTitle>
+                  <DialogTitle>Delete Account</DialogTitle>
                   <DialogDescription>
-                    계정을 삭제하면 모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.
-                    탈퇴 전에 대화·기억 데이터를 보관하려면 프로필 또는 채팅 설정에서
-                    &quot;컨텍스트 내보내기&quot;를 이용해 주세요.
-                    정말 계정을 삭제하시겠습니까?
+                    Deleting your account will permanently remove all your data and cannot be undone.
+                    If you want to keep your chat or memory data before leaving, please use
+                    &quot;Export Context&quot; in your profile or chat settings.
+                    Are you sure you want to delete your account?
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
@@ -445,21 +445,21 @@ export default function SettingsScreen() {
                     variant="outline"
                     onClick={() => setDeleteAccountDialogOpen(false)}
                   >
-                    취소
+                    Cancel
                   </Button>
                   <Button
                     onClick={handleDeleteAccount}
                     variant="destructive"
                     disabled={isDeletingAccount}
                   >
-                    {isDeletingAccount ? "처리 중..." : "계정 삭제"}
+                    {isDeletingAccount ? "Processing..." : "Delete Account"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
           <p className="text-center text-slate-400 dark:text-slate-600 text-xs mt-6">
-            버전 1.2.0 (Build 302)
+            Version 1.2.0 (Build 302)
             <br />
             © 2024 AI Idol Chat Corp.
           </p>

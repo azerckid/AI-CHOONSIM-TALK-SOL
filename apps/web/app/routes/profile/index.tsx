@@ -34,7 +34,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // 함께한 날 계산: 사용자의 첫 번째 대화 시작일부터 오늘까지의 일수
   let daysTogether = 0;
-  let mainCharacterName = "춘심"; // 기본값
+  let mainCharacterName = "Choonsim"; // default
   try {
     const firstConversation = await db.query.conversation.findFirst({
       where: eq(schema.conversation.userId, session.user.id),
@@ -56,12 +56,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
       const characterCounts = new Map<string, number>();
       conversations.forEach(conv => {
-        const charId = conv.characterId || "chunsim";
+        const charId = conv.characterId || "choonsim";
         characterCounts.set(charId, (characterCounts.get(charId) || 0) + 1);
       });
 
       let maxCount = 0;
-      let mostUsedCharId = "chunsim";
+      let mostUsedCharId = "choonsim";
       characterCounts.forEach((count, charId) => {
         if (count > maxCount) {
           maxCount = count;
@@ -216,13 +216,13 @@ export default function ProfileScreen() {
       await signOut({
         fetchOptions: {
           onSuccess: () => {
-            toast.success("로그아웃되었습니다");
+            toast.success("Logged out");
             navigate("/home");
           },
         },
       });
     } catch (err) {
-      toast.error("로그아웃 중 오류가 발생했습니다");
+      toast.error("Failed to log out");
     }
   };
 
@@ -239,7 +239,7 @@ export default function ProfileScreen() {
         >
           <span className="material-symbols-outlined text-[24px]">arrow_back_ios_new</span>
         </button>
-        <h1 className="text-base font-bold tracking-tight text-white/90">마이페이지</h1>
+        <h1 className="text-base font-bold tracking-tight text-white/90">My Page</h1>
         <button
           onClick={() => navigate("/settings")}
           className="flex items-center justify-center text-white/80 hover:text-primary transition-colors size-10 rounded-full hover:bg-white/5"
@@ -268,7 +268,7 @@ export default function ProfileScreen() {
           </div>
           <div className="mt-4 text-center">
             <h2 className="text-2xl font-bold tracking-tight text-white mb-1">
-              {user?.name || "사용자"}
+              {user?.name || "User"}
             </h2>
             {/* Badges */}
             <div className="flex flex-wrap gap-2 justify-center items-center mt-2">
@@ -284,7 +284,7 @@ export default function ProfileScreen() {
               </span>
             </div>
             <p className="text-white/60 text-sm mt-3 px-4 line-clamp-2">
-              "오늘도 {mainCharacterName}와 함께 힘내자! 🌙✨"
+              "Let's have a great day with {mainCharacterName}! 🌙✨"
             </p>
           </div>
         </section>
@@ -295,11 +295,11 @@ export default function ProfileScreen() {
             <div className="grid grid-cols-3 divide-x divide-white/10">
               <div className="flex flex-col items-center gap-1 px-2">
                 <span className="text-2xl font-bold text-white tracking-tight">{stats.daysTogether}일</span>
-                <span className="text-xs text-white/50 font-medium">함께한 날</span>
+                <span className="text-xs text-white/50 font-medium">Days Together</span>
               </div>
               <div className="flex flex-col items-center gap-1 px-2">
                 <span className="text-2xl font-bold text-primary tracking-tight">Lv.{stats.affinityLevel}</span>
-                <span className="text-xs text-white/50 font-medium">친밀도</span>
+                <span className="text-xs text-white/50 font-medium">Affinity</span>
               </div>
               <button
                 onClick={() => setIsItemStoreOpen(true)}
@@ -309,7 +309,7 @@ export default function ProfileScreen() {
                   {stats.hearts >= 1000 ? `${(stats.hearts / 1000).toFixed(1)}k` : stats.hearts}
                 </span>
                 <span className="text-xs text-white/50 font-medium flex items-center gap-1">
-                  보유 하트
+                  Hearts
                   <span className="material-symbols-outlined text-[10px] text-primary">add_circle</span>
                 </span>
               </button>
@@ -319,9 +319,9 @@ export default function ProfileScreen() {
           {/* 오늘의 토큰 사용량 */}
           <div className="bg-surface-dark/50 border border-white/5 rounded-2xl p-4 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-white/90">오늘 사용량</h3>
+              <h3 className="text-sm font-semibold text-white/90">Today's Usage</h3>
               <span className="text-xs text-white/50">
-                {new Date().toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -332,7 +332,7 @@ export default function ProfileScreen() {
                     {formatTokenCount(todayUsage.totalTokens)}
                   </span>
                 </div>
-                <span className="text-xs text-white/50 font-medium ml-7">총 토큰</span>
+                <span className="text-xs text-white/50 font-medium ml-7">Total Tokens</span>
               </div>
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
@@ -341,16 +341,16 @@ export default function ProfileScreen() {
                     {todayUsage.messageCount}
                   </span>
                 </div>
-                <span className="text-xs text-white/50 font-medium ml-7">메시지 수</span>
+                <span className="text-xs text-white/50 font-medium ml-7">Messages</span>
               </div>
             </div>
             <div className="mt-3 pt-3 border-t border-white/10 grid grid-cols-2 gap-4 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-white/60">입력 토큰</span>
+                <span className="text-white/60">Input Tokens</span>
                 <span className="text-white/90 font-medium">{formatTokenCount(todayUsage.promptTokens)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-white/60">출력 토큰</span>
+                <span className="text-white/60">Output Tokens</span>
                 <span className="text-white/90 font-medium">{formatTokenCount(todayUsage.completionTokens)}</span>
               </div>
             </div>
@@ -365,7 +365,7 @@ export default function ProfileScreen() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px] text-[#9945FF]">account_balance_wallet</span>
-                <span className="text-sm font-semibold text-white/90">지갑 연결</span>
+                <span className="text-sm font-semibold text-white/90">Wallet</span>
               </div>
               <WalletButtonInline />
             </div>
@@ -377,7 +377,7 @@ export default function ProfileScreen() {
             >
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px] text-[#9945FF]">bolt</span>
-                <span className="text-sm font-medium text-white/80">Blinks 체험하기</span>
+                <span className="text-sm font-medium text-white/80">Try Blinks</span>
               </div>
               <span className="material-symbols-outlined text-[16px] text-white/30">chevron_right</span>
             </button>
@@ -388,14 +388,14 @@ export default function ProfileScreen() {
             >
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px] text-[#9945FF]">auto_awesome</span>
-                <span className="text-sm font-medium text-white/80">온체인 기억 앨범</span>
+                <span className="text-sm font-medium text-white/80">On-chain Memory Album</span>
               </div>
               <span className="material-symbols-outlined text-[16px] text-white/30">chevron_right</span>
             </button>
             {/* CHOCO Token 정보 */}
             <div className="flex items-center justify-between px-2">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-white/50">보유 CHOCO</span>
+                <span className="text-sm text-white/50">CHOCO Balance</span>
               </div>
               <span className="text-sm font-bold text-primary">
                 {parseInt(user?.chocoBalance ?? "0").toLocaleString()} 🍫
@@ -408,7 +408,7 @@ export default function ProfileScreen() {
         <div className="px-4 space-y-6">
           {/* Group 1: Account & Payment */}
           <div>
-            <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3 ml-2">계정 관리</h3>
+            <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3 ml-2">Account</h3>
             <div className="bg-surface-dark border border-white/5 rounded-2xl overflow-hidden">
               {/* List Item */}
               <button
@@ -419,8 +419,8 @@ export default function ProfileScreen() {
                   <span className="material-symbols-outlined">badge</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-semibold text-white truncate">프로필 수정</p>
-                  <p className="text-xs text-white/50 truncate">닉네임, 상태메시지 변경</p>
+                  <p className="text-base font-semibold text-white truncate">Edit Profile</p>
+                  <p className="text-xs text-white/50 truncate">Change nickname & status message</p>
                 </div>
                 <span className="material-symbols-outlined text-white/30">chevron_right</span>
               </button>
@@ -434,8 +434,8 @@ export default function ProfileScreen() {
                   <span className="material-symbols-outlined">diamond</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-semibold text-white truncate">멤버십 업그레이드</p>
-                  <p className="text-xs text-white/50 truncate">더 높은 등급의 혜택 받기</p>
+                  <p className="text-base font-semibold text-white truncate">Upgrade Membership</p>
+                  <p className="text-xs text-white/50 truncate">Unlock higher tier perks</p>
                 </div>
                 <span className="material-symbols-outlined text-white/30">chevron_right</span>
               </button>
@@ -449,8 +449,8 @@ export default function ProfileScreen() {
                   <span className="material-symbols-outlined">credit_card</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-semibold text-white truncate">충전 및 결제 관리</p>
-                  <p className="text-xs text-white/50 truncate">CHOCO 충전 및 사용 내역</p>
+                  <p className="text-base font-semibold text-white truncate">Top Up & Payments</p>
+                  <p className="text-xs text-white/50 truncate">CHOCO balance & history</p>
                 </div>
                 <span className="material-symbols-outlined text-white/30">chevron_right</span>
               </button>
@@ -459,14 +459,14 @@ export default function ProfileScreen() {
 
           {/* Group 2: Activity */}
           <div>
-            <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3 ml-2">나의 활동</h3>
+            <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3 ml-2">Activity</h3>
             <div className="bg-surface-dark border border-white/5 rounded-2xl overflow-hidden">
               {/* 내 대화 앨범 (Phase 4-1) */}
               <button
                 disabled={isAlbumGenerating || (albumTickets ?? 0) <= 0}
                 onClick={async () => {
                   if ((albumTickets ?? 0) <= 0) {
-                    toast.error("대화 앨범 티켓이 없습니다. 상점에서 구매해 주세요.");
+                    toast.error("No Chat Album tickets. Purchase one from the store.");
                     return;
                   }
                   setIsAlbumGenerating(true);
@@ -474,7 +474,7 @@ export default function ProfileScreen() {
                     const res = await fetch("/api/album/generate", { method: "POST" });
                     if (!res.ok) {
                       const data = await res.json().catch(() => ({}));
-                      toast.error((data as { error?: string })?.error ?? "앨범 생성에 실패했습니다.");
+                      toast.error((data as { error?: string })?.error ?? "Failed to generate album.");
                       return;
                     }
                     const blob = await res.blob();
@@ -485,9 +485,9 @@ export default function ProfileScreen() {
                     a.click();
                     URL.revokeObjectURL(url);
                     revalidator.revalidate();
-                    toast.success("대화 앨범이 다운로드되었습니다.");
+                    toast.success("Chat Album downloaded.");
                   } catch (e) {
-                    toast.error("앨범 생성 중 오류가 발생했습니다.");
+                    toast.error("Error generating album.");
                   } finally {
                     setIsAlbumGenerating(false);
                   }
@@ -498,9 +498,9 @@ export default function ProfileScreen() {
                   <span className="material-symbols-outlined">photo_album</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-semibold text-white truncate">내 대화 앨범</p>
+                  <p className="text-base font-semibold text-white truncate">My Chat Album</p>
                   <p className="text-xs text-white/50 truncate">
-                    최근 30일 대화 PDF 생성 {(albumTickets ?? 0) > 0 ? `(보유 ${albumTickets}장)` : ""}
+                    PDF of last 30 days {(albumTickets ?? 0) > 0 ? `(${albumTickets} ticket${albumTickets === 1 ? "" : "s"})` : ""}
                   </p>
                 </div>
                 {isAlbumGenerating ? (
@@ -519,8 +519,8 @@ export default function ProfileScreen() {
                   <span className="material-symbols-outlined">favorite</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-semibold text-white truncate">저장된 순간들</p>
-                  <p className="text-xs text-white/50 truncate">좋아요한 대화 및 사진</p>
+                  <p className="text-base font-semibold text-white truncate">Saved Moments</p>
+                  <p className="text-xs text-white/50 truncate">Liked chats & photos</p>
                 </div>
                 <span className="material-symbols-outlined text-white/30">chevron_right</span>
               </button>
@@ -534,8 +534,8 @@ export default function ProfileScreen() {
                   <span className="material-symbols-outlined">history</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-semibold text-white truncate">대화 기록</p>
-                  <p className="text-xs text-white/50 truncate">지난 대화 다시보기</p>
+                  <p className="text-base font-semibold text-white truncate">Chat History</p>
+                  <p className="text-xs text-white/50 truncate">Review past conversations</p>
                 </div>
                 <span className="material-symbols-outlined text-white/30">chevron_right</span>
               </button>
@@ -549,8 +549,8 @@ export default function ProfileScreen() {
                   <span className="material-symbols-outlined">notifications</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-semibold text-white truncate">알림 설정</p>
-                  <p className="text-xs text-white/50 truncate">캐릭터 메시지 알림</p>
+                  <p className="text-base font-semibold text-white truncate">Notification Settings</p>
+                  <p className="text-xs text-white/50 truncate">Character message alerts</p>
                 </div>
                 <span className="material-symbols-outlined text-white/30">chevron_right</span>
               </button>

@@ -24,7 +24,7 @@ export function MessageInput({
   ownedHearts = 0,
   userInventory = [],
   heartItem,
-  placeholder = "메시지를 입력하세요...",
+  placeholder = "Type a message...",
   disabled = false,
   className,
 }: MessageInputProps) {
@@ -71,7 +71,7 @@ export function MessageInput({
       setUploadedUrl(data.url);
     } catch (err) {
       console.error("Upload error:", err);
-      alert("이미지 업로드에 실패했습니다.");
+      alert("Image upload failed.");
       setPreviewUrl(null);
     } finally {
       setIsUploading(false);
@@ -126,7 +126,7 @@ export function MessageInput({
               <span className="material-symbols-outlined text-[16px]">close</span>
             </button>
           </div>
-          <span className="text-xs text-gray-400">이미지가 업로드되었습니다</span>
+          <span className="text-xs text-gray-400">Image uploaded</span>
         </div>
       )}
 

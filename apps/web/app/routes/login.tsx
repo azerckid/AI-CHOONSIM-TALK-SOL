@@ -20,7 +20,7 @@ export default function LoginScreen() {
       });
 
       if (signInError) {
-        throw new Error(signInError.message || "로그인에 실패했습니다.");
+        throw new Error(signInError.message || "Login failed.");
       }
 
       setIsLoading(false);
@@ -43,7 +43,7 @@ export default function LoginScreen() {
       });
 
       if (socialError) {
-        throw new Error(socialError.message || "소셜 로그인에 실패했습니다.");
+        throw new Error(socialError.message || "Social login failed.");
       }
     } catch (err) {
       setIsLoading(false);

@@ -117,8 +117,8 @@ export function ChatHeader({
                 />
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>내 잔액</DialogTitle>
-                    <DialogDescription>현재 보유 중인 자산입니다.</DialogDescription>
+                    <DialogTitle>My Balance</DialogTitle>
+                    <DialogDescription>Your current assets.</DialogDescription>
                   </DialogHeader>
                   <div className="py-4 space-y-4">
                     <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
@@ -155,11 +155,11 @@ export function ChatHeader({
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={onDeleteChat} variant="destructive">
                 <span className="material-symbols-outlined mr-2 text-[18px]">delete</span>
-                대화방 삭제
+                Delete Chat
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onResetChat}>
                 <span className="material-symbols-outlined mr-2 text-[18px]">restart_alt</span>
-                대화 초기화 (기억 포함)
+                Reset Chat (incl. memory)
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

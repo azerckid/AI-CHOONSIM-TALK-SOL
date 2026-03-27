@@ -36,7 +36,7 @@ export function WalletButton() {
         <button
           onClick={() => disconnect()}
           className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/70 transition-colors"
-          title="지갑 연결 해제"
+          title="Disconnect Wallet"
         >
           <LogOut className="w-3 h-3" />
         </button>
@@ -53,7 +53,7 @@ export function WalletButton() {
       className="h-8 text-xs gap-1.5 rounded-xl border-white/10 bg-white/5 hover:bg-white/10"
     >
       <Wallet className="w-3 h-3" />
-      {connecting ? "연결 중..." : "지갑 연결"}
+      {connecting ? "Connecting..." : "Connect Wallet"}
     </Button>
   );
 }

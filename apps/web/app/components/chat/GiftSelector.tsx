@@ -72,7 +72,7 @@ export function GiftSelector({
             onClose();
         } catch (error) {
             console.error("Gift error:", error);
-            toast.error("선물 발송에 실패했습니다.");
+            toast.error("Failed to send gift.");
         } finally {
             setIsSending(false);
         }
@@ -124,7 +124,7 @@ export function GiftSelector({
                                 <div className="flex flex-col items-center">
                                     <span className="text-[10px] font-bold text-white whitespace-nowrap">{item.name}</span>
                                     <span className={cn("text-[9px] font-black", isHeart ? "text-primary/80" : "text-white/50")}>
-                                        {item.quantity}개
+                                        {item.quantity}
                                     </span>
                                 </div>
                             </button>
@@ -140,7 +140,7 @@ export function GiftSelector({
                             <span className="material-symbols-outlined text-white/60 text-xl">storefront</span>
                         </div>
                         <div className="flex flex-col items-center">
-                            <span className="text-[10px] font-bold text-white/60 whitespace-nowrap mt-1">상점 가기</span>
+                            <span className="text-[10px] font-bold text-white/60 whitespace-nowrap mt-1">Go to Store</span>
                         </div>
                     </button>
                 </div>
@@ -165,12 +165,12 @@ export function GiftSelector({
                             <div className="flex flex-col">
                                 <h4 className="text-white font-black text-lg">{selectedItemData.name}</h4>
                                 <p className="text-white/50 text-[11px] font-bold uppercase tracking-widest mt-0.5">
-                                    선택됨
+                                    Selected
                                 </p>
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest">보유량</p>
+                            <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Owned</p>
                             <p className="text-primary font-black text-xl leading-none">{selectedItemData.quantity}</p>
                         </div>
                     </div>
@@ -197,7 +197,7 @@ export function GiftSelector({
                     <div className="w-full space-y-3 pt-1">
                         {!hasEnough && (
                             <p className="text-center text-[11px] font-bold text-red-500/90 bg-red-500/10 py-2 rounded-xl border border-red-500/20">
-                                보유 수량이 부족합니다. 상점을 방문해 주세요.
+                                Not enough items. Please visit the store.
                             </p>
                         )}
                         <button
@@ -217,7 +217,7 @@ export function GiftSelector({
                                     <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                                         {hasEnough ? "send" : "storefront"}
                                     </span>
-                                    {hasEnough ? `${selectedItemData.name} ${selectedAmount}개 선물하기` : "상점으로 이동하기"}
+                                    {hasEnough ? `Send ${selectedAmount}x ${selectedItemData.name}` : "Go to Store"}
                                 </>
                             )}
                         </button>

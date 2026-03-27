@@ -47,7 +47,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         console.error("Toss Success Loader Error:", error);
-        return { error: errorMessage || "결제 승인 처리 중 오류가 발생했습니다." };
+        return { error: errorMessage || "An error occurred while processing the payment." };
     }
 }
 
@@ -58,11 +58,11 @@ export default function TossSuccessPage() {
     useEffect(() => {
         if (data.success) {
             if (data.type === "SUBSCRIPTION") {
-                toast.success(`${data.tier} 멤버십 구독이 시작되었습니다!`);
+                toast.success(`${data.tier} membership subscription started!`);
             } else if (data.type === "ITEM") {
-                toast.success(`${data.quantity}개의 하트가 인벤토리에 추가되었습니다!`);
+                toast.success(`${data.quantity} hearts added to your inventory!`);
             } else {
-                toast.success(`${data.creditsGranted} CHOCO가 충전되었습니다!`);
+                toast.success(`${data.creditsGranted} CHOCO has been charged!`);
             }
             // 2~3초 후 이동
             const timer = setTimeout(() => {
@@ -84,13 +84,13 @@ export default function TossSuccessPage() {
                         <div className="size-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto">
                             <span className="material-symbols-outlined text-red-500 text-4xl">error</span>
                         </div>
-                        <h1 className="text-xl font-bold text-white">결제 처리 실패</h1>
+                        <h1 className="text-xl font-bold text-white">Payment Failed</h1>
                         <p className="text-white/60 text-sm">{data.error}</p>
                         <button
                             onClick={() => navigate("/profile/subscription", { replace: true })}
                             className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-medium transition-colors"
                         >
-                            돌아가기
+                            Go Back
                         </button>
                     </>
                 ) : (
@@ -98,9 +98,9 @@ export default function TossSuccessPage() {
                         <div className="size-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto animate-bounce">
                             <span className="material-symbols-outlined text-primary text-4xl">check_circle</span>
                         </div>
-                        <h1 className="text-2xl font-bold text-white">결제 완료!</h1>
+                        <h1 className="text-2xl font-bold text-white">Payment Complete!</h1>
                         <p className="text-white/60">
-                            잠시 후 자동으로 대시보드로 이동합니다...
+                            Redirecting to your dashboard shortly...
                         </p>
                         <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
                             <div className="h-full bg-primary animate-[shimmer_2s_infinite]" style={{ width: '100%' }} />

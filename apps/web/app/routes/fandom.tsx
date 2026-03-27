@@ -20,7 +20,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   const url = new URL(request.url);
-  const characterId = url.searchParams.get("characterId") || "chunsim";
+  const characterId = url.searchParams.get("characterId") || "choonsim";
 
   // 0. All Characters for Selector
   const allCharacters = await db.query.character.findMany({
@@ -230,11 +230,7 @@ export default function FandomScreen() {
   const [isPosting, setIsPosting] = useState(false);
   const [postContent, setPostContent] = useState("");
 
-  // 춘심 1번, Rina 2번, 나머지 순서 (미서비스는 비활성 스타일)
-  const chunsim = allCharacters.find((c: { id: string }) => c.id === "chunsim");
-  const rina = allCharacters.find((c: { id: string }) => c.id === "rina");
-  const rest = allCharacters.filter((c: { id: string }) => c.id !== "chunsim" && c.id !== "rina");
-  const characters = [chunsim, rina, ...rest].filter((c): c is SCharacter => c != null);
+  const characters = allCharacters.filter((c): c is SCharacter => c != null);
 
   useEffect(() => {
     if (fetcher.data?.success) {

@@ -60,7 +60,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     messageCreatedAt: row.messageCreatedAt.toISOString(),
     role: row.role,
     characterId: row.characterId,
-    characterName: row.characterName || "춘심",
+    characterName: row.characterName || "Choonsim",
     characterAvatarUrl:
       avatarMap[row.characterId] ||
       "https://lh3.googleusercontent.com/aida-public/AB6AXuCutVt4neD3mw-fGim_WdODfouQz3b0aaqpPfx1sNTt8N75jfKec3kNioEoZugl2D0eqVP5833PF21_hTqlDz38aVNUICprwHAM45vTdJeUPcA0mj_wzSgkMVSzYiv-RCJhNyAAZ0RlWSJQxzSa8Mi-yYPu-czB9WEbQsDFEjcAQwezmcZqtAbSB5bwyRhTTfr1y2rrxDHIFNN2G2fVmkHcCWo7uvVNjtAehxS8fgGKMbJgQ59q1ClGgD--3EuZR6f_esg0NbdGCao",
@@ -88,10 +88,10 @@ function formatTimeAgo(dateString: string): string {
   const t = DateTime.fromISO(dateString);
   const diff = now.diff(t, ["minutes", "hours", "days"]);
 
-  if (diff.minutes < 1) return "방금 전";
-  if (diff.minutes < 60) return `${Math.floor(diff.minutes)}분 전`;
-  if (diff.hours < 24) return `${Math.floor(diff.hours)}시간 전`;
-  if (diff.days < 7) return `${Math.floor(diff.days)}일 전`;
+  if (diff.minutes < 1) return "just now";
+  if (diff.minutes < 60) return `${Math.floor(diff.minutes)}m ago`;
+  if (diff.hours < 24) return `${Math.floor(diff.hours)}h ago`;
+  if (diff.days < 7) return `${Math.floor(diff.days)}d ago`;
   return t.toFormat("MM/dd");
 }
 
@@ -109,7 +109,7 @@ export default function ProfileSavedScreen() {
         >
           <span className="material-symbols-outlined text-[24px]">arrow_back</span>
         </button>
-        <h1 className="text-white text-lg font-bold flex-1">저장된 순간들</h1>
+        <h1 className="text-white text-lg font-bold flex-1">Saved Moments</h1>
         <div className="w-6" /> {/* Spacer */}
       </div>
 
@@ -120,9 +120,9 @@ export default function ProfileSavedScreen() {
             <span className="material-symbols-outlined text-[64px] text-pink-500/20">
               favorite
             </span>
-            <p className="text-white/40 font-bold text-base">저장된 순간이 없어요</p>
+            <p className="text-white/40 font-bold text-base">No saved moments</p>
             <p className="text-white/20 text-sm text-center">
-              대화 중 마음에 드는 메시지에 하트를 눌러보세요!
+              Tap the heart on any message you love during a chat!
             </p>
           </div>
         ) : (
@@ -143,7 +143,7 @@ export default function ProfileSavedScreen() {
 
                 {moment.mediaUrl && moment.mediaType?.includes("image") ? (
                   <div className="mt-2 mb-2 rounded-xl overflow-hidden border border-white/10 relative">
-                    <img src={moment.mediaUrl} alt="저장된 사진" className="w-full h-auto object-cover max-h-48" />
+                    <img src={moment.mediaUrl} alt="Saved photo" className="w-full h-auto object-cover max-h-48" />
                   </div>
                 ) : null}
 
