@@ -1,4 +1,4 @@
 {
   "ignoreCommand": "! git diff ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} $VERCEL_GIT_COMMIT_SHA --name-only | grep -qvE '^(docs/|.*\\.md$)'",
-  "buildCommand": "npm run build || true"
+  "buildCommand": "npm run build"
 }
