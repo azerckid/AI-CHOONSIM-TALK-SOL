@@ -95,18 +95,21 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
 
       const tx = new VersionedTransaction(message);
 
-      // 3. Privy 서명 + 전송 (직렬화된 Uint8Array 전달)
+      // 3. Privy로 서명만 받고, RPC 제출은 우리가 직접
       setStatus("signing");
-      const result = await embeddedWallet.signAndSendTransaction({
+      const signResult = await embeddedWallet.signTransaction({
         transaction: tx.serialize(),
         chain: SOLANA_DEVNET_CHAIN,
-        options: { commitment: "confirmed" },
       });
-      // signature는 Uint8Array 또는 string일 수 있음 → base58로 통일
-      const rawSig = result.signature;
-      const signature = typeof rawSig === "string"
-        ? rawSig
-        : bs58.encode(rawSig as Uint8Array);
+      // signedTransaction은 Uint8Array (서명된 직렬화 트랜잭션)
+      const signedTx = VersionedTransaction.deserialize(signResult.signedTransaction);
+
+      // 4. 우리 RPC로 직접 전송
+      const rawSig = await connection.sendRawTransaction(signedTx.serialize(), {
+        skipPreflight: false,
+        maxRetries: 3,
+      });
+      const signature = typeof rawSig === "string" ? rawSig : bs58.encode(rawSig as any);
 
       // 4. verify-sig → CHOCO 지급
       setStatus("verifying");
