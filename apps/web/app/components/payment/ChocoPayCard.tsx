@@ -8,7 +8,7 @@
  * 4. window.phantom.solana.signAndSendTransaction() → Phantom 팝업
  * 5. signature → /api/payment/solana/verify-sig → CHOCO 충전
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { PrivyChocoPayCard } from "./PrivyChocoPayCard";
@@ -37,7 +37,12 @@ function getSolDisplay(choco: number): string {
 export function ChocoPayCard({ choco }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [grantedChoco, setGrantedChoco] = useState(0);
+  const [hasPhantom, setHasPhantom] = useState(false);
   const revalidator = useRevalidator();
+
+  useEffect(() => {
+    setHasPhantom(!!(window as any).phantom?.solana?.isPhantom);
+  }, []);
 
   async function handlePay() {
     const phantom = (window as any).phantom?.solana;
@@ -165,26 +170,30 @@ export function ChocoPayCard({ choco }: Props) {
         </div>
       )}
 
-      <button
-        onClick={handlePay}
-        disabled={isLoading}
-        className="w-full flex items-center justify-center gap-2 bg-[#9945FF] hover:bg-[#7b35d9] disabled:opacity-50 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
-      >
-        {isLoading ? (
-          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-        ) : (
-          <>
-            <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
-            Sign with Phantom
-          </>
-        )}
-      </button>
+      {hasPhantom && (
+        <>
+          <button
+            onClick={handlePay}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-2 bg-[#9945FF] hover:bg-[#7b35d9] disabled:opacity-50 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
+          >
+            {isLoading ? (
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+                Sign with Phantom
+              </>
+            )}
+          </button>
 
-      <div className="flex items-center gap-2">
-        <div className="flex-1 h-px bg-white/10" />
-        <span className="text-[10px] text-white/30">또는</span>
-        <div className="flex-1 h-px bg-white/10" />
-      </div>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-px bg-white/10" />
+            <span className="text-[10px] text-white/30">또는</span>
+            <div className="flex-1 h-px bg-white/10" />
+          </div>
+        </>
+      )}
 
       <PrivyChocoPayCard choco={choco} />
     </div>
