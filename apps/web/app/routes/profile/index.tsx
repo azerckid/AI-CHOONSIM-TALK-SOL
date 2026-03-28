@@ -12,6 +12,8 @@ function WalletButtonInline() {
 }
 import { db } from "~/lib/db.server";
 import { auth } from "~/lib/auth.server";
+import { solanaConnection } from "~/lib/solana/connection.server";
+import { PublicKey } from "@solana/web3.js";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useNavigate, useRevalidator } from "react-router";
 import { signOut } from "~/lib/auth-client";
@@ -181,11 +183,22 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const paypalClientId = process.env.PAYPAL_CLIENT_ID;
   const tossClientKey = process.env.TOSS_CLIENT_KEY;
 
-  return Response.json({ user, stats, todayUsage, mainCharacterName, albumTickets: albumInventory?.quantity ?? 0, paypalClientId, tossClientKey });
+  // SOL 잔액 조회
+  let solBalance: number | null = null;
+  if (user?.solanaWallet) {
+    try {
+      const lamports = await solanaConnection.getBalance(new PublicKey(user.solanaWallet));
+      solBalance = lamports / 1e9; // lamports → SOL
+    } catch {
+      // 잔액 조회 실패해도 페이지는 정상 렌더링
+    }
+  }
+
+  return Response.json({ user, stats, todayUsage, mainCharacterName, albumTickets: albumInventory?.quantity ?? 0, paypalClientId, tossClientKey, solBalance });
 }
 
 export default function ProfileScreen() {
-  const { user, stats, todayUsage, mainCharacterName, albumTickets, paypalClientId, tossClientKey } = useLoaderData<typeof loader>() as {
+  const { user, stats, todayUsage, mainCharacterName, albumTickets, paypalClientId, tossClientKey, solBalance } = useLoaderData<typeof loader>() as {
     user: any;
     stats: any;
     todayUsage: { totalTokens: number; promptTokens: number; completionTokens: number; messageCount: number };
@@ -193,6 +206,7 @@ export default function ProfileScreen() {
     albumTickets?: number;
     paypalClientId?: string;
     tossClientKey?: string;
+    solBalance: number | null;
   };
   const navigate = useNavigate();
   const revalidator = useRevalidator();
@@ -388,6 +402,17 @@ export default function ProfileScreen() {
               </div>
               <span className="material-symbols-outlined text-[16px] text-white/30">chevron_right</span>
             </button>
+            {/* SOL 잔액 */}
+            {user?.solanaWallet && (
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-white/50">SOL Balance</span>
+                </div>
+                <span className="text-sm font-bold text-[#9945FF]">
+                  {solBalance !== null ? `${solBalance.toFixed(4)} SOL` : "—"}
+                </span>
+              </div>
+            )}
             {/* CHOCO Token 정보 */}
             <div className="flex items-center justify-between px-2">
               <div className="flex items-center gap-2">
