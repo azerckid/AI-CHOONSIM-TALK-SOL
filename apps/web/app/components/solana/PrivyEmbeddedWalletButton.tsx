@@ -7,7 +7,8 @@
  * 반드시 PrivyWalletProvider 하위에서 사용해야 합니다.
  */
 import { useEffect, useState } from "react";
-import { usePrivy, useWallets, useCreateWallet } from "@privy-io/react-auth";
+import { usePrivy } from "@privy-io/react-auth";
+import { useCreateWallet } from "@privy-io/react-auth/solana";
 import { toast } from "sonner";
 import { Wallet, Loader2, Check } from "lucide-react";
 
@@ -16,16 +17,14 @@ interface Props {
 }
 
 export function PrivyEmbeddedWalletButton({ onSaved }: Props) {
-  const { login, authenticated, ready } = usePrivy();
-  const { wallets } = useWallets();
+  const { login, authenticated, ready, user } = usePrivy();
   const { createWallet } = useCreateWallet();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
-  // Solana 임베디드 지갑 (Privy가 생성한 것)
-  const embeddedWallet = wallets.find(
-    (w) => w.walletClientType === "privy" &&
-      (w as unknown as { chainType?: string }).chainType === "solana"
+  // Solana 임베디드 지갑 (Privy가 생성한 것) — linkedAccounts에서 직접 조회
+  const embeddedWallet = (user?.linkedAccounts as any[])?.find(
+    (a) => a.chainType === "solana" && a.walletClientType === "privy"
   );
 
   // 로그인 후 임베디드 지갑이 생성되면 자동으로 DB 저장
