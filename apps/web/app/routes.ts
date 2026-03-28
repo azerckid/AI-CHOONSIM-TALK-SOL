@@ -54,6 +54,10 @@ export default [
   // AGENTS.md의 "Authentication & Routing Setup" 섹션 참조
   route("auth/*", "routes/api/auth/$.ts"), // Better Auth의 모든 경로 처리
 
+  // SIWS (Sign In With Solana)
+  route("api/auth/siws/nonce", "routes/api/auth/siws/nonce.ts"),
+  route("api/auth/siws/verify", "routes/api/auth/siws/verify.ts"),
+
   // API 라우트
   route("api/chat", "routes/api/chat/index.ts"),
   route("api/chat/create", "routes/api/chat/create.ts"),

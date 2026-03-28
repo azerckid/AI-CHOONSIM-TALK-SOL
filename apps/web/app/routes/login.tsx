@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { LoginForm } from "~/components/auth/LoginForm";
+import { SiwsButton } from "~/components/auth/SiwsButton";
 import { signIn } from "~/lib/auth-client";
 
 export default function LoginScreen() {
@@ -98,6 +99,16 @@ export default function LoginScreen() {
             isLoading={isLoading}
             error={error || undefined}
           />
+
+          {/* Sign In With Solana */}
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-white/10" />
+              <span className="text-[11px] text-white/30 font-medium">또는</span>
+              <div className="flex-1 h-px bg-white/10" />
+            </div>
+            <SiwsButton onError={(msg) => setError(msg)} />
+          </div>
         </div>
       </div>
     </div>
