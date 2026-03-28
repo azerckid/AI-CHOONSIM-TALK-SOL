@@ -6,6 +6,18 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+  define: {
+    // Privy embedded wallet uses Node.js Buffer — polyfill for browser
+    global: "globalThis",
+  },
+  optimizeDeps: {
+    include: ["buffer"],
+  },
+  resolve: {
+    alias: {
+      buffer: "buffer/",
+    },
+  },
   build: {
     manifest: true,
   },
