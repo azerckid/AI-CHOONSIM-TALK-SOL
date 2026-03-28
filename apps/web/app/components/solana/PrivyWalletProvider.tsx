@@ -29,12 +29,6 @@ export function PrivyWalletProvider({ children }: Props) {
             createOnLogin: "users-without-wallets",
           },
         },
-        solanaClusters: [
-          {
-            name: "devnet",
-            rpcUrl: "https://api.devnet.solana.com",
-          },
-        ],
         loginMethods: ["email", "google", "twitter"],
       }}
     >

@@ -37,8 +37,8 @@ function getSolDisplay(choco: number): string {
   return CHOCO_SOL[nearest] ?? (choco * 0.00001).toFixed(6);
 }
 
-// Devnet genesis hash (CAIP-2 chain ID)
-const SOLANA_DEVNET_CHAIN = "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1";
+// Privy SolanaChain identifier for devnet
+const SOLANA_DEVNET_CHAIN = "solana:devnet";
 
 function PrivyChocoPayCardInner({ choco, compact }: Props) {
   const { authenticated, ready, login } = usePrivy();
