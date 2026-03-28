@@ -11,6 +11,7 @@
 import { useState } from "react";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
+import { PrivyChocoPayCard } from "./PrivyChocoPayCard";
 
 interface Props {
   choco: number;
@@ -178,6 +179,14 @@ export function ChocoPayCard({ choco }: Props) {
           </>
         )}
       </button>
+
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-px bg-white/10" />
+        <span className="text-[10px] text-white/30">또는</span>
+        <div className="flex-1 h-px bg-white/10" />
+      </div>
+
+      <PrivyChocoPayCard choco={choco} />
     </div>
   );
 }
