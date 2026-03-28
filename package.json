@@ -18,6 +18,9 @@
         "turbo": "^2.4.0"
     },
     "dependencies": {
-        "@metaplex-foundation/umi": "^1.5.1"
+        "@metaplex-foundation/umi": "^1.5.1",
+        "@solana-program/memo": "^0.11.0",
+        "@solana-program/system": "^0.11.0",
+        "@solana-program/token": "^0.12.0"
     }
 }
