@@ -2,11 +2,12 @@
  * WalletAddressForm — Phantom 지갑 주소 등록 컴포넌트
  *
  * - currentWallet이 있으면: 주소 표시 + 변경 버튼
- * - currentWallet이 없으면: Phantom 설치 안내 + 주소 입력 폼
+ * - currentWallet이 없으면: Connect Wallet 버튼 (자동 저장) + 수동 입력 폼
  * PATCH /api/user/wallet로 저장
  */
 import { useState } from "react";
 import { toast } from "sonner";
+import { WalletButton } from "./WalletButton";
 
 interface Props {
   currentWallet: string | null;
@@ -64,31 +65,36 @@ export function WalletAddressForm({ currentWallet }: Props) {
 
   // 등록 안 됨 or 편집 모드
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {!currentWallet && (
-        <div className="bg-[#9945FF]/10 border border-[#9945FF]/20 rounded-xl p-3 space-y-1">
-          <p className="text-xs font-semibold text-[#9945FF]">Phantom Wallet Required</p>
+        <div className="bg-[#9945FF]/10 border border-[#9945FF]/20 rounded-xl p-3 space-y-2">
+          <p className="text-xs font-semibold text-[#9945FF]">Connect Your Wallet</p>
           <p className="text-xs text-white/50 leading-relaxed">
-            To receive CHOCO on-chain and mint memory NFTs, you need a Phantom wallet.
+            Connect Phantom to receive CHOCO and mint memory NFTs. Your address is saved automatically.
           </p>
-          <a
-            href="https://phantom.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-[#9945FF] hover:underline mt-1"
-          >
-            <span className="material-symbols-outlined text-[13px]">open_in_new</span>
-            Install Phantom →
-          </a>
+          {/* 원클릭 연결 — 자동 저장 */}
+          <WalletButton />
+          <p className="text-xs text-white/30 pt-1">
+            No Phantom?{" "}
+            <a
+              href="https://phantom.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#9945FF] hover:underline"
+            >
+              Install here →
+            </a>
+          </p>
         </div>
       )}
 
+      {/* 수동 입력 (폴백 / 편집 모드) */}
       <div className="flex gap-2">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Paste your Solana wallet address"
+          placeholder="Or paste your Solana wallet address"
           className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-[#9945FF]/50 transition-colors font-mono"
         />
         <button

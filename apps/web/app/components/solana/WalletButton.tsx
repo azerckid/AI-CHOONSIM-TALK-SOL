@@ -1,16 +1,36 @@
 /**
  * Solana Wallet Connect 버튼
- * Phantom 지갑 연결/해제 UI
+ * Phantom 지갑 연결 시 DB에 자동 저장
  */
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Button } from "~/components/ui/button";
 import { Wallet, LogOut, Copy, Check } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { toast } from "sonner";
 
 export function WalletButton() {
   const { publicKey, connected, connecting, connect, disconnect, wallet } =
     useWallet();
   const [copied, setCopied] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  // 지갑 연결 시 DB에 자동 저장
+  useEffect(() => {
+    if (!connected || !publicKey) return;
+    const address = publicKey.toBase58();
+    fetch("/api/user/wallet", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ solanaWallet: address }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          setSaved(true);
+          toast.success("Wallet connected and saved!");
+        }
+      })
+      .catch(() => {});
+  }, [connected, publicKey]);
 
   const shortAddress = publicKey
     ? `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}`
