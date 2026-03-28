@@ -105,22 +105,27 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
       const signedTx = VersionedTransaction.deserialize(signResult.signedTransaction);
 
       // 4. 우리 RPC로 직접 전송
+      console.log("[PrivyPay] sendRawTransaction start");
       const rawSig = await connection.sendRawTransaction(signedTx.serialize(), {
-        skipPreflight: false,
+        skipPreflight: true,  // preflight 시뮬레이션 skip → public RPC hang 방지
         maxRetries: 3,
       });
       const signature = typeof rawSig === "string" ? rawSig : bs58.encode(rawSig as any);
+      console.log("[PrivyPay] signature:", signature);
 
       // 온체인 확인 대기 — 클라이언트 폴링 (최대 60s)
       setStatus("verifying");
       const deadline = Date.now() + 60_000;
+      let pollCount = 0;
       while (Date.now() < deadline) {
         const { value: statuses } = await connection.getSignatureStatuses([signature]);
         const s = statuses?.[0];
+        console.log(`[PrivyPay] poll #${++pollCount} status:`, s?.confirmationStatus ?? "null");
         if (s?.err) throw new Error("트랜잭션이 온체인에서 실패했어요.");
         if (s && (s.confirmationStatus === "confirmed" || s.confirmationStatus === "finalized")) break;
         await new Promise((r) => setTimeout(r, 2500));
       }
+      console.log("[PrivyPay] confirmed, calling verify-sig");
 
       // 5. verify-sig → CHOCO 지급 (PENDING이면 최대 3회 재시도)
       let verifyData: any = null;
@@ -131,6 +136,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
           body: JSON.stringify({ signature, paymentId }),
         });
         verifyData = await verifyRes.json();
+        console.log(`[PrivyPay] verify attempt ${attempt + 1}:`, verifyData.status);
         if (verifyData.status !== "PENDING") break;
         await new Promise((r) => setTimeout(r, 3000));
       }
