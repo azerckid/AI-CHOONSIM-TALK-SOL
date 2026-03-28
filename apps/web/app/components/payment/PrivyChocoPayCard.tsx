@@ -14,6 +14,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
+import bs58 from "bs58";
 
 interface Props {
   choco: number;
@@ -44,8 +45,8 @@ function PrivyChocoPayCardInner({ choco }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [grantedChoco, setGrantedChoco] = useState(0);
 
-  // Privy 임베디드 Solana 지갑 찾기
-  const embeddedWallet = wallets[0] ?? null;
+  // Privy 임베디드 Solana 지갑만 선택 (Phantom 등 외부 지갑 제외)
+  const embeddedWallet = wallets.find((w: any) => w.walletClientType === "privy") ?? wallets[0] ?? null;
 
   async function handlePay() {
     if (!embeddedWallet) {
@@ -92,14 +93,18 @@ function PrivyChocoPayCardInner({ choco }: Props) {
 
       const tx = new VersionedTransaction(message);
 
-      // 3. Privy 서명 + 전송 (VersionedTransaction 객체를 직접 전달)
+      // 3. Privy 서명 + 전송 (직렬화된 Uint8Array 전달)
       setStatus("signing");
-      const { signature } = await embeddedWallet.signAndSendTransaction({
-        transaction: tx,
+      const result = await embeddedWallet.signAndSendTransaction({
+        transaction: tx.serialize(),
         chain: SOLANA_DEVNET_CHAIN,
         options: { commitment: "confirmed" },
       });
-      // Privy는 이미 base58 문자열로 signature를 반환함
+      // signature는 Uint8Array 또는 string일 수 있음 → base58로 통일
+      const rawSig = result.signature;
+      const signature = typeof rawSig === "string"
+        ? rawSig
+        : bs58.encode(rawSig as Uint8Array);
 
       // 4. verify-sig → CHOCO 지급
       setStatus("verifying");
