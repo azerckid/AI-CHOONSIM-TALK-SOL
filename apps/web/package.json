@@ -82,6 +82,9 @@
     "web-push": "^3.6.7",
     "zod": "^4.3.4"
   },
+  "engines": {
+    "node": "22.x"
+  },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.13",
     "@types/crypto-js": "^4.2.2",
