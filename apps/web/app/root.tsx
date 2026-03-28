@@ -13,6 +13,7 @@ import "~/lib/i18n";
 import "./app.css";
 import { Toaster } from "~/components/ui/sonner";
 import { SolanaWalletProvider } from "~/components/solana/SolanaWalletProvider";
+import { PrivyWalletProvider } from "~/components/solana/PrivyWalletProvider";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -55,9 +56,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <SolanaWalletProvider>
-      <Outlet />
-    </SolanaWalletProvider>
+    <PrivyWalletProvider>
+      <SolanaWalletProvider>
+        <Outlet />
+      </SolanaWalletProvider>
+    </PrivyWalletProvider>
   );
 }
 
