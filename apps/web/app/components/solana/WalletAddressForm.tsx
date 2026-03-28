@@ -7,7 +7,11 @@
  */
 import { useState } from "react";
 import { toast } from "sonner";
+import { Copy, Check } from "lucide-react";
 import { WalletButton } from "./WalletButton";
+import { PrivyEmbeddedWalletButton } from "./PrivyEmbeddedWalletButton";
+import { ExportWalletButton } from "./ExportWalletButton";
+
 
 interface Props {
   currentWallet: string | null;
@@ -17,6 +21,15 @@ export function WalletAddressForm({ currentWallet }: Props) {
   const [editing, setEditing] = useState(false);
   const [input, setInput] = useState("");
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  function copyAddress() {
+    if (!currentWallet) return;
+    navigator.clipboard.writeText(currentWallet).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
 
   async function save() {
     const trimmed = input.trim();
@@ -53,12 +66,25 @@ export function WalletAddressForm({ currentWallet }: Props) {
           </span>
           <span className="text-xs text-white/30">registered</span>
         </div>
-        <button
-          onClick={() => { setInput(currentWallet); setEditing(true); }}
-          className="text-xs text-white/40 hover:text-white/70 transition-colors shrink-0 ml-2"
-        >
-          Change
-        </button>
+        <div className="flex items-center gap-2 shrink-0 ml-2">
+          {/* 주소 복사 */}
+          <button
+            onClick={copyAddress}
+            className="flex items-center gap-1 text-xs text-white/30 hover:text-white/70 transition-colors"
+            title="Copy address"
+          >
+            {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+          </button>
+          {/* 프라이빗 키 내보내기 (Privy 임베디드 지갑만 해당) */}
+          <ExportWalletButton address={currentWallet} />
+          {/* 주소 변경 */}
+          <button
+            onClick={() => { setInput(currentWallet); setEditing(true); }}
+            className="text-xs text-white/40 hover:text-white/70 transition-colors"
+          >
+            Change
+          </button>
+        </div>
       </div>
     );
   }
@@ -72,19 +98,17 @@ export function WalletAddressForm({ currentWallet }: Props) {
           <p className="text-xs text-white/50 leading-relaxed">
             Connect Phantom to receive CHOCO and mint memory NFTs. Your address is saved automatically.
           </p>
-          {/* 원클릭 연결 — 자동 저장 */}
+          {/* 옵션 1: Phantom 원클릭 연결 (자동 저장) */}
           <WalletButton />
-          <p className="text-xs text-white/30 pt-1">
-            No Phantom?{" "}
-            <a
-              href="https://phantom.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#9945FF] hover:underline"
-            >
-              Install here →
-            </a>
-          </p>
+
+          <div className="flex items-center gap-2 py-1">
+            <div className="flex-1 h-px bg-white/10" />
+            <span className="text-xs text-white/30">or</span>
+            <div className="flex-1 h-px bg-white/10" />
+          </div>
+
+          {/* 옵션 2: Privy 임베디드 지갑 (Phantom 불필요) */}
+          <PrivyEmbeddedWalletButton />
         </div>
       )}
 
