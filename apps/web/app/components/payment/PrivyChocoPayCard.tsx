@@ -94,15 +94,12 @@ function PrivyChocoPayCardInner({ choco }: Props) {
 
       // 3. Privy 서명 + 전송
       setStatus("signing");
-      const { signature: sigBytes } = await embeddedWallet.signAndSendTransaction({
+      const { signature } = await embeddedWallet.signAndSendTransaction({
         transaction: serialized,
         chain: SOLANA_DEVNET_CHAIN,
         options: { commitment: "confirmed" },
       });
-
-      // Uint8Array → base58 (bs58 없이 직접 처리)
-      const { default: bs58 } = await import("bs58" as any);
-      const signature: string = bs58.encode(sigBytes);
+      // Privy는 이미 base58 문자열로 signature를 반환함
 
       // 4. verify-sig → CHOCO 지급
       setStatus("verifying");
