@@ -87,7 +87,7 @@ const en = {
 } as const;
 
 i18n.use(initReactI18next).init({
-  resources: { en: { translation: en } },
+  resources: { en: { common: en } },
   lng: "en",
   fallbackLng: "en",
   defaultNS,
