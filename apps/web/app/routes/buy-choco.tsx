@@ -16,6 +16,7 @@ import * as schema from "~/db/schema";
 import { eq } from "drizzle-orm";
 import { useLoaderData } from "react-router";
 import { SolanaPayButton } from "~/components/payment/SolanaPayButton";
+import { PrivyChocoPayCard } from "~/components/payment/PrivyChocoPayCard";
 import { CheckCircle, ArrowLeft } from "lucide-react";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -91,9 +92,9 @@ export default function BuyChocoPage() {
         {/* 지갑 없으면 안내 */}
         {!solanaWallet && (
           <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-sm leading-relaxed">
-            <p className="font-bold mb-1">⚠️ Phantom 지갑 미등록</p>
+            <p className="font-bold mb-1">⚠️ 지갑 미등록</p>
             <p>
-              프로필 → Wallet 메뉴에서 지갑 주소를 등록하면 CHOCO가 지갑으로 자동 전송돼요.
+              임베디드 지갑으로 바로 결제하거나, 프로필 → Wallet에서 지갑을 등록하세요.
             </p>
           </div>
         )}
@@ -146,13 +147,23 @@ export default function BuyChocoPage() {
           )}
         </div>
 
-        {/* Solana Pay 버튼 */}
+        {/* Solana Pay 버튼 (Phantom QR) */}
         <SolanaPayButton
           amount={usdAmount}
           credits={selectedChoco}
           description={`${selectedChoco} CHOCO 구매`}
           onSuccess={() => setDone(true)}
         />
+
+        {/* 구분선 */}
+        <div className="flex items-center gap-3 my-4">
+          <div className="flex-1 h-px bg-white/10" />
+          <span className="text-xs text-white/30">또는</span>
+          <div className="flex-1 h-px bg-white/10" />
+        </div>
+
+        {/* Privy 임베디드 지갑 결제 */}
+        <PrivyChocoPayCard choco={selectedChoco} />
 
         <p className="text-center text-xs text-white/30 mt-4">
           Devnet 기준 · SOL 시세 자동 반영 · 결제 후 자동 충전
