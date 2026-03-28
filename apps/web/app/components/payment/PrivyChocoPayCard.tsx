@@ -111,14 +111,29 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
       });
       const signature = typeof rawSig === "string" ? rawSig : bs58.encode(rawSig as any);
 
-      // 4. verify-sig → CHOCO 지급
+      // 온체인 확인 대기 — 클라이언트 폴링 (최대 60s)
       setStatus("verifying");
-      const verifyRes = await fetch("/api/payment/solana/verify-sig", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signature, paymentId }),
-      });
-      const verifyData = await verifyRes.json();
+      const deadline = Date.now() + 60_000;
+      while (Date.now() < deadline) {
+        const { value: statuses } = await connection.getSignatureStatuses([signature]);
+        const s = statuses?.[0];
+        if (s?.err) throw new Error("트랜잭션이 온체인에서 실패했어요.");
+        if (s && (s.confirmationStatus === "confirmed" || s.confirmationStatus === "finalized")) break;
+        await new Promise((r) => setTimeout(r, 2500));
+      }
+
+      // 5. verify-sig → CHOCO 지급 (PENDING이면 최대 3회 재시도)
+      let verifyData: any = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const verifyRes = await fetch("/api/payment/solana/verify-sig", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ signature, paymentId }),
+        });
+        verifyData = await verifyRes.json();
+        if (verifyData.status !== "PENDING") break;
+        await new Promise((r) => setTimeout(r, 3000));
+      }
 
       if (verifyData.status === "COMPLETED") {
         setGrantedChoco(verifyData.chocoGranted ?? choco);
