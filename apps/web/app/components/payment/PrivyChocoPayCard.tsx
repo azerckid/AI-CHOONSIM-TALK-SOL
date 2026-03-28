@@ -67,7 +67,6 @@ function PrivyChocoPayCardInner({ choco }: Props) {
 
       // 2. @solana/web3.js로 트랜잭션 빌드
       const {
-        Transaction,
         SystemProgram,
         PublicKey,
         Connection,
@@ -90,12 +89,11 @@ function PrivyChocoPayCardInner({ choco }: Props) {
       }).compileToV0Message();
 
       const tx = new VersionedTransaction(message);
-      const serialized = tx.serialize();
 
-      // 3. Privy 서명 + 전송
+      // 3. Privy 서명 + 전송 (VersionedTransaction 객체를 직접 전달)
       setStatus("signing");
       const { signature } = await embeddedWallet.signAndSendTransaction({
-        transaction: serialized,
+        transaction: tx,
         chain: SOLANA_DEVNET_CHAIN,
         options: { commitment: "confirmed" },
       });
