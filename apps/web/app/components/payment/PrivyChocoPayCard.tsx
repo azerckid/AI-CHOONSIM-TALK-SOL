@@ -10,6 +10,7 @@
  * 반드시 PrivyWalletProvider 하위에서 사용해야 합니다.
  */
 import { useState, useEffect } from "react";
+import { usePrivy } from "@privy-io/react-auth";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
@@ -37,6 +38,7 @@ function getSolDisplay(choco: number): string {
 const SOLANA_DEVNET_CHAIN = "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1";
 
 function PrivyChocoPayCardInner({ choco }: Props) {
+  const { authenticated, ready, login } = usePrivy();
   const { wallets } = useWallets();
   const revalidator = useRevalidator();
   const [status, setStatus] = useState<Status>("idle");
@@ -172,20 +174,30 @@ function PrivyChocoPayCardInner({ choco }: Props) {
         </div>
       )}
 
-      <button
-        onClick={handlePay}
-        disabled={isLoading || !embeddedWallet}
-        className="w-full flex items-center justify-center gap-2 bg-[#9945FF] hover:bg-[#7b35d9] disabled:opacity-50 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
-      >
-        {isLoading ? (
-          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-        ) : (
-          <>
-            <span className="material-symbols-outlined text-[18px]">bolt</span>
-            {embeddedWallet ? "임베디드 지갑으로 결제" : "지갑 없음"}
-          </>
-        )}
-      </button>
+      {ready && !authenticated ? (
+        <button
+          onClick={login}
+          className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
+        >
+          <span className="material-symbols-outlined text-[18px]">login</span>
+          이메일로 로그인 후 결제
+        </button>
+      ) : (
+        <button
+          onClick={handlePay}
+          disabled={isLoading || !embeddedWallet}
+          className="w-full flex items-center justify-center gap-2 bg-[#9945FF] hover:bg-[#7b35d9] disabled:opacity-50 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
+        >
+          {isLoading ? (
+            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-[18px]">bolt</span>
+              {embeddedWallet ? "임베디드 지갑으로 결제" : "지갑 없음"}
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 }
