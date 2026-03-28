@@ -103,6 +103,7 @@ export default [
   // Solana Actions & Blinks
   route("blinks", "routes/blinks.tsx"),
   route("actions.json", "routes/actions.json.ts"),
+  route(".well-known/solana-actions.json", "routes/well-known/solana-actions.ts"),
   route("api/actions/gift", "routes/api/actions/gift.ts"),
   route("api/actions/subscribe", "routes/api/actions/subscribe.ts"),
   route("api/actions/checkin", "routes/api/actions/checkin.ts"),
