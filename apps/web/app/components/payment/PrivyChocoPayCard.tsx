@@ -18,6 +18,8 @@ import bs58 from "bs58";
 
 interface Props {
   choco: number;
+  /** compact=true 이면 컨테이너/금액 표시 생략 (ChocoPayCard 내부 사용 시) */
+  compact?: boolean;
 }
 
 type Status = "idle" | "building" | "signing" | "verifying" | "done" | "error";
@@ -38,7 +40,7 @@ function getSolDisplay(choco: number): string {
 // Devnet genesis hash (CAIP-2 chain ID)
 const SOLANA_DEVNET_CHAIN = "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1";
 
-function PrivyChocoPayCardInner({ choco }: Props) {
+function PrivyChocoPayCardInner({ choco, compact }: Props) {
   const { authenticated, ready, login } = usePrivy();
   const { wallets } = useWallets();
   const revalidator = useRevalidator();
@@ -135,26 +137,6 @@ function PrivyChocoPayCardInner({ choco }: Props) {
     }
   }
 
-  if (status === "done") {
-    return (
-      <div className="mt-3 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-500/15 border border-green-500/30 text-green-400 text-sm font-semibold">
-        <span className="material-symbols-outlined text-[18px]">check_circle</span>
-        {grantedChoco.toLocaleString()} CHOCO 충전 완료! 💕
-      </div>
-    );
-  }
-
-  if (status === "error") {
-    return (
-      <div className="mt-3 flex flex-col gap-2">
-        <p className="text-xs text-red-400">오류가 발생했어요. 다시 시도해주세요.</p>
-        <button onClick={() => setStatus("idle")} className="text-xs text-white/50 hover:text-white/80 transition-colors">
-          다시 시도
-        </button>
-      </div>
-    );
-  }
-
   const isLoading = status !== "idle";
   const statusLabel: Record<Status, string> = {
     idle: "",
@@ -165,52 +147,84 @@ function PrivyChocoPayCardInner({ choco }: Props) {
     error: "",
   };
 
+  const doneUI = (
+    <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-500/15 border border-green-500/30 text-green-400 text-sm font-semibold">
+      <span className="material-symbols-outlined text-[18px]">check_circle</span>
+      {grantedChoco.toLocaleString()} CHOCO 충전 완료! 💕
+    </div>
+  );
+
+  const errorUI = (
+    <div className="flex flex-col gap-1">
+      <p className="text-xs text-red-400">오류가 발생했어요. 다시 시도해주세요.</p>
+      <button onClick={() => setStatus("idle")} className="text-xs text-white/50 hover:text-white/80 transition-colors">
+        다시 시도
+      </button>
+    </div>
+  );
+
+  const buttonUI = ready && !authenticated ? (
+    <button
+      onClick={login}
+      className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
+    >
+      <span className="material-symbols-outlined text-[18px]">login</span>
+      이메일로 로그인 후 결제
+    </button>
+  ) : (
+    <button
+      onClick={handlePay}
+      disabled={isLoading || !embeddedWallet}
+      className="w-full flex items-center justify-center gap-2 bg-[#9945FF] hover:bg-[#7b35d9] disabled:opacity-50 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
+    >
+      {isLoading ? (
+        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+      ) : (
+        <>
+          <span className="material-symbols-outlined text-[18px]">bolt</span>
+          {embeddedWallet ? "임베디드 지갑으로 결제" : "지갑 없음"}
+        </>
+      )}
+    </button>
+  );
+
+  // compact: ChocoPayCard 내부에서 사용 — 컨테이너/금액 없이 버튼만
+  if (compact) {
+    return (
+      <>
+        {isLoading && (
+          <div className="flex items-center gap-2 text-xs text-[#9945FF]">
+            <span className="w-3 h-3 border-2 border-[#9945FF]/40 border-t-[#9945FF] rounded-full animate-spin shrink-0" />
+            {statusLabel[status]}
+          </div>
+        )}
+        {status === "done" ? doneUI : status === "error" ? errorUI : buttonUI}
+      </>
+    );
+  }
+
+  // standalone: /buy-choco 페이지 등 — 전체 카드
   return (
     <div className="mt-3 p-3 rounded-xl bg-[#9945FF]/10 border border-[#9945FF]/30 space-y-2.5">
       <div className="flex items-center justify-between text-sm">
         <span className="font-bold text-white">{choco.toLocaleString()} CHOCO</span>
         <span className="text-white/50 text-xs">{getSolDisplay(choco)} SOL (Devnet)</span>
       </div>
-
       {isLoading && (
         <div className="flex items-center gap-2 text-xs text-[#9945FF]">
           <span className="w-3 h-3 border-2 border-[#9945FF]/40 border-t-[#9945FF] rounded-full animate-spin shrink-0" />
           {statusLabel[status]}
         </div>
       )}
-
-      {ready && !authenticated ? (
-        <button
-          onClick={login}
-          className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
-        >
-          <span className="material-symbols-outlined text-[18px]">login</span>
-          이메일로 로그인 후 결제
-        </button>
-      ) : (
-        <button
-          onClick={handlePay}
-          disabled={isLoading || !embeddedWallet}
-          className="w-full flex items-center justify-center gap-2 bg-[#9945FF] hover:bg-[#7b35d9] disabled:opacity-50 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
-        >
-          {isLoading ? (
-            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          ) : (
-            <>
-              <span className="material-symbols-outlined text-[18px]">bolt</span>
-              {embeddedWallet ? "임베디드 지갑으로 결제" : "지갑 없음"}
-            </>
-          )}
-        </button>
-      )}
+      {status === "done" ? doneUI : status === "error" ? errorUI : buttonUI}
     </div>
   );
 }
 
 /** SSR-safe wrapper */
-export function PrivyChocoPayCard({ choco }: Props) {
+export function PrivyChocoPayCard({ choco, compact }: Props) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
-  return <PrivyChocoPayCardInner choco={choco} />;
+  return <PrivyChocoPayCardInner choco={choco} compact={compact} />;
 }

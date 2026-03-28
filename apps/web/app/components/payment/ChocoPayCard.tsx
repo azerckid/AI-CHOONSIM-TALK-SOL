@@ -51,7 +51,12 @@ export function ChocoPayCard({ choco }: Props) {
   const revalidator = useRevalidator();
 
   useEffect(() => {
-    setHasPhantom(!!(window as any).phantom?.solana?.isPhantom);
+    const phantom = (window as any).phantom?.solana;
+    if (!phantom?.isPhantom) return;
+    // 이 앱에 실제로 연결(authorize)된 Phantom인지 확인
+    phantom.connect({ onlyIfTrusted: true })
+      .then(() => setHasPhantom(true))
+      .catch(() => setHasPhantom(false)); // 연결된 적 없으면 false
   }, []);
 
   async function handlePay() {
@@ -205,7 +210,7 @@ export function ChocoPayCard({ choco }: Props) {
       )}
 
       <PrivyErrorBoundary>
-        <PrivyChocoPayCard choco={choco} />
+        <PrivyChocoPayCard choco={choco} compact />
       </PrivyErrorBoundary>
     </div>
   );
