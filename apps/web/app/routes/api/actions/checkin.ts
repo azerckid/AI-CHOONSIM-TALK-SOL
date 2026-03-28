@@ -31,9 +31,9 @@ export function loader({ request }: LoaderFunctionArgs) {
 
   const payload = {
     icon: "https://res.cloudinary.com/dpmw96p8k/image/upload/v1/choonsim/checkin-action-icon.png",
-    title: "오늘의 춘심 체크인 ✅",
-    description: `매일 체크인하면 ${DAILY_CHOCO_REWARD} CHOCO를 받을 수 있습니다. 온체인으로 출석이 기록됩니다.`,
-    label: `${DAILY_CHOCO_REWARD} CHOCO 받기`,
+    title: "Choonsim Daily Check-in ✅",
+    description: `Check in every day to earn ${DAILY_CHOCO_REWARD} CHOCO. Your attendance is recorded on-chain.`,
+    label: `Claim ${DAILY_CHOCO_REWARD} CHOCO`,
   };
 
   return Response.json(payload, { headers: ACTIONS_CORS_HEADERS });
@@ -50,7 +50,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     if (!senderAddress) {
       return Response.json(
-        { message: "account 파라미터가 필요합니다." },
+        { message: "account parameter is required." },
         { status: 400, headers: ACTIONS_CORS_HEADERS }
       );
     }
@@ -88,14 +88,14 @@ export async function action({ request }: ActionFunctionArgs) {
     return Response.json(
       {
         transaction: base64Tx,
-        message: `✅ 체크인 완료! 트랜잭션 확인 후 ${DAILY_CHOCO_REWARD} CHOCO가 지급됩니다.`,
+        message: `✅ Check-in complete! ${DAILY_CHOCO_REWARD} CHOCO will be credited after transaction confirmation.`,
       },
       { headers: ACTIONS_CORS_HEADERS }
     );
   } catch (err) {
     console.error("[actions/checkin] error:", err);
     return Response.json(
-      { message: "트랜잭션 생성에 실패했습니다." },
+      { message: "Failed to create transaction." },
       { status: 500, headers: ACTIONS_CORS_HEADERS }
     );
   }

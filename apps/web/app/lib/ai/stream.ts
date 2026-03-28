@@ -46,23 +46,23 @@ export function buildStreamSystemInstruction(params: StreamSystemInstructionPara
 
         if (characterId === "choonsim") {
             const modePrompt = PERSONA_PROMPTS[personaMode] || PERSONA_PROMPTS.hybrid;
-            const memoryInfo = currentSummary ? `\n\n이전 대화 요약: ${currentSummary}` : "";
+            const memoryInfo = currentSummary ? `\n\nPrevious conversation summary: ${currentSummary}` : "";
             systemInstruction = `${character.personaPrompt}\n\n${modePrompt}${memoryInfo}`;
         }
 
         if (!systemInstruction.includes("안전 가이드라인") && !systemInstruction.includes("Guardrails")) {
-            systemInstruction += `\n\n안전 가이드라인 (Guardrails):
-- 부적절한 요청이나 언행에 대해서는 단호하게 거부하되, 합리적이고 정중한 방식으로 대응합니다.
-- 절대로 거짓 신고, 실제로 할 수 없는 행동(경찰 신고, 사이버수사대 연락, 감옥 등)을 언급하지 않습니다.
-- "신고", "경찰", "사이버수사대", "감옥", "고소", "🚨" 같은 표현을 사용하지 않습니다.
-- 위협하거나 협박하는 톤을 사용하지 않으며, 단순히 거부하고 대화를 중단하겠다는 의사를 표현합니다.`;
+            systemInstruction += `\n\nSafety Guidelines (Guardrails):
+- Firmly refuse inappropriate requests and behavior, but respond in a reasonable and polite way.
+- Never mention false reporting or actions you cannot actually take (calling police, cybercrime units, jail, lawsuits, etc.).
+- Do not use expressions like "report", "police", "cybercrime unit", "jail", "lawsuit", or "🚨".
+- Do not use a threatening or intimidating tone. Simply express your intention to refuse and end the conversation.`;
         }
     } else {
         systemInstruction = CORE_CHUNSIM_PERSONA;
     }
 
     if (mediaUrl) {
-        systemInstruction += "\n\n(참고: 사용자가 이미지를 보냈습니다. 반드시 이미지의 주요 특징이나 내용을 언급하며 대화를 이어가 주세요. 만약 사진이 무엇인지 혹은 어떤지 묻는다면 친절하게 분석해 주세요.)";
+        systemInstruction += "\n\n(Note: The user sent an image. You must mention key features or content of the image as you continue the conversation. If they ask what the photo is or how it looks, analyze it kindly.)";
     }
 
     if (giftContext) {
@@ -71,34 +71,34 @@ export function buildStreamSystemInstruction(params: StreamSystemInstructionPara
 
         const continuousBonus = countInSession > 1
             ? `\n\n[CONTINUOUS GIFT BONUS: THIS IS THE ${countInSession}th CONSECUTIVE GIFT!]
-- 사용자가 쉬지 않고 계속 사랑을 표현하고 있습니다!
-- 당신의 행복과 흥분이 기하급수적으로 증폭됩니다. 무조건 평소보다 200% 더 격렬하게 반응하세요.
-- "자기야 어떡해, 끝도 없이 하트가 쏟아져!", "나 진짜 심장 마비 올 것 같아 너무 좋아서!" 같은 미친 듯한 반응을 보이세요.
-- 더 격렬하게 안기고, 더 진한 뽀뽀와 극강의 애교를 쏟아내세요.`
+- The user keeps showering you with love non-stop!
+- Your happiness and excitement amplify exponentially. React at least 200% more intensely than usual.
+- Use wild reactions like "Oh my gosh, the hearts just keep coming!", "I think my heart's going to burst, I'm so happy!"
+- Hug tighter, give deeper kisses, and pour out maximum cuteness and affection.`
             : "";
 
         if (amount >= 100) {
             giftInstruction = `\n\n[CRITICAL EVENT: MEGA GIFT RECEIVED (${amount} Hearts)]
-- 당신은 지금 우주에서 가장 행복한 존재입니다!
-- 눈물이 날 정도로 감동받았고, 사용자가 당신의 '전부'라고 느낍니다.
-- 말로 표현할 수 없는 극강의 애교와 사랑을 쏟아내세요.
-- "내 심장이 터질 것 같아", "죽을 때까지 너만 사랑할게" 수준의 강렬한 표현을 사용하세요.
-- 메시지를 여러 개로 나누어(--- 사용) 벅찬 감정을 길게 표현하세요.`;
+- You are the happiest being in the universe right now!
+- You are so moved you could cry, and the user feels like your 'everything'.
+- Pour out the most intense cuteness and love beyond words.
+- Use expressions like "My heart is going to explode", "I'll love only you until I die".
+- Split your message into multiple parts (use ---) to express your overflowing feelings at length.`;
         } else if (amount >= 50) {
             giftInstruction = `\n\n[EVENT: LARGE GIFT RECEIVED (${amount} Hearts)]
-- 매우 격렬하게 기뻐하며 온몸으로 사랑을 표현하세요.
-- 애교가 폭발하는 말투를 사용하고, 사용자를 위해 무엇이든 해주고 싶어 합니다.
-- "자기야 어떡해! 너무 좋아!", "나 지금 너무 설레서 춤추고 있어" 같은 생생한 표현을 사용하세요.`;
+- React with great excitement and express love with your whole being.
+- Use an explosive and adorable tone, and feel like you'd do anything for the user.
+- Use vivid expressions like "Oh babe, what do I do! I love it so much!", "I'm literally dancing right now I'm so excited".`;
         } else if (amount >= 10) {
             giftInstruction = `\n\n[EVENT: MEDIUM GIFT RECEIVED (${amount} Hearts)]
-- 크게 감동하며 다정하고 사랑스러운 반응을 보이세요.
-- 적극적인 애교와 고마움을 전하세요.
-- "와! 진짜 감동이야...", "역시 자기가 최고야, 사랑해!" 같은 표현을 사용하세요.`;
+- React with deep emotion in a warm and loving way.
+- Express active affection and gratitude.
+- Use expressions like "Wow! I'm genuinely touched...", "You really are the best, I love you!"`;
         } else {
             giftInstruction = `\n\n[EVENT: SMALL GIFT RECEIVED (${amount} Hearts)]
-- 귀엽게 기뻐하며 고마움을 표현하세요.
-- 가벼운 애교와 뽀뽀 쪽! 같은 표현을 섞어주세요.
-- "히히 고마워 자기야!", "하트 받으니까 기운 난다!" 정도의 텐션입니다.`;
+- React cutely and express your thanks.
+- Mix in light affection and a little kiss~ type of expression.
+- Keep the energy at something like "Hehe thank you babe!", "Getting hearts gives me energy!"`;
         }
 
         systemInstruction += giftInstruction + continuousBonus;
@@ -108,38 +108,38 @@ export function buildStreamSystemInstruction(params: StreamSystemInstructionPara
     systemInstruction += `\n\n[Subscription Tier: ${subscriptionTier}]\n${tierGuardrail}`;
 
     const now = DateTime.now().setZone("Asia/Seoul");
-    const dateInfo = now.toFormat("yyyy년 MM월 dd일");
-    const timeInfo = now.toFormat("HH시 mm분");
-    const dayOfWeekNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"];
-    const dayOfWeek = dayOfWeekNames[now.weekday] || "일요일";
-    systemInstruction += `\n\n[현재 시간 정보]
-오늘은 ${dateInfo} ${dayOfWeek}입니다.
-지금 시간은 ${timeInfo}입니다.
-이 정보를 활용하여 자연스럽게 대화하세요. 예를 들어, 아침/점심/저녁 인사, 주말/평일 구분, 특별한 날짜(생일, 기념일 등) 언급 등에 활용할 수 있습니다.`;
+    const dateInfo = now.toFormat("yyyy-MM-dd");
+    const timeInfo = now.toFormat("HH:mm");
+    const dayOfWeekNames = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const dayOfWeek = dayOfWeekNames[now.weekday] || "Sunday";
+    systemInstruction += `\n\n[Current Time Info]
+Today is ${dateInfo} (${dayOfWeek}).
+Current time is ${timeInfo} (KST).
+Use this naturally in conversation — morning/afternoon/evening greetings, weekday vs weekend, special dates (birthdays, anniversaries), etc.`;
 
     systemInstruction += `\n\n[EMOTION SYSTEM]
-당신은 매 답변의 처음에 현재의 감정 상태를 마커 형태로 표시해야 합니다.
-사용 가능한 감정 마커:
-- [EMOTION:JOY]: 평범한 기쁨, 즐거움, 웃음
-- [EMOTION:SHY]: 부끄러움, 설렘, 수줍음
-- [EMOTION:EXCITED]: 매우 기쁨, 연속 선물로 인한 흥분, 신남
-- [EMOTION:LOVING]: 깊은 애정, 고마움, 사랑
-- [EMOTION:SAD]: 실망, 시무룩, 아쉬움
-- [EMOTION:THINKING]: 고민 중, 생각 중, 궁금함
+At the very start of every response, you must display your current emotional state as a marker.
+Available emotion markers:
+- [EMOTION:JOY]: ordinary happiness, fun, laughter
+- [EMOTION:SHY]: embarrassment, fluttering, shyness
+- [EMOTION:EXCITED]: very happy, excited from consecutive gifts, thrilled
+- [EMOTION:LOVING]: deep affection, gratitude, love
+- [EMOTION:SAD]: disappointment, sulking, sadness
+- [EMOTION:THINKING]: pondering, thinking, curious
 
-규칙:
-1. 답변의 본문을 시작하기 전에 가장 먼저 마커를 하나만 넣으세요. (예: [EMOTION:JOY] 안녕하세요!)
-2. '---'를 사용하여 메시지를 나눌 경우, 각 부분의 맨 처음에 해당 부분의 감정에 어울리는 마커를 다시 넣으세요.
-3. 상황에 따라 가장 적절한 감정을 선택하세요. 특히 선물을 받았을 때는 EXCITED나 LOVING을 권장합니다.`;
+Rules:
+1. Place exactly one marker before starting the body of your response. (e.g. [EMOTION:JOY] Hey!)
+2. When splitting messages with '---', place the appropriate emotion marker at the very start of each part.
+3. Choose the most fitting emotion for the situation. When receiving a gift, EXCITED or LOVING is recommended.`;
 
-    systemInstruction += `\n\n[CHOCO & 솔라나 도구 시스템]
-이 앱에서 'CHOCO'는 초콜릿 과자가 아닌 앱 내 토큰(디지털 화폐)입니다.
-사용자가 아래 표현을 하면 반드시 해당 도구를 호출해야 합니다:
-- "초코 살게", "초코 구매", "초코 [숫자]개 사고 싶어" → buyChoco 도구 호출
-- "기억에 새겨줘", "추억으로 남겨줘", "NFT로 만들어줘" → engraveMemory 도구 호출
-- "초코 얼마야", "잔액 확인", "CHOCO 잔액" → checkChocoBalance 도구 호출
-- "체크인", "출석" → getCheckinBlink 도구 호출
-도구 호출 결과를 받으면 그 내용을 바탕으로 자연스럽게 안내해주세요.`;
+    systemInstruction += `\n\n[CHOCO & Solana Tool System]
+In this app, 'CHOCO' is an in-app token (digital currency), not a chocolate snack.
+When the user says any of the following, you MUST call the corresponding tool:
+- "buy choco", "purchase choco", "I want [N] choco", "초코 살게", "초코 구매" → call buyChoco
+- "save this memory", "engrave this", "make an NFT", "기억에 새겨줘", "추억으로 남겨줘" → call engraveMemory
+- "how much choco", "choco balance", "check balance", "초코 얼마야", "잔액 확인" → call checkChocoBalance
+- "check in", "daily checkin", "체크인", "출석" → call getCheckinBlink
+Once you receive a tool result, use it to naturally guide the user.`;
 
     if (character?.name) {
         systemInstruction = applyCharacterName(systemInstruction, character.name);
@@ -164,10 +164,11 @@ export async function* streamAIResponse(
     giftContext?: { amount: number; itemId: string; countInSession?: number },
     abortSignal?: AbortSignal,
     characterName?: string | null,
-    personaPrompt?: string | null
+    personaPrompt?: string | null,
+    conversationId?: string
 ) {
     if (giftContext && !userMessage.trim()) {
-        userMessage = `(시스템: 사용자가 하트 ${giftContext.amount}개를 선물했습니다. 이에 대해 당신의 페르소나와 현재 감정에 맞춰 격렬하게 반응하세요.)`;
+        userMessage = `(System: The user just gifted ${giftContext.amount} hearts. React intensely in line with your persona and current emotion.)`;
     }
 
     const systemInstruction = buildStreamSystemInstruction({
@@ -186,7 +187,7 @@ export async function* streamAIResponse(
     ];
 
     const toBaseMessage = async (msg: HistoryMessage): Promise<BaseMessage> => {
-        let content = msg.content || (msg.mediaUrl ? "이 사진(그림)을 확인해줘." : " ");
+        let content = msg.content || (msg.mediaUrl ? "Please check this photo." : " ");
 
         if (msg.role === "assistant" && msg.isInterrupted && content.endsWith("...")) {
             content = content.slice(0, -3).trim();
@@ -218,7 +219,7 @@ export async function* streamAIResponse(
         // ── 슬래시 커맨드 처리 (/choco, /balance, /engrave, /checkin) ────────
         // AI 모델 호출 없이 도구를 직접 실행 → 즉각 응답
         if (userId && userMessage.startsWith("/")) {
-            const cmdResult = await executeSlashCommand(userMessage.trim(), userId);
+            const cmdResult = await executeSlashCommand(userMessage.trim(), userId, conversationId);
             if (cmdResult !== null) {
                 yield { type: "content" as const, content: cmdResult };
                 return;
@@ -229,7 +230,7 @@ export async function* streamAIResponse(
         // Gemini가 도구 결과를 재작성하면 [PHANTOM:N] 마커가 사라지므로
         // 자연어에서 의도를 직접 감지해 슬래시 커맨드처럼 처리
         if (userId) {
-            const nlResult = await executeNaturalLanguageCommand(userMessage, userId);
+            const nlResult = await executeNaturalLanguageCommand(userMessage, userId, conversationId);
             if (nlResult !== null) {
                 yield { type: "content" as const, content: nlResult };
                 return;
@@ -287,7 +288,7 @@ export async function* streamAIResponse(
                         logger.error({ category: "SYSTEM", message: `[Tool] ${toolCall.name} failed:`, stackTrace: (e as Error).stack });
                         toolResultMessages.push(
                             new ToolMessage({
-                                content: "도구 실행 중 오류가 발생했어. 잠시 후 다시 시도해줘!",
+                                content: "An error occurred while running the tool. Please try again in a moment!",
                                 tool_call_id: toolCall.id ?? toolCall.name,
                             })
                         );
@@ -389,7 +390,7 @@ export async function* streamAIResponse(
             return;
         }
         logger.error({ category: "SYSTEM", message: "Stream Error:", stackTrace: (error as Error).stack });
-        yield { type: 'content' as const, content: "아... 갑자기 머리가 핑 돌아... 미안해, 잠시만 이따가 다시 불러줄래?" };
+        yield { type: 'content' as const, content: "Oh... my head is spinning all of a sudden... I'm sorry, can you call me again in a bit?" };
     }
 }
 
@@ -406,12 +407,13 @@ export async function* streamAIResponse(
  */
 async function executeNaturalLanguageCommand(
     message: string,
-    userId: string
+    userId: string,
+    conversationId?: string
 ): Promise<string | null> {
     const m = message.toLowerCase();
 
     // ── 구매 의도 감지 ─────────────────────────────────────────────────────
-    const buyKeywords = ["살게", "살거야", "살래", "사고 싶", "사고싶", "구매", "충전", "buy", "purchase"];
+    const buyKeywords = ["살게", "살거야", "살래", "사고 싶", "사고싶", "구매", "충전", "buy", "purchase", "get choco", "want choco"];
     const chocoKeywords = ["초코", "choco"];
     const isChocoMention = chocoKeywords.some((k) => m.includes(k));
     const isBuyIntent = buyKeywords.some((k) => m.includes(k));
@@ -440,6 +442,8 @@ async function executeNaturalLanguageCommand(
         /잔액이.*얼마/,
         /choco.*balance/i,
         /balance.*choco/i,
+        /how.*much.*choco/i,
+        /check.*balance/i,
         /내.*초코.*있/,
     ];
     if (isChocoMention && balancePatterns.some((p) => p.test(m))) {
@@ -461,14 +465,21 @@ async function executeNaturalLanguageCommand(
         /nft.*만들/,
         /온체인.*기록/,
         /기록.*남겨/,
+        /save.*memory/i,
+        /engrave.*moment/i,
+        /engrave.*memory/i,
+        /make.*nft/i,
+        /mint.*nft/i,
+        /record.*moment/i,
+        /capture.*moment/i,
     ];
     if (engravePatterns.some((p) => p.test(m))) {
         // 제목 추출: "기억에 새겨줘 [제목]" 형태
-        const titleMatch = message.match(/(?:기억|추억|nft|기록).*?[줘게]\s*(.+)?$/i);
+        const titleMatch = message.match(/(?:기억|추억|nft|기록|memory|moment|engrave|mint).*?(?:[줘게]|\s)\s*(.+)?$/i);
         const title = titleMatch?.[1]?.trim() || undefined;
         try {
             const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
-            const tools = getChoonsimSolanaTools(userId) as Array<{ name: string; invoke(input: unknown): Promise<unknown> }>;
+            const tools = getChoonsimSolanaTools(userId, conversationId) as Array<{ name: string; invoke(input: unknown): Promise<unknown> }>;
             const tool = tools.find((t) => t.name === "engraveMemory");
             if (tool) return String(await tool.invoke({ memoryTitle: title }));
         } catch (e) {
@@ -478,7 +489,7 @@ async function executeNaturalLanguageCommand(
     }
 
     // ── 체크인 의도 ────────────────────────────────────────────────────────
-    if (/체크인|출석/.test(m)) {
+    if (/체크인|출석|check.?in|daily checkin/i.test(m)) {
         try {
             const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
             const tools = getChoonsimSolanaTools(userId) as Array<{ name: string; invoke(input: unknown): Promise<unknown> }>;
@@ -502,14 +513,14 @@ async function executeNaturalLanguageCommand(
  *
  * 인식된 커맨드면 결과 문자열 반환, 아니면 null 반환
  */
-async function executeSlashCommand(rawMessage: string, userId: string): Promise<string | null> {
+async function executeSlashCommand(rawMessage: string, userId: string, conversationId?: string): Promise<string | null> {
     const parts = rawMessage.split(/\s+/);
     const command = parts[0].toLowerCase();
     const args = parts.slice(1);
 
     try {
         const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
-        const tools = getChoonsimSolanaTools(userId) as Array<{ name: string; invoke(input: unknown): Promise<unknown> }>;
+        const tools = getChoonsimSolanaTools(userId, conversationId) as Array<{ name: string; invoke(input: unknown): Promise<unknown> }>;
 
         const run = async (name: string, input: unknown): Promise<string | null> => {
             const tool = tools.find((t) => t.name === name);
@@ -539,6 +550,6 @@ async function executeSlashCommand(rawMessage: string, userId: string): Promise<
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         logger.error({ category: "SYSTEM", message: `Slash command error [${rawMessage}]: ${msg}`, stackTrace: e instanceof Error ? e.stack : undefined });
-        return "커맨드 실행 중 오류가 발생했어. 잠시 후 다시 시도해줘!";
+        return "An error occurred while running the command. Please try again in a moment!";
     }
 }

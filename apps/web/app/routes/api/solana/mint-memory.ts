@@ -9,7 +9,7 @@ import { auth } from "~/lib/auth.server";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { eq, sql } from "drizzle-orm";
-import { mintMemoryNFT } from "~/lib/solana/cnft.server";
+import { mintMemoryNFT, getDefaultImageUri } from "~/lib/solana/cnft.server";
 import { z } from "zod";
 
 const MINT_COST_CHOCO = 200;
@@ -18,7 +18,7 @@ const mintSchema = z.object({
   ownerAddress: z.string().min(32).max(44),
   name: z.string().min(1).max(32),
   description: z.string().max(200).optional().default(""),
-  imageUri: z.string().url().optional().default(""),
+  imageUri: z.string().url().optional(),
   characterId: z.string(),
 });
 
@@ -50,7 +50,8 @@ export async function action({ request }: ActionFunctionArgs) {
     return Response.json({ error: "Invalid request", details: parsed.error.issues }, { status: 400 });
   }
 
-  const { ownerAddress, name, description, imageUri, characterId } = parsed.data;
+  const { ownerAddress, name, description, characterId } = parsed.data;
+  const imageUri = parsed.data.imageUri ?? getDefaultImageUri();
 
   try {
     // cNFT 발행

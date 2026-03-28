@@ -33,41 +33,41 @@ export function loader({ request }: LoaderFunctionArgs) {
   // GET — Action 메타데이터
   const payload = {
     icon: "https://res.cloudinary.com/dpmw96p8k/image/upload/v1/choonsim/gift-action-icon.png",
-    title: "춘심에게 초코 선물하기 🍫",
+    title: "Gift CHOCO to a Fan 🍫",
     description:
-      "다른 팬에게 CHOCO 토큰을 선물하세요. 선물받은 팬은 춘심과 더 많은 대화를 나눌 수 있습니다.",
-    label: "CHOCO 선물",
+      "Send CHOCO tokens to another fan. The recipient can enjoy more conversations with Choonsim.",
+    label: "Gift CHOCO",
     links: {
       actions: [
         {
-          label: "100 CHOCO 선물",
+          label: "Gift 100 CHOCO",
           href: "/api/actions/gift?amount=100",
           parameters: [
             {
               name: "to",
-              label: "받는 사람 지갑 주소",
+              label: "Recipient wallet address",
               required: true,
             },
           ],
         },
         {
-          label: "500 CHOCO 선물",
+          label: "Gift 500 CHOCO",
           href: "/api/actions/gift?amount=500",
           parameters: [
             {
               name: "to",
-              label: "받는 사람 지갑 주소",
+              label: "Recipient wallet address",
               required: true,
             },
           ],
         },
         {
-          label: "1000 CHOCO 선물",
+          label: "Gift 1000 CHOCO",
           href: "/api/actions/gift?amount=1000",
           parameters: [
             {
               name: "to",
-              label: "받는 사람 지갑 주소",
+              label: "Recipient wallet address",
               required: true,
             },
           ],
@@ -95,7 +95,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     if (!senderAddress) {
       return Response.json(
-        { message: "account 파라미터가 필요합니다." },
+        { message: "account parameter is required." },
         { status: 400, headers: ACTIONS_CORS_HEADERS }
       );
     }
@@ -108,7 +108,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     if (!toAddress) {
       return Response.json(
-        { message: "to 파라미터(받는 사람 지갑 주소)가 필요합니다." },
+        { message: "to parameter (recipient wallet address) is required." },
         { status: 400, headers: ACTIONS_CORS_HEADERS }
       );
     }
@@ -158,14 +158,14 @@ export async function action({ request }: ActionFunctionArgs) {
     return Response.json(
       {
         transaction: base64Tx,
-        message: `🍫 ${amount} CHOCO 선물 트랜잭션이 준비되었습니다!`,
+        message: `🍫 ${amount} CHOCO gift transaction is ready!`,
       },
       { headers: ACTIONS_CORS_HEADERS }
     );
   } catch (err) {
     console.error("[actions/gift] error:", err);
     return Response.json(
-      { message: "트랜잭션 생성에 실패했습니다." },
+      { message: "Failed to create transaction." },
       { status: 500, headers: ACTIONS_CORS_HEADERS }
     );
   }
@@ -199,7 +199,7 @@ async function buildDemoTransaction(senderAddress: string, amount: number) {
   return Response.json(
     {
       transaction: base64Tx,
-      message: `🍫 [DEMO] ${amount} CHOCO 선물 — CHOCO 토큰 배포 후 실제 전송됩니다.`,
+      message: `🍫 [DEMO] ${amount} CHOCO gift — will be sent for real after CHOCO token is deployed.`,
     },
     { headers: ACTIONS_CORS_HEADERS }
   );

@@ -35,18 +35,21 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
-import { eq, sql } from "drizzle-orm";
-import { mintMemoryNFT } from "~/lib/solana/cnft.server";
+import { eq, sql, count, desc } from "drizzle-orm";
+import { mintMemoryNFT, getDefaultImageUri } from "~/lib/solana/cnft.server";
+import { getRandomIllustration, buildIllustrationWithOverlay } from "~/lib/cloudinary.server";
+import { model } from "~/lib/ai/model";
+import { HumanMessage } from "@langchain/core/messages";
 import { DateTime } from "luxon";
 
 const CHOCO_DECIMALS = 6;
 const MINT_COST_CHOCO = 200;
 const PHANTOM_GUIDE =
-  "자기야, 이 기능은 Solana 지갑이 필요해!\n\n" +
-  "1️⃣ Phantom 설치: https://phantom.app\n" +
-  "2️⃣ 설치 후 지갑 주소 복사\n" +
-  "3️⃣ 프로필 → Wallet 메뉴에서 주소 등록\n\n" +
-  "등록하고 나면 바로 할 수 있어! 💕";
+  "Hey, this feature requires a Solana wallet!\n\n" +
+  "1️⃣ Install Phantom: https://phantom.app\n" +
+  "2️⃣ Copy your wallet address after installation\n" +
+  "3️⃣ Go to Profile → Wallet and register your address\n\n" +
+  "Once you're set up, we can do this right away! 💕";
 
 // ── Agent Kit 싱글턴 ────────────────────────────────────────────────────────
 
@@ -158,7 +161,7 @@ export async function transferChocoSPL(
 // ── LangGraph 도구 목록 ─────────────────────────────────────────────────────
 
 /** 춘심 Agent 전용 Solana 도구 (LangGraph callModelNode용) */
-export function getChoonsimSolanaTools(userId: string) {
+export function getChoonsimSolanaTools(userId: string, conversationId?: string) {
   return [
 
     // ── READ 도구 ──────────────────────────────────────────────────────────
@@ -170,11 +173,11 @@ export function getChoonsimSolanaTools(userId: string) {
           columns: { chocoBalance: true },
         });
         const balance = parseFloat(user?.chocoBalance ?? "0");
-        return `현재 CHOCO 잔액: ${balance.toLocaleString()} CHOCO`;
+        return `Current CHOCO balance: ${balance.toLocaleString()} CHOCO`;
       },
       {
         name: "checkChocoBalance",
-        description: "사용자의 현재 CHOCO 잔액을 조회합니다.",
+        description: "Check the user's current CHOCO balance.",
         schema: z.object({}),
       }
     ),
@@ -188,16 +191,16 @@ export function getChoonsimSolanaTools(userId: string) {
           );
           const pubkey = new PublicKey(walletAddress);
           const balance = await connection.getBalance(pubkey);
-          return `${walletAddress}의 SOL 잔액: ${(balance / 1e9).toFixed(4)} SOL (Devnet)`;
+          return `SOL balance of ${walletAddress}: ${(balance / 1e9).toFixed(4)} SOL (Devnet)`;
         } catch {
-          return "잘못된 지갑 주소입니다.";
+          return "Invalid wallet address.";
         }
       },
       {
         name: "getSolBalance",
-        description: "특정 Solana 지갑의 SOL 잔액을 조회합니다 (Devnet).",
+        description: "Check the SOL balance of a specific Solana wallet (Devnet).",
         schema: z.object({
-          walletAddress: z.string().describe("Solana 지갑 주소 (Base58)"),
+          walletAddress: z.string().describe("Solana wallet address (Base58)"),
         }),
       }
     ),
@@ -206,14 +209,14 @@ export function getChoonsimSolanaTools(userId: string) {
       async () => {
         const baseUrl = process.env.BETTER_AUTH_URL || "";
         return (
-          `오늘의 체크인 Blink 💕\n` +
+          `Today's Check-in Blink 💕\n` +
           `${baseUrl}/api/actions/checkin\n` +
-          `체크인하면 50 CHOCO를 받을 수 있어요!`
+          `Check in and earn 50 CHOCO!`
         );
       },
       {
         name: "getCheckinBlink",
-        description: "오늘의 일일 체크인 Blink URL을 안내합니다.",
+        description: "Provide today's daily check-in Blink URL.",
         schema: z.object({}),
       }
     ),
@@ -222,16 +225,16 @@ export function getChoonsimSolanaTools(userId: string) {
       async ({ amount }) => {
         const baseUrl = process.env.BETTER_AUTH_URL || "";
         return (
-          `🍫 ${amount} CHOCO 선물 Blink:\n` +
+          `🍫 ${amount} CHOCO Gift Blink:\n` +
           `${baseUrl}/api/actions/gift?amount=${amount}\n` +
-          `X(Twitter)에 공유하면 팬들이 바로 선물을 받을 수 있어요!`
+          `Share on X (Twitter) and your fans can receive the gift right away!`
         );
       },
       {
         name: "getGiftBlink",
-        description: "CHOCO 선물 Blink URL을 생성하여 안내합니다.",
+        description: "Generate and provide a CHOCO gift Blink URL.",
         schema: z.object({
-          amount: z.number().int().positive().describe("선물할 CHOCO 수량"),
+          amount: z.number().int().positive().describe("Amount of CHOCO to gift"),
         }),
       }
     ),
@@ -242,14 +245,16 @@ export function getChoonsimSolanaTools(userId: string) {
      * engraveMemory — "기억에 새겨줘" 감지 시 cNFT 발행
      * 1. 지갑 확인 → 없으면 Phantom 안내
      * 2. CHOCO 200 확인 → 부족하면 안내
-     * 3. cNFT 발행 → 유저 지갑으로 전송
-     * 4. DB CHOCO 200 차감
+     * 3. 최근 대화에서 AI 제목 + 키워드 자동 생성
+     * 4. 랜덤 일러스트 선택 + Cloudinary 날짜 오버레이
+     * 5. cNFT 발행 → 유저 지갑으로 전송
+     * 6. DB CHOCO 200 차감
      */
     tool(
       async ({ memoryTitle }) => {
         const user = await db.query.user.findFirst({
           where: eq(schema.user.id, userId),
-          columns: { solanaWallet: true, chocoBalance: true, id: true },
+          columns: { solanaWallet: true, chocoBalance: true, id: true, name: true },
         });
 
         if (!user?.solanaWallet) return PHANTOM_GUIDE;
@@ -257,26 +262,84 @@ export function getChoonsimSolanaTools(userId: string) {
         const balance = parseFloat(user.chocoBalance ?? "0");
         if (balance < MINT_COST_CHOCO) {
           return (
-            `CHOCO가 부족해... 현재 ${balance} CHOCO인데, ` +
-            `기억 각인에는 ${MINT_COST_CHOCO} CHOCO가 필요해!`
+            `Not enough CHOCO... You have ${balance} CHOCO, but ` +
+            `engraving a memory costs ${MINT_COST_CHOCO} CHOCO!`
           );
         }
 
         try {
-          const today = DateTime.now().setZone("Asia/Seoul").toFormat("yyyy-MM-dd");
-          const name = (memoryTitle || "춘심과의 소중한 순간").slice(0, 32);
-          const description = `춘심과의 소중한 순간 — ${today}`;
-          const imageUri =
-            process.env.CHOONSIM_DEFAULT_IMAGE_URI ||
-            "https://res.cloudinary.com/dpmw96p8k/image/upload/v1/choonsim/choonsim.png";
+          const today = DateTime.now().setZone("Asia/Seoul");
+          const dateStr = today.toFormat("yyyy.MM.dd");
 
+          // ── 대화 메시지 조회 ──────────────────────────────────────────────
+          let msgCount = 1;
+          let recentMessages: Array<{ role: string; content: string }> = [];
+
+          if (conversationId) {
+            const [countResult, messages] = await Promise.all([
+              db.select({ value: count() })
+                .from(schema.message)
+                .where(eq(schema.message.conversationId, conversationId)),
+              db.query.message.findMany({
+                where: eq(schema.message.conversationId, conversationId),
+                columns: { role: true, content: true },
+                orderBy: [desc(schema.message.createdAt)],
+                limit: 8,
+              }),
+            ]);
+            msgCount = countResult[0]?.value ?? 1;
+            recentMessages = messages.reverse();
+          }
+
+          // ── AI 제목 + 키워드 자동 생성 ───────────────────────────────────
+          let nftName = (memoryTitle || "").slice(0, 32);
+          let keyword = "";
+
+          if (recentMessages.length > 0) {
+            const chatSnippet = recentMessages
+              .map(m => `${m.role === "user" ? "User" : "Choonsim"}: ${m.content.slice(0, 60)}`)
+              .join("\n");
+
+            try {
+              const aiRes = await model.invoke([
+                new HumanMessage(
+                  `Look at the conversation below and reply with JSON only. Do not say anything else.\n\n` +
+                  `{"title": "A poetic one-line title capturing this moment (under 20 chars, English)", "keyword": "One core word from the conversation (English)"}\n\n` +
+                  `Conversation:\n${chatSnippet}`
+                ),
+              ]);
+              const raw = aiRes.content.toString().trim()
+                .replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+              const parsed = JSON.parse(raw) as { title?: string; keyword?: string };
+              if (!nftName && parsed.title) nftName = parsed.title.slice(0, 32);
+              if (parsed.keyword) keyword = parsed.keyword;
+            } catch {
+              // AI 생성 실패 시 기본값 사용
+            }
+          }
+
+          if (!nftName) nftName = "A precious moment with Choonsim";
+
+          // ── 랜덤 이미지 + 오버레이 ────────────────────────────────────────
+          const baseImageUri = await getRandomIllustration();
+          const imageUri = buildIllustrationWithOverlay(baseImageUri, dateStr, msgCount);
+
+          // ── 속성 구성 ─────────────────────────────────────────────────────
+          const extraAttributes = [
+            { trait_type: "date", value: dateStr },
+            { trait_type: "message_count", value: String(msgCount) },
+            ...(keyword ? [{ trait_type: "keyword", value: keyword }] : []),
+          ];
+
+          // ── cNFT 발행 ─────────────────────────────────────────────────────
           const result = await mintMemoryNFT({
             ownerAddress: user.solanaWallet,
-            name,
-            description,
+            name: nftName,
+            description: `A precious moment with Choonsim — ${dateStr}`,
             imageUri,
             characterId: "choonsim",
             userId,
+            extraAttributes,
           });
 
           // DB CHOCO 차감
@@ -290,26 +353,25 @@ export function getChoonsimSolanaTools(userId: string) {
 
           const explorerUrl = `https://explorer.solana.com/tx/${result.signature}?cluster=devnet`;
           return (
-            `기억에 새겼어! 🎖️ ${MINT_COST_CHOCO} CHOCO 사용됐어.\n` +
-            `"${name}"\n` +
-            `온체인에 영원히 새겨진 거야! 💕\n` +
+            `Memory engraved! 🎖️ ${MINT_COST_CHOCO} CHOCO used.\n"${nftName}"\nNow forever sealed on-chain! 💕` +
+            `\n---\n` +
             `Explorer: ${explorerUrl}`
           );
         } catch (err) {
           console.error("[engraveMemory] error:", err);
-          return "지금 기억을 새기는 중에 문제가 생겼어... 잠시 후에 다시 시도해줘!";
+          return "Something went wrong while engraving your memory... Please try again in a moment!";
         }
       },
       {
         name: "engraveMemory",
         description:
-          "유저가 현재 대화 순간을 cNFT로 온체인에 기록하고 싶을 때 사용. " +
-          "'기억에 새겨줘', '추억으로 남겨줘', 'NFT로 만들어줘' 표현 감지.",
+          "Use when the user wants to record the current conversation moment as a cNFT on-chain. " +
+          "Detect expressions like 'save this memory', 'engrave this moment', 'make an NFT', 'record this'.",
         schema: z.object({
           memoryTitle: z
             .string()
             .optional()
-            .describe("NFT 제목. 없으면 기본값 사용"),
+            .describe("NFT title. Auto-generated by AI if not provided"),
         }),
       }
     ),
@@ -329,19 +391,19 @@ export function getChoonsimSolanaTools(userId: string) {
         if (!user?.solanaWallet) return PHANTOM_GUIDE;
 
         return (
-          `${amount} CHOCO 구매할게! 🍫\n` +
-          `지갑: ${user.solanaWallet.slice(0, 6)}…${user.solanaWallet.slice(-4)}\n` +
-          `아래 버튼으로 Phantom에서 바로 결제해줘! 💕\n` +
+          `Buying ${amount} CHOCO! 🍫\n` +
+          `Wallet: ${user.solanaWallet.slice(0, 6)}…${user.solanaWallet.slice(-4)}\n` +
+          `Pay instantly with Phantom using the button below! 💕\n` +
           `[PHANTOM:${amount}]`
         );
       },
       {
         name: "buyChoco",
         description:
-          "유저가 CHOCO를 구매하고 싶을 때. " +
-          "'초코 살게', '초코 구매', '초코 [숫자]개 사고 싶어' 표현 감지.",
+          "Use when the user wants to purchase CHOCO. " +
+          "Detect expressions like 'buy choco', 'purchase choco', 'I want to buy [number] choco'.",
         schema: z.object({
-          amount: z.number().int().positive().describe("구매할 CHOCO 수량"),
+          amount: z.number().int().positive().describe("Amount of CHOCO to purchase"),
         }),
       }
     ),

@@ -259,7 +259,8 @@ export async function action({ request }: ActionFunctionArgs) {
                           giftContext ? { ...giftContext, countInSession: giftCountInSession } : undefined,
                           request.signal,
                           (currentConversation as any)?.character?.name,
-                          (currentConversation as any)?.character?.personaPrompt
+                          (currentConversation as any)?.character?.personaPrompt,
+                          conversationId
                       );
 
                 for await (const item of streamSource) {
@@ -313,7 +314,8 @@ export async function action({ request }: ActionFunctionArgs) {
                 // 2단계: 전체 응답을 ---로 나누기
                 let messageParts = contentWithoutPhotoMarker.split('---').map(p => p.trim()).filter(p => p.length > 0);
 
-                if (messageParts.length <= 1 && contentWithoutPhotoMarker.length > 100) {
+                const hasUrl = /https?:\/\//.test(contentWithoutPhotoMarker);
+                if (messageParts.length <= 1 && contentWithoutPhotoMarker.length > 100 && !hasUrl) {
                     const chunkSize = 80;
                     messageParts = [];
                     let currentPart = "";

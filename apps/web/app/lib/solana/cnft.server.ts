@@ -8,6 +8,7 @@ import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import {
   keypairIdentity,
   publicKey as umiPublicKey,
+  base58,
 } from "@metaplex-foundation/umi";
 import {
   mintV1,
@@ -15,6 +16,7 @@ import {
   TokenProgramVersion,
 } from "@metaplex-foundation/mpl-bubblegum";
 import type { MetadataArgsArgs } from "@metaplex-foundation/mpl-bubblegum";
+import { uploadNFTMetadata } from "~/lib/cloudinary.server";
 
 function getUmi() {
   const rpcUrl = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
@@ -31,10 +33,23 @@ function getUmi() {
   return umi;
 }
 
+/** NFT 이미지 URL — 환경변수 우선, 없으면 Cloudinary fallback */
+export function getDefaultImageUri(): string {
+  return (
+    process.env.CHOONSIM_DEFAULT_IMAGE_URI ||
+    "https://res.cloudinary.com/dpmw96p8k/image/upload/v1/choonsim/choonsim.png"
+  );
+}
+
+export interface NFTAttribute {
+  trait_type: string;
+  value: string;
+}
+
 export interface MintMemoryNFTParams {
   /** 사용자 Solana 지갑 주소 */
   ownerAddress: string;
-  /** NFT 제목 (채팅 첫 문장 또는 사용자 정의) */
+  /** NFT 제목 */
   name: string;
   /** NFT 설명 */
   description: string;
@@ -42,8 +57,10 @@ export interface MintMemoryNFTParams {
   imageUri: string;
   /** 캐릭터 ID */
   characterId: string;
-  /** 사용자 ID (속성으로 저장) */
+  /** 사용자 ID */
   userId: string;
+  /** 추가 속성 (date, message_count, keyword 등) */
+  extraAttributes?: NFTAttribute[];
 }
 
 export interface MintResult {
@@ -62,10 +79,12 @@ export async function mintMemoryNFT(params: MintMemoryNFTParams): Promise<MintRe
 
   const umi = getUmi();
 
+  const metadataUri = await buildMetadataUri(params);
+
   const metadata: MetadataArgsArgs = {
     name: params.name.slice(0, 32), // Metaplex 최대 32자
     symbol: "CHM",
-    uri: buildMetadataUri(params),
+    uri: metadataUri,
     sellerFeeBasisPoints: 0,
     collection: null,
     creators: [
@@ -90,29 +109,31 @@ export async function mintMemoryNFT(params: MintMemoryNFTParams): Promise<MintRe
   }).sendAndConfirm(umi);
 
   return {
-    signature: Buffer.from(signature).toString("base64"),
+    signature: base58.deserialize(signature)[0],
   };
 }
 
-/** 온체인 Metadata JSON URI — Cloudinary 기반 */
-function buildMetadataUri(params: MintMemoryNFTParams): string {
-  // 실제 배포 시 IPFS/Arweave 사용 권장
-  // 현재는 온체인 속성을 URI에 인코딩 (데모)
+/**
+ * 메타데이터 JSON을 Cloudinary에 업로드하고 HTTPS URL을 반환합니다.
+ * DAS API 호환 표준 URI 형식을 사용합니다.
+ */
+async function buildMetadataUri(params: MintMemoryNFTParams): Promise<string> {
+  const baseAttributes: NFTAttribute[] = [
+    { trait_type: "character", value: params.characterId },
+    { trait_type: "userId", value: params.userId },
+    { trait_type: "type", value: "memory" },
+  ];
+
   const metadataJson = {
     name: params.name,
     description: params.description,
     image: params.imageUri,
-    attributes: [
-      { trait_type: "character", value: params.characterId },
-      { trait_type: "userId", value: params.userId },
-      { trait_type: "type", value: "memory" },
-    ],
+    attributes: [...baseAttributes, ...(params.extraAttributes ?? [])],
     properties: {
       files: [{ uri: params.imageUri, type: "image/png" }],
     },
   };
 
-  // Base64 Data URI (해커톤 데모용 — 실제론 Arweave/IPFS)
-  const encoded = Buffer.from(JSON.stringify(metadataJson)).toString("base64");
-  return `data:application/json;base64,${encoded}`;
+  const fileName = `${params.userId}-${Date.now()}`;
+  return uploadNFTMetadata(metadataJson, fileName);
 }
