@@ -2,7 +2,7 @@ import { db } from "./db.server";
 import * as schema from "../db/schema";
 
 export type LogLevel = "INFO" | "WARN" | "ERROR" | "AUDIT";
-export type LogCategory = "SYSTEM" | "API" | "AUTH" | "PAYMENT" | "DB" | "ADMIN" | "MIGRATION";
+export type LogCategory = "SYSTEM" | "API" | "AUTH" | "PAYMENT" | "DB" | "ADMIN" | "MIGRATION" | "ZK_COMPRESSION";
 
 interface LogPayload {
     level?: LogLevel;

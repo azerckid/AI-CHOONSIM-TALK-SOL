@@ -75,7 +75,7 @@ export async function mintCompressedChoco(
   const agentKeypair = getAgentKeypair();
   const mint = new PublicKey(mintAddress);
   const toPubkey = new PublicKey(recipientWallet);
-  const amountRaw = BigInt(amount) * BigInt(10 ** CHOCO_DECIMALS);
+  const amountRaw = amount * (10 ** CHOCO_DECIMALS);
 
   const signature = await mintTo(
     rpc,
@@ -109,7 +109,7 @@ export async function transferCompressedChoco(
   const agentKeypair = getAgentKeypair();
   const mint = new PublicKey(mintAddress);
   const toPubkey = new PublicKey(toWallet);
-  const amountRaw = BigInt(amount) * BigInt(10 ** CHOCO_DECIMALS);
+  const amountRaw = amount * (10 ** CHOCO_DECIMALS);
 
   const signature = await compressedTransfer(
     rpc,

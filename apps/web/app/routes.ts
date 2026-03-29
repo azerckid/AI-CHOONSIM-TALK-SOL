@@ -34,6 +34,7 @@ export default [
   route("profile/edit", "routes/profile/edit.tsx"),
   route("profile/subscription", "routes/profile/subscription.tsx"),
   route("profile/saved", "routes/profile/saved.tsx"),
+  route("profile/memories", "routes/profile/memories.tsx"),
   route("profile", "routes/profile/index.tsx"),
 
   // CHOCO 구매
@@ -62,6 +63,7 @@ export default [
   route("api/chat", "routes/api/chat/index.ts"),
   route("api/chat/create", "routes/api/chat/create.ts"),
   route("api/chat/delete", "routes/api/chat/delete.ts"),
+  route("api/chat/interrupt", "routes/api/chat/interrupt.ts"),
   route("api/messages", "routes/api/messages/index.ts"),
   route("api/messages/:id/like", "routes/api/messages/$id.like.ts"),
   route("api/upload", "routes/api/upload.ts"),
@@ -77,6 +79,8 @@ export default [
   route("api/items/gift", "routes/api/items/gift.ts"),
   route("api/payment/create-order", "routes/api.payment.create-order.ts"),
   route("api/payment/capture-order", "routes/api.payment.capture-order.ts"),
+  route("api/payment/item/create-order", "routes/api.payment.item.create-order.ts"),
+  route("api/payment/item/capture-order", "routes/api.payment.item.capture-order.ts"),
   route("pricing", "routes/pricing.tsx"),
   route("api/payment/activate-subscription", "routes/api.payment.activate-subscription.ts"),
   route("api/webhooks/paypal", "routes/api.webhooks.paypal.ts"),
@@ -115,6 +119,7 @@ export default [
 
   // Solana cNFT
   route("api/solana/mint-memory", "routes/api/solana/mint-memory.ts"),
+  route("api/solana/memories", "routes/api/solana/memories.ts"),
 
   // ZK Compression setup (admin)
   route("api/admin/setup-compressed-token", "routes/api/admin/setup-compressed-token.ts"),
