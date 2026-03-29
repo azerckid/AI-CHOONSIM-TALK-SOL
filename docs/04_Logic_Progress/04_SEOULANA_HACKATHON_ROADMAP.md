@@ -62,36 +62,37 @@
 
 ---
 
-### 🔴 Day 10 (2026-04-03, 금) — cNFT 앨범 UI + 통합 테스트
-**목표**: 미구현 UI 완성 + 데모 플로우 전체 검증
+### 🔴 Day 10 (2026-04-03, 금) — 통합 테스트 + 버그 픽스
+**목표**: 데모 플로우 전체 검증 및 버그 수정
 
-#### cNFT 메모리 앨범 UI (코딩 작업)
-- [ ] `/profile/memories` 페이지 구현
-  - Metaplex DAS API (`getAssetsByOwner`)로 유저 cNFT 목록 조회
-  - 민팅 날짜, 대화 내용 미리보기, Explorer 링크 카드 UI
-  - 지갑 미연결 시 안내 메시지 표시
+> cNFT 메모리 앨범 UI(`/profile/memories`)는 구현 완료 및 routes.ts 등록 완료 (2026-03-29)
 
-#### 통합 테스트
-- [ ] 데모 시나리오 E2E 1회 완주 (아래 데모 시나리오 참조)
+#### 데모 E2E 테스트 (직접 브라우저에서 수행)
+- [ ] Gift Blink → Phantom 서명 → 온체인 트랜잭션 완료 확인
+- [ ] 채팅 → "기억 새기기" → cNFT 민팅 → Explorer 링크 반환 확인
+- [ ] `/profile/memories` → cNFT 카드 정상 표시 확인
+- [ ] "내 SOL 잔액 얼마야?" → Agent Kit 응답 확인
+- [ ] CHOCO 결제 (Privy 임베디드 지갑) → 잔액 반영 확인
 - [ ] 발견된 버그 우선순위화 및 수정
-- [ ] 데모용 Devnet 지갑에 SOL / CHOCO 충분히 확보
 
 #### 환경변수 점검
 - [ ] Vercel 환경변수 전체 확인 (ZK Compression, SIWS, Privy 포함)
 - [ ] `CHOONSIM_DEFAULT_IMAGE_URI` Vercel 등록 여부 확인
+- [ ] 데모용 Devnet 지갑에 SOL / CHOCO 충분히 확보
 
 ---
 
 ### 🟡 Day 11 (2026-04-04, 토) — 제출 준비
 **목표**: 제출 서류 + 데모 영상 완성
 
+- [x] GitHub README 업데이트 (2026-03-29 완료)
+  - Blinks, cNFT, Agent Kit, Token-2022, Privy, SIWS, ZK Compression 전체 기재
+  - 라이브 URL, 온체인 주소, Explorer 링크, Key Files 포함
 - [ ] 데모 영상 녹화 (3분 이내, 아래 시나리오 기준)
-- [ ] GitHub README 업데이트
-  - 구현된 Solana 기능 전체 목록 (Blinks, cNFT, Agent Kit, Token-2022, Privy, SIWS, ZK Compression)
-  - 라이브 URL, Solana Explorer 링크, 데모 영상 링크
+  - 완성 후 README 상단에 영상 링크 추가
 - [ ] Seoulana 제출 텍스트 작성 (`05_HACKATHON_SUBMISSION_INFO.md` 기반)
 - [ ] Vercel 배포 최종 확인 (Devnet 모드 동작 검증)
-- [ ] SuperTeam Korea 슬랙 채널 제출 방법 확인
+- [ ] SuperTeam Korea 슬랙 채널 제출
 
 **예비일**: 2026-04-05(일) — 최종 버그 픽스 및 제출
 
