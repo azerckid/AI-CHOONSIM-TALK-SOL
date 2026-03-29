@@ -116,6 +116,9 @@ export default [
   // Solana cNFT
   route("api/solana/mint-memory", "routes/api/solana/mint-memory.ts"),
 
+  // ZK Compression setup (admin)
+  route("api/admin/setup-compressed-token", "routes/api/admin/setup-compressed-token.ts"),
+
   // Admin Routes
   route("admin", "routes/admin/index.tsx"),
   route("admin/dashboard", "routes/admin/dashboard.tsx"),

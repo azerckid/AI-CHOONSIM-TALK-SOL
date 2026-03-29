@@ -9,6 +9,7 @@ import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { solanaConnection } from "~/lib/solana/connection.server";
+import { mintCompressedChoco } from "~/lib/solana/zk-compression.server";
 
 const CHECKIN_CHOCO_REWARD = 50;
 const MISSION_ID = "daily_checkin_solana";
@@ -103,11 +104,33 @@ export async function action({ request }: ActionFunctionArgs) {
       }
     });
 
+    // ZK Compression — 지갑이 등록된 유저에게 압축 CHOCO 온체인 민팅
+    let zkSignature: string | null = null;
+    try {
+      const user = await db.query.user.findFirst({
+        where: eq(schema.user.id, userId),
+        columns: { solanaWallet: true },
+      });
+      if (user?.solanaWallet) {
+        const zkResult = await mintCompressedChoco(user.solanaWallet, CHECKIN_CHOCO_REWARD);
+        zkSignature = zkResult.signature;
+      }
+    } catch (zkErr) {
+      // ZK 민팅 실패는 체크인 성공에 영향 없음
+      console.warn("[checkin/verify] ZK compression mint failed (non-critical):", zkErr);
+    }
+
     return Response.json({
       success: true,
       message: `✅ 체크인 완료! ${CHECKIN_CHOCO_REWARD} CHOCO가 지급되었습니다.`,
       reward: CHECKIN_CHOCO_REWARD,
       signature: txSignature,
+      ...(zkSignature && {
+        zkCompression: {
+          signature: zkSignature,
+          explorer: `https://explorer.solana.com/tx/${zkSignature}?cluster=devnet`,
+        },
+      }),
     });
   } catch (err) {
     console.error("[checkin/verify] error:", err);

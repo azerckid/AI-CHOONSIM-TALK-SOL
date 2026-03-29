@@ -2,6 +2,7 @@
 
 > 해커톤 마감: 2026-04-05 23:59 KST
 > 작성일: 2026-03-28
+> 최종 업데이트: 2026-03-29
 
 ---
 
@@ -9,67 +10,52 @@
 
 | 순위 | 기능 | 난이도 | 임팩트 | 상태 |
 |------|------|--------|--------|------|
-| 1 | Embedded Wallet (Privy) | 중 | 최고 | 구현 예정 |
-| 2 | Sign In With Solana (SIWS) | 하 | 중 | 구현 예정 |
-| 3 | ZK Compression | 상 | 중 | 검토 중 |
+| 1 | Embedded Wallet (Privy) | 중 | 최고 | ✅ 완료 |
+| 2 | Sign In With Solana (SIWS) | 하 | 중 | ✅ 완료 |
+| 3 | ZK Compression | 상 | 중 | 🔨 구현 중 |
 | 4 | Solana Mobile (SMS) | 상 | 낮음 | 해커톤 후 |
 
 ---
 
-## 1. Embedded Wallet (Privy) — 최우선
-
-### 배경
-현재 신규 유저 온보딩 흐름:
-1. 회원가입
-2. Phantom 앱 설치
-3. 지갑 주소 복사
-4. 프로필 → Wallet 메뉴에서 수동 등록
-
-이 4단계 장벽이 일반 유저(non-crypto)의 최대 진입 장벽이다.
+## 1. ✅ Embedded Wallet (Privy) — 완료 (2026-03-29)
 
 ### 해결책
 **Privy Embedded Wallet** — 이메일/소셜 로그인만으로 자동으로 지갑 생성. Phantom 설치 불필요.
 
-### 구현 계획
-- `@privy-io/react-auth` SDK 설치
-- PrivyProvider로 앱 래핑
-- 로그인 시 embedded wallet 자동 생성 → DB에 지갑 주소 자동 저장
-- 기존 Phantom 연결은 외부 지갑 옵션으로 유지
-
-### 기대 효과
-- 온보딩 4단계 → 1단계 (소셜 로그인만)
-- 일반 유저도 cNFT 발행, CHOCO 거래 가능
-- 데모 시 심사위원에게 즉시 체험 가능
+### 구현 결과
+- `@privy-io/react-auth` SDK + `PrivyWalletProvider` 래핑
+- 채팅 인라인 결제 카드(`ChocoPayCard`) — Phantom 없으면 Privy 임베디드 지갑으로 결제
+- Privy `signTransaction` + `sendRawTransaction` (Privy 백엔드 우회)
+- Buffer 폴리필 (`root.tsx`), `solana:devnet` RPC 설정
 
 ### 관련 파일
-- `app/root.tsx` — PrivyProvider 추가
-- `app/routes/api/user/wallet.ts` — 지갑 자동 등록
-- `app/lib/auth/` — 로그인 후크 수정
+- `app/components/solana/PrivyWalletProvider.tsx`
+- `app/components/payment/PrivyChocoPayCard.tsx`
+- `app/components/payment/ChocoPayCard.tsx`
 
 ---
 
-## 2. Sign In With Solana (SIWS) — 2순위
-
-### 배경
-현재 인증: 이메일/소셜 로그인 (Better Auth)
-지갑 연결: 별도 단계 (프로필에서 수동 등록)
+## 2. ✅ Sign In With Solana (SIWS) — 완료 (2026-03-29)
 
 ### 해결책
 SIWS — 지갑 서명으로 로그인. 지갑이 곧 신원.
 
-### 구현 계획
-- `@web3auth/sign-in-with-solana` 또는 직접 구현
-- 로그인 페이지에 "Connect Wallet" 버튼 추가
-- 지갑 서명 검증 → Better Auth 세션 생성
-- 기존 이메일 로그인과 병행 제공
+### 구현 결과
+- `tweetnacl` Ed25519 서명 검증 (외부 라이브러리 추가 없음)
+- nonce → `verification` 테이블 저장 (5분 TTL)
+- `solanaWallet`로 기존 계정 조회 → 소셜/이메일 계정도 Phantom 하나로 로그인
+- 신규 지갑 → `siws_<wallet>@choonsim.wallet` 자동 계정 생성
+- Better Auth 쿠키 서명 알고리즘 재현 (HMAC-SHA256 Web Crypto API)
 
-### 기대 효과
-- crypto 유저는 지갑 하나로 모든 것 해결
-- 별도 지갑 등록 단계 불필요
+### 관련 파일
+- `app/lib/solana/siws.server.ts`
+- `app/routes/api/auth/siws/nonce.ts`
+- `app/routes/api/auth/siws/verify.ts`
+- `app/components/auth/SiwsButton.tsx`
 
 ---
 
-## 3. ZK Compression — 3순위
+## 3. 🔨 ZK Compression — 구현 중
 
 ### 배경
 Solana Foundation이 가장 강하게 추진 중인 기술.
