@@ -8,7 +8,12 @@
 .env.development.local
 .env.production
 .env.production.local
+.env.check
+.env.vercel.backup
 !.env.example
+
+CLAUDE.md
+AGENTS.md
 
 /.vscode/
 node_modules/
