@@ -2,23 +2,48 @@
  * /profile/memories — cNFT 메모리 앨범
  *
  * 사용자 Solana 지갑에 새겨진 춘심과의 기억(cNFT)을 조회합니다.
+ * Phantom 연결 시 → Phantom 주소로 조회
+ * Phantom 미연결 시 → DB의 solanaWallet(Privy 임베디드 지갑) 주소로 fallback
  */
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link, useLoaderData, redirect } from "react-router";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletButton } from "~/components/solana/WalletButton";
 import { BottomNavigation } from "~/components/layout/BottomNavigation";
 import { Loader2, ExternalLink, ImageOff, ChevronLeft, Sparkles } from "lucide-react";
 import type { MemoryNFT } from "~/routes/api/solana/memories";
+import { auth } from "~/lib/auth.server";
+import { db } from "~/lib/db.server";
+import * as schema from "~/db/schema";
+import { eq } from "drizzle-orm";
+import type { LoaderFunctionArgs } from "react-router";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) return redirect("/login");
+
+  const user = await db.query.user.findFirst({
+    where: eq(schema.user.id, session.user.id),
+    columns: { solanaWallet: true },
+  });
+
+  return { embeddedWallet: user?.solanaWallet ?? null };
+}
 
 export default function MemoriesPage() {
+  const { embeddedWallet } = useLoaderData<typeof loader>();
   const { publicKey, connected } = useWallet();
   const [memories, setMemories] = useState<MemoryNFT[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Phantom 연결 주소 우선, 없으면 Privy 임베디드 지갑 주소 사용
+  const walletAddress = connected && publicKey
+    ? publicKey.toBase58()
+    : embeddedWallet ?? null;
+
   useEffect(() => {
-    if (!connected || !publicKey) {
+    if (!walletAddress) {
       setMemories([]);
       return;
     }
@@ -26,7 +51,7 @@ export default function MemoriesPage() {
     setLoading(true);
     setError(null);
 
-    fetch(`/api/solana/memories?wallet=${publicKey.toBase58()}`)
+    fetch(`/api/solana/memories?wallet=${walletAddress}`)
       .then((r) => r.json())
       .then((data: { memories: MemoryNFT[]; error?: string }) => {
         setMemories(data.memories ?? []);
@@ -34,7 +59,9 @@ export default function MemoriesPage() {
       })
       .catch(() => setError("기억을 불러오지 못했어요."))
       .finally(() => setLoading(false));
-  }, [connected, publicKey]);
+  }, [walletAddress]);
+
+  const isUsingEmbedded = !connected && !!embeddedWallet;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -54,10 +81,15 @@ export default function MemoriesPage() {
         <div className="bg-card rounded-2xl border border-border p-4 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium">솔라나 지갑</p>
-            {connected && publicKey ? (
-              <p className="text-xs text-muted-foreground font-mono mt-0.5">
-                {publicKey.toBase58().slice(0, 6)}...{publicKey.toBase58().slice(-4)}
-              </p>
+            {walletAddress ? (
+              <div className="mt-0.5 space-y-0.5">
+                <p className="text-xs text-muted-foreground font-mono">
+                  {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                </p>
+                {isUsingEmbedded && (
+                  <p className="text-xs text-purple-400">임베디드 지갑</p>
+                )}
+              </div>
             ) : (
               <p className="text-xs text-muted-foreground mt-0.5">지갑을 연결하면 기억을 볼 수 있어요</p>
             )}
@@ -66,7 +98,7 @@ export default function MemoriesPage() {
         </div>
 
         {/* 상태별 콘텐츠 */}
-        {!connected ? (
+        {!walletAddress ? (
           <EmptyState message="지갑을 연결하면 온체인에 새겨진 기억들이 나타나요." />
         ) : loading ? (
           <LoadingState />
