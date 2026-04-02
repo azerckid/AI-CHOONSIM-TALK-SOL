@@ -24,7 +24,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return Response.json({ memories: [], error: "wallet address required" }, { status: 400 });
   }
 
-  const rpcUrl = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
+  // DAS API(getAssetsByOwner)는 Helius 같은 확장 RPC에서만 지원됨
+  // HELIUS_RPC_URL 우선, 없으면 ZK_COMPRESSION_RPC_URL(Photon), 최후 fallback은 공개 devnet
+  const rpcUrl =
+    process.env.HELIUS_RPC_URL ||
+    process.env.ZK_COMPRESSION_RPC_URL ||
+    "https://api.devnet.solana.com";
 
   try {
     const res = await fetch(rpcUrl, {
