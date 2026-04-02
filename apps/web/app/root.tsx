@@ -11,6 +11,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useNavigation,
 } from "react-router";
 import { useTranslation } from "react-i18next";
 
@@ -60,10 +61,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+function NavigationProgressBar() {
+  const navigation = useNavigation();
+  const isLoading = navigation.state === "loading";
+
+  if (!isLoading) return null;
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-[9999] h-0.5 bg-primary/20">
+      <div className="h-full bg-primary animate-progress-bar" />
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <PrivyWalletProvider>
       <SolanaWalletProvider>
+        <NavigationProgressBar />
         <Outlet />
       </SolanaWalletProvider>
     </PrivyWalletProvider>

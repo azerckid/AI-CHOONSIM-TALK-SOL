@@ -443,6 +443,17 @@ body {
   }
 }
 
+/* 페이지 전환 진행 바 */
+@keyframes progress-bar {
+  0% { width: 0%; opacity: 1; }
+  60% { width: 80%; opacity: 1; }
+  100% { width: 95%; opacity: 1; }
+}
+
+.animate-progress-bar {
+  animation: progress-bar 1.5s ease-out forwards;
+}
+
 /* PayPal iFrame Dark Mode Force Fix */
 iframe[name^="zoid-paypal-buttons"] {
   background: transparent !important;
