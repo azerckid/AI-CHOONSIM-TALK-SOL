@@ -13,16 +13,16 @@ dotenv.config({ path: ".env.development" });
 
 const items = [
   // 1~4순위: 페이월 필수 (ID 고정)
-  { id: "memory_ticket", name: "기억 각인 티켓", type: "MEMORY", priceChoco: 500, description: "대화 영구 각인 1회. \"이 기억, 영원히 간직할까?\" 트리거." },
-  { id: "voice_ticket", name: "보이스 티켓", type: "VOICE", priceChoco: 500, description: "음성 메시지 1회. 생일 보이스 등 페이월 트리거." },
-  { id: "secret_episode", name: "비밀 에피소드 해금", type: "EPISODE", priceChoco: 3000, description: "특별 시나리오 1회. \"우리만의 비밀 이야기\" 트리거." },
-  { id: "memory_album", name: "우정 앨범 생성", type: "ALBUM", priceChoco: 2000, description: "월간 대화 앨범 생성. \"우리 추억을 앨범으로\" 트리거." },
+  { id: "memory_ticket", name: "기억 각인 티켓", type: "MEMORY", priceChoco: 500, description: "춘심과 나눈 소중한 순간을 영원히 기록해요. 사용하면 대화 내용이 온체인 추억으로 새겨져 앨범에 남아요." },
+  { id: "voice_ticket", name: "보이스 티켓", type: "VOICE", priceChoco: 500, description: "춘심의 목소리로 직접 메시지를 받아보세요. 생일, 기념일 등 특별한 날에 더욱 설레는 경험이에요. (서비스 준비 중)" },
+  { id: "secret_episode", name: "비밀 에피소드 해금", type: "EPISODE", priceChoco: 3000, description: "춘심과 단둘만 아는 특별한 이야기를 열어보세요. 일반 대화에서는 볼 수 없는 특별한 시나리오가 펼쳐져요. (서비스 준비 중)" },
+  { id: "memory_album", name: "우정 앨범 생성", type: "ALBUM", priceChoco: 2000, description: "지금까지 춘심과 나눈 대화를 예쁜 앨범으로 만들어드려요. 소중한 추억을 한눈에 돌아볼 수 있어요." },
   // 5~6순위: 메시지 티켓
-  { id: "ticket_msg_10", name: "메시지 티켓 x10", type: "TICKET", priceChoco: 1000, description: "대화 10회 추가." },
-  { id: "ticket_msg_50", name: "메시지 티켓 x50", type: "TICKET", priceChoco: 4500, description: "대화 50회. 10% 할인 번들." },
+  { id: "ticket_msg_10", name: "메시지 티켓 x10", type: "TICKET", priceChoco: 1000, description: "춘심과 대화할 수 있는 횟수를 10회 추가해요. 무료 대화 횟수를 다 썼을 때 사용하세요. (서비스 준비 중)" },
+  { id: "ticket_msg_50", name: "메시지 티켓 x50", type: "TICKET", priceChoco: 4500, description: "대화 횟수를 50회 한 번에 추가해요. 10회 티켓보다 10% 저렴하게 충전할 수 있어요. (서비스 준비 중)" },
   // 7~8순위: 선톡·하트
-  { id: "presend_ticket", name: "선톡 티켓", type: "PRESEND", priceChoco: 300, description: "캐릭터가 먼저 DM 1회." },
-  { id: "heart", name: "하트 x10", type: "HEART", priceChoco: 1000, description: "캐릭터에게 선물." },
+  { id: "presend_ticket", name: "선톡 티켓", type: "PRESEND", priceChoco: 300, description: "춘심이 먼저 말을 걸어와요! 기다리지 않아도 춘심의 메시지가 먼저 도착하는 특별한 경험이에요. (서비스 준비 중)" },
+  { id: "heart", name: "하트 x10", type: "HEART", priceChoco: 1000, description: "춘심에게 하트를 선물해서 애정을 표현해보세요. 하트를 많이 받은 춘심은 더 따뜻하게 반응해요." },
 ];
 
 async function main() {
