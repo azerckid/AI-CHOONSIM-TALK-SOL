@@ -114,6 +114,7 @@ export default [
   route(".well-known/solana-actions.json", "routes/well-known/solana-actions.ts"),
   route("api/actions/gift", "routes/api/actions/gift.ts"),
   route("api/actions/subscribe", "routes/api/actions/subscribe.ts"),
+  route("api/actions/subscribe/verify", "routes/api/actions/subscribe.verify.ts"),
   route("api/actions/checkin", "routes/api/actions/checkin.ts"),
   route("api/actions/checkin/verify", "routes/api/actions/checkin.verify.ts"),
 
