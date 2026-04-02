@@ -418,24 +418,7 @@ async function executeNaturalLanguageCommand(
     const isChocoMention = chocoKeywords.some((k) => m.includes(k));
     const isBuyIntent = buyKeywords.some((k) => m.includes(k));
 
-    if (isChocoMention && isBuyIntent) {
-        // 수량 추출 (숫자 중 가장 큰 것 or 첫 번째)
-        const numbers = message.match(/\d+/g)?.map(Number) ?? [];
-        const amount = numbers.length > 0 ? Math.max(...numbers) : 100;
-        const safeAmount = amount > 0 && amount <= 100000 ? amount : 100;
-
-        try {
-            const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
-            const tools = getChoonsimSolanaTools(userId) as Array<{ name: string; invoke(input: unknown): Promise<unknown> }>;
-            const tool = tools.find((t) => t.name === "buyChoco");
-            if (tool) return String(await tool.invoke({ amount: safeAmount }));
-        } catch (e) {
-            logger.error({ category: "SYSTEM", message: `[NL] buyChoco failed: ${e}` });
-        }
-        return null;
-    }
-
-    // ── 잔액 확인 의도 ─────────────────────────────────────────────────────
+    // ── 잔액 확인 패턴 ─────────────────────────────────────────────────────
     const balancePatterns = [
         /초코.*얼마/,
         /잔액.*확인/,
@@ -446,19 +429,8 @@ async function executeNaturalLanguageCommand(
         /check.*balance/i,
         /내.*초코.*있/,
     ];
-    if (isChocoMention && balancePatterns.some((p) => p.test(m))) {
-        try {
-            const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
-            const tools = getChoonsimSolanaTools(userId) as Array<{ name: string; invoke(input: unknown): Promise<unknown> }>;
-            const tool = tools.find((t) => t.name === "checkChocoBalance");
-            if (tool) return String(await tool.invoke({}));
-        } catch (e) {
-            logger.error({ category: "SYSTEM", message: `[NL] checkChocoBalance failed: ${e}` });
-        }
-        return null;
-    }
 
-    // ── 기억 각인 의도 ─────────────────────────────────────────────────────
+    // ── 기억 각인 패턴 ─────────────────────────────────────────────────────
     const engravePatterns = [
         /기억.*새겨/,
         /추억.*남겨/,
@@ -473,35 +445,76 @@ async function executeNaturalLanguageCommand(
         /record.*moment/i,
         /capture.*moment/i,
     ];
-    if (engravePatterns.some((p) => p.test(m))) {
+
+    const isBuy = isChocoMention && isBuyIntent;
+    const isBalance = isChocoMention && balancePatterns.some((p) => p.test(m));
+    const isEngrave = engravePatterns.some((p) => p.test(m));
+    const isCheckin = /체크인|출석|check.?in|daily checkin/i.test(m);
+
+    if (!isBuy && !isBalance && !isEngrave && !isCheckin) {
+        return null; // 감지 안 됨 → AI 응답으로 넘김
+    }
+
+    // 의도가 감지된 경우에만 도구 로드 (import 1회)
+    let tools: Array<{ name: string; invoke(input: unknown): Promise<unknown> }> = [];
+    try {
+        const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
+        tools = getChoonsimSolanaTools(userId, conversationId) as typeof tools;
+    } catch (e) {
+        logger.error({ category: "SYSTEM", message: `[NL] Failed to load Solana tools: ${e}` });
+        return null;
+    }
+
+    const run = async (name: string, input: unknown): Promise<string | null> => {
+        const tool = tools.find((t) => t.name === name);
+        if (!tool) return null;
+        return String(await tool.invoke(input));
+    };
+
+    if (isBuy) {
+        // 수량 추출 (숫자 중 가장 큰 것 or 기본값 100)
+        const numbers = message.match(/\d+/g)?.map(Number) ?? [];
+        const amount = numbers.length > 0 ? Math.max(...numbers) : 100;
+        const safeAmount = amount > 0 && amount <= 100000 ? amount : 100;
+        try {
+            return await run("buyChoco", { amount: safeAmount });
+        } catch (e) {
+            logger.error({ category: "SYSTEM", message: `[NL] buyChoco failed: ${e}` });
+            return null;
+        }
+    }
+
+    if (isBalance) {
+        try {
+            return await run("checkChocoBalance", {});
+        } catch (e) {
+            logger.error({ category: "SYSTEM", message: `[NL] checkChocoBalance failed: ${e}` });
+            return null;
+        }
+    }
+
+    if (isEngrave) {
         // 제목 추출: "기억에 새겨줘 [제목]" 형태
         const titleMatch = message.match(/(?:기억|추억|nft|기록|memory|moment|engrave|mint).*?(?:[줘게]|\s)\s*(.+)?$/i);
         const title = titleMatch?.[1]?.trim() || undefined;
         try {
-            const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
-            const tools = getChoonsimSolanaTools(userId, conversationId) as Array<{ name: string; invoke(input: unknown): Promise<unknown> }>;
-            const tool = tools.find((t) => t.name === "engraveMemory");
-            if (tool) return String(await tool.invoke({ memoryTitle: title }));
+            return await run("engraveMemory", { memoryTitle: title });
         } catch (e) {
             logger.error({ category: "SYSTEM", message: `[NL] engraveMemory failed: ${e}` });
+            return null;
         }
-        return null;
     }
 
-    // ── 체크인 의도 ────────────────────────────────────────────────────────
-    if (/체크인|출석|check.?in|daily checkin/i.test(m)) {
+    if (isCheckin) {
         try {
-            const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
-            const tools = getChoonsimSolanaTools(userId) as Array<{ name: string; invoke(input: unknown): Promise<unknown> }>;
-            const tool = tools.find((t) => t.name === "getCheckinBlink");
-            if (tool) return String(await tool.invoke({}));
+            return await run("getCheckinBlink", {});
         } catch (e) {
             logger.error({ category: "SYSTEM", message: `[NL] getCheckinBlink failed: ${e}` });
+            return null;
         }
-        return null;
     }
 
-    return null; // 감지 안 됨 → AI 응답으로 넘김
+    return null;
 }
 
 // ── 슬래시 커맨드 실행 ─────────────────────────────────────────────────────
