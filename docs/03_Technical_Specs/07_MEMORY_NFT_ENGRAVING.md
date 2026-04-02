@@ -1,6 +1,6 @@
 # 07. 기억각인 NFT (cNFT Memory Engraving)
 > Created: 2026-03-28
-> Last Updated: 2026-03-28 (Explorer 링크 버그 수정, Cloudinary 메타데이터 업로드, 이미지 헬퍼 통일)
+> Last Updated: 2026-04-02 (DAS API Helius RPC 우선화, DB 설계 결정 문서화, .env.example 추가)
 
 채팅 중 유저가 특별한 순간을 Compressed NFT로 Solana Devnet에 영구 기록하는 기능.
 
@@ -133,7 +133,21 @@ const imageUri =
 ### 7.1 `CHOONSIM_DEFAULT_IMAGE_URI` 미설정
 - `.env.development`, `.env.example`, Vercel 환경변수 어디에도 설정되어 있지 않다.
 - 현재는 항상 fallback Cloudinary URL을 사용하고 있으며, 해당 URL이 실제로 존재하는지 확인이 필요하다.
+- `.env.example`에 항목 추가 완료 (2026-04-02).
 - **조치**: Cloudinary URL 존재 여부 확인 후 Vercel 환경변수에 `CHOONSIM_DEFAULT_IMAGE_URI` 추가.
+
+### 7.6 Message 테이블에 NFT 추적 컬럼 없음 (설계 결정)
+- `schema.ts`의 `Message` 테이블에 `nft_mint_address`, `nft_engraved_at` 컬럼이 존재하지 않는다.
+- **현재 방식**: cNFT 발행 후 DB에 기록 없이, `/profile/memories` 페이지는 온체인 DAS API 단독 조회로 동작.
+- **장점**: DB 마이그레이션 불필요, 온체인 데이터가 단일 진실 공급원.
+- **단점**: 특정 메시지에서 발행된 NFT를 채팅 화면에서 직접 연결 불가.
+- **MVP 결정**: DAS API 조회 방식으로 확정. 향후 채팅-NFT 연결이 필요하다면 컬럼 추가.
+
+### 7.7 DAS API — Helius RPC 필수
+- `getAssetsByOwner` 메서드는 표준 Devnet RPC에서 지원되지 않는다.
+- `HELIUS_RPC_URL` 또는 `ZK_COMPRESSION_RPC_URL` 환경변수 설정 필수.
+- 미설정 시 `/profile/memories`가 항상 빈 결과를 반환한다.
+- `memories.ts` 수정 완료: Helius RPC 우선 사용 (2026-04-02).
 
 ### ~~7.1 Explorer 링크 버그~~ ✅ 수정 완료 (2026-03-28)
 - `Buffer.from(signature).toString("base64")` → `bs58.encode(signature)` 로 수정

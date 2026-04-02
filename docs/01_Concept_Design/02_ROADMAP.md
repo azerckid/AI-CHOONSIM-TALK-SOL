@@ -74,7 +74,7 @@
 
 ---
 
-## Antigravity Global Rubric (6/6)
+## Core Global Rubric (6/6)
 
 | Criterion | 현황 |
 |:---|:---|

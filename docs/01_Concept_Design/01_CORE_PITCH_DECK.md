@@ -73,7 +73,7 @@
 
 ---
 
-## Antigravity Rubric Self-Scorecard (Target: 6/6)
+## Core Rubric Self-Scorecard (Target: 6/6)
 - [x] **Functionality**: Vercel AI SDK 기반 실시간 대화 및 이메일 대응 AI 검증 완료.
 - [x] **Potential Impact**: 글로벌 팬덤 3.3만 명 기반의 압도적인 확장 가능성(일본/남미 중심).
 - [x] **Novelty**: **Social IP Reality-to-AI Bridge** 모델 (세계 최초의 인격 이식형 사적 안식처).

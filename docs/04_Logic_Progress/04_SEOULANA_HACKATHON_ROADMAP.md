@@ -1,6 +1,6 @@
 # Seoulana Hackathon — 11일 구현 로드맵
 > Created: 2026-03-25 14:00
-> Last Updated: 2026-03-29
+> Last Updated: 2026-04-02
 
 **기간**: 2026-03-25(수) ~ 2026-04-05(일) 23:59 KST
 **남은 일수**: 7일
@@ -23,7 +23,8 @@
 | Embedded Wallet (Privy) | ✅ 완료 | 이메일/소셜 로그인 → 자동 지갑 생성, 결제 연동 |
 | Sign In With Solana (SIWS) | ✅ 완료 | Phantom 서명 로그인, 기존 계정 통합 |
 | ZK Compression | ✅ 완료 | Compressed CHOCO 민트 `ATHJdhUxqek9hJjfobda6sdGjLEZSmFhZoniRnsxMmEJ`, 체크인 보상 연동 |
-| cNFT 메모리 앨범 UI | 🔲 미구현 | `/profile/memories` — DAS API 조회 |
+| cNFT 메모리 앨범 UI | ✅ 완료 | `/profile/memories` — DAS API(`getAssetsByOwner`) 구현 완료. Helius RPC 필요 |
+| Subscribe Verify | ✅ 완료 | `POST /api/actions/subscribe/verify` — 결제 확인 후 tier 업데이트 |
 | 데모 E2E 테스트 | 🔲 미완 | 3분 시나리오 전체 흐름 |
 | 데모 영상 | 🔲 미완 | 제출 마감 4/5 23:59 KST |
 | GitHub README 업데이트 | 🔲 미완 | Solana 기능 전체 기재 |
