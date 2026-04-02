@@ -35,14 +35,19 @@ export function PrivyEmbeddedWalletButton({ onSaved }: Props) {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ solanaWallet: embeddedWallet.address }),
-    }).then((res) => {
+    }).then(async (res) => {
       if (res.ok) {
         setDone(true);
         toast.success("Embedded wallet saved!");
         onSaved?.(embeddedWallet.address);
         setTimeout(() => window.location.reload(), 1200);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error ?? "Failed to save wallet address");
       }
-    }).catch(() => {});
+    }).catch(() => {
+      toast.error("Network error. Please try again.");
+    });
   }, [authenticated, embeddedWallet, done, onSaved]);
 
   const handleClick = async () => {

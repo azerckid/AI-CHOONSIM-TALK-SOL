@@ -17,7 +17,7 @@ import {
   buildSiwsMessage,
   deriveSiwsCredentials,
 } from "~/lib/solana/siws.server";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { sendOnboardingSol } from "~/lib/solana/airdrop.server";
 
 /**
@@ -149,16 +149,18 @@ export async function action({ request }: ActionFunctionArgs) {
       return Response.json({ error: "계정 생성 실패" }, { status: 500 });
     }
 
-    await db
-      .update(schema.user)
-      .set({ solanaWallet: walletAddress, provider: "siws" })
-      .where(eq(schema.user.email, email));
-
     // 신규 SIWS 가입 시 테스트 SOL 지급 (fire-and-forget)
     sendOnboardingSol(walletAddress);
 
     sessionRes = signUpRes;
   }
+
+  // solanaWallet 설정 — 신규/기존 사용자 모두 처리
+  // Better Auth가 이메일을 소문자로 저장하므로 LOWER() 비교로 케이스 불일치 방지
+  await db
+    .update(schema.user)
+    .set({ solanaWallet: walletAddress, provider: "siws" })
+    .where(sql`LOWER(${schema.user.email}) = ${email.toLowerCase()}`);
 
   // ── 4. 세션 쿠키 클라이언트에 전달 ────────────────────────────────────────
   return sessionRes;

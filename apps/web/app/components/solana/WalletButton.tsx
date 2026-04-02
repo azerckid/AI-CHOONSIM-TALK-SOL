@@ -23,13 +23,18 @@ export function WalletButton() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ solanaWallet: address }),
     })
-      .then((res) => {
+      .then(async (res) => {
         if (res.ok) {
           setSaved(true);
           toast.success("Wallet connected and saved!");
+        } else {
+          const data = await res.json().catch(() => ({}));
+          toast.error(data.error ?? "Failed to save wallet address");
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        toast.error("Network error. Please try again.");
+      });
   }, [connected, publicKey]);
 
   const shortAddress = publicKey
