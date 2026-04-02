@@ -18,6 +18,7 @@ import {
   deriveSiwsCredentials,
 } from "~/lib/solana/siws.server";
 import { eq } from "drizzle-orm";
+import { sendOnboardingSol } from "~/lib/solana/airdrop.server";
 
 /**
  * better-call의 signCookieValue와 동일한 알고리즘
@@ -152,6 +153,9 @@ export async function action({ request }: ActionFunctionArgs) {
       .update(schema.user)
       .set({ solanaWallet: walletAddress, provider: "siws" })
       .where(eq(schema.user.email, email));
+
+    // 신규 SIWS 가입 시 테스트 SOL 지급 (fire-and-forget)
+    sendOnboardingSol(walletAddress);
 
     sessionRes = signUpRes;
   }

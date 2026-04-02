@@ -8,6 +8,7 @@ import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { eq } from "drizzle-orm";
 import { PublicKey } from "@solana/web3.js";
+import { sendOnboardingSol } from "~/lib/solana/airdrop.server";
 
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== "PATCH") {
@@ -33,10 +34,21 @@ export async function action({ request }: ActionFunctionArgs) {
     return Response.json({ error: "Invalid Solana wallet address" }, { status: 400 });
   }
 
+  // 기존 지갑 주소 확인 (신규 등록인 경우에만 SOL 지급)
+  const existing = await db.query.user.findFirst({
+    where: eq(schema.user.id, session.user.id),
+    columns: { solanaWallet: true },
+  });
+
   await db
     .update(schema.user)
     .set({ solanaWallet, updatedAt: new Date() })
     .where(eq(schema.user.id, session.user.id));
+
+  // 신규 지갑 등록 시 테스트 SOL 지급 (fire-and-forget)
+  if (!existing?.solanaWallet) {
+    sendOnboardingSol(solanaWallet);
+  }
 
   return Response.json({ success: true, solanaWallet });
 }

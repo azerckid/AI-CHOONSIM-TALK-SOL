@@ -12,7 +12,8 @@
         "build": "turbo run build",
         "dev": "turbo run dev",
         "typecheck": "turbo run typecheck",
-        "test": "turbo run test"
+        "test": "turbo run test",
+        "fund:agent": "npx tsx scripts/fund-agent-wallet.ts"
     },
     "devDependencies": {
         "turbo": "^2.4.0"
