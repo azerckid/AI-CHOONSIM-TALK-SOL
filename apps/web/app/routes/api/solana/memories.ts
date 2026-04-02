@@ -56,13 +56,29 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 
     // CHM 심볼만 필터
-    const memories: MemoryNFT[] = json.result.items
-      .filter((asset) => asset.content?.metadata?.symbol === "CHM")
-      .map((asset) => {
+    const rawItems = json.result.items.filter(
+      (asset) => asset.content?.metadata?.symbol === "CHM"
+    );
+
+    const memories: MemoryNFT[] = await Promise.all(
+      rawItems.map(async (asset) => {
         const meta = asset.content?.metadata ?? {};
         const attrs: { trait_type: string; value: string }[] = asset.content?.metadata?.attributes ?? [];
         const characterId = attrs.find((a) => a.trait_type === "character")?.value ?? "choonsim";
-        const image = asset.content?.links?.image ?? asset.content?.files?.[0]?.uri ?? "";
+
+        // DAS가 image를 파싱하지 못한 경우 json_uri에서 직접 fetch
+        let image = asset.content?.links?.image ?? asset.content?.files?.[0]?.uri ?? "";
+        if (!image && asset.content?.json_uri) {
+          try {
+            const metaRes = await fetch(asset.content.json_uri, { signal: AbortSignal.timeout(3000) });
+            if (metaRes.ok) {
+              const metaJson = await metaRes.json() as { image?: string };
+              image = metaJson.image ?? "";
+            }
+          } catch {
+            // fetch 실패 시 무시
+          }
+        }
 
         return {
           id: asset.id,
@@ -72,7 +88,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
           characterId,
           explorerUrl: `https://explorer.solana.com/address/${asset.id}?cluster=devnet`,
         };
-      });
+      })
+    );
 
     return Response.json({ memories });
   } catch (err) {
@@ -85,6 +102,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 interface DASAsset {
   id: string;
   content?: {
+    json_uri?: string;
     metadata?: {
       name?: string;
       description?: string;
