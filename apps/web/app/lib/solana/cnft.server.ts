@@ -65,7 +65,8 @@ export interface MintMemoryNFTParams {
 
 export interface MintResult {
   signature: string;
-  assetId?: string;
+  // assetId는 mintV1 후 getLeafAssetId(merkleTree, nonce)로 계산 가능하지만
+  // nonce를 트랜잭션 없이 알 수 없어 현재는 미사용. Explorer URL은 signature 기반.
 }
 
 /**
