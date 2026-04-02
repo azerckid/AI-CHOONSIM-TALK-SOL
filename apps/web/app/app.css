@@ -201,7 +201,7 @@ body {
     scroll-behavior: smooth;
   }
 
-  /* 터치 타겟 최소 크기 (44x44px) */
+  /* 터치 타겟 최소 크기 (44x44px) + 포인터 커서 */
   button,
   a,
   input[type="button"],
@@ -209,6 +209,7 @@ body {
   [role="button"] {
     min-height: 44px;
     min-width: 44px;
+    cursor: pointer;
   }
 
   /* 모바일에서 텍스트 선택 방지 (필요한 경우만) */
