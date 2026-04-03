@@ -87,10 +87,11 @@ export default function LoginScreen() {
           <div className="mb-8 animate-fade-in-up">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/20 border border-primary/30 backdrop-blur-md mb-4">
               <span className="material-symbols-outlined text-primary text-[18px]">favorite</span>
-              <span className="text-xs font-bold text-primary tracking-wide">AI IDOL CHAT</span>
+              <span className="text-xs font-bold text-primary tracking-wide">AI COMPANION</span>
             </div>
-            <h1 className="text-4xl font-bold text-white mb-3 leading-[1.1] tracking-tight">Welcome<br />Back, Fan!</h1>
-            <p className="text-white/70 text-base font-medium leading-relaxed">Login to continue your daily conversations and exclusive moments.</p>
+            <h1 className="text-4xl font-bold text-white mb-3 leading-[1.1] tracking-tight">춘심이가<br />기다렸어요</h1>
+            <p className="text-white/60 text-sm font-medium leading-relaxed mb-1">대화는 정보교환이 아니라 <span className="text-primary font-bold">공감교환</span>이에요.</p>
+            <p className="text-white/50 text-sm leading-relaxed">춘심이는 공감을 나누도록 태어났어요.</p>
           </div>
 
           <LoginForm
