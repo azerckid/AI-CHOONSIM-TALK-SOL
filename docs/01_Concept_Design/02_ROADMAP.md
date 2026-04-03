@@ -1,6 +1,6 @@
 # 프로젝트 로드맵 (ChoonSim-Talk × Solana)
 > Created: 2025-12-01
-> Last Updated: 2026-03-25
+> Last Updated: 2026-04-03
 
 ---
 
@@ -71,6 +71,7 @@
 | Open Builder Platform | 외부 IP/캐릭터가 Blinks + cNFT + Agent를 조립하는 오픈 생태계 |
 | Credit-based AI Agent | 유저 온체인 활동 학습 → 자산 관리 지원 에이전트 |
 | Character RWA Market | AI 캐릭터가 수익 창출 RWA로 Solana 마켓플레이스에서 거래 |
+| **기밀 컴퓨팅 (DeCC)** | 채팅 데이터 프라이버시 강화 — Secret Network TEE 또는 Arcium MPC 연동 |
 
 ---
 
