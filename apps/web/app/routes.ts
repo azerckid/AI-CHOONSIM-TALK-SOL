@@ -17,8 +17,14 @@ export default [
   route("home", "routes/home.tsx"),
   route("login", "routes/login.tsx"),
   route("signup", "routes/signup.tsx"),
+  route("forgot-password", "routes/forgot-password.tsx"),
   route("onboarding/choco", "routes/onboarding/choco.tsx"),
   route("wallet-setup", "routes/wallet-setup.tsx"),
+
+  // 약관 및 정책
+  route("terms", "routes/terms.tsx"),
+  route("privacy", "routes/privacy.tsx"),
+  route("help", "routes/help.tsx"),
 
   // 채팅
   route("chat/:id", "routes/chat/$id.tsx"),
@@ -47,6 +53,8 @@ export default [
 
   // 설정
   route("settings", "routes/settings.tsx"),
+  route("settings/blocked", "routes/settings/blocked.tsx"),
+  route("settings/chat", "routes/settings/chat.tsx"),
 
   // 캐릭터
   route("character/:id", "routes/character/$id.tsx"),

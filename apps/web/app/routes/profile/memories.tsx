@@ -189,7 +189,7 @@ function EmptyState({ message }: { message: string }) {
       </div>
       <p className="text-sm text-muted-foreground max-w-xs">{message}</p>
       <Link
-        to="/chat"
+        to="/chats"
         className="text-sm text-purple-400 hover:text-purple-300 transition-colors underline underline-offset-2"
       >
         춘심과 대화하기
