@@ -1,9 +1,3 @@
-// Buffer polyfill — Privy embedded wallet requires Node.js Buffer in browser
-import { Buffer } from "buffer";
-if (typeof globalThis.Buffer === "undefined") {
-  globalThis.Buffer = Buffer;
-}
-
 import {
   isRouteErrorResponse,
   Links,
