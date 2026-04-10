@@ -1,4 +1,4 @@
-import { type RouteConfig, index, route } from "@react-router/dev/routes";
+import { type RouteConfig, index, layout, route } from "@react-router/dev/routes";
 
 /**
  * React Router v7 라우트 설정
@@ -13,13 +13,25 @@ export default [
   // 인덱스 라우트
   index("routes/index.tsx"),
 
-  // 인증 및 온보딩
+  // 지갑 Provider가 필요한 페이지 (Privy + Solana Wallet Adapter)
+  layout("routes/layouts/wallet-layout.tsx", [
+    route("login", "routes/login.tsx"),
+    route("wallet-setup", "routes/wallet-setup.tsx"),
+    route("buy-choco", "routes/buy-choco.tsx"),
+    route("blinks", "routes/blinks.tsx"),
+    route("profile/memories", "routes/profile/memories.tsx"),
+    route("profile", "routes/profile/index.tsx"),
+    route("profile/edit", "routes/profile/edit.tsx"),
+    route("profile/subscription", "routes/profile/subscription.tsx"),
+    route("profile/saved", "routes/profile/saved.tsx"),
+    route("admin/blinks", "routes/admin/blinks.tsx"),
+  ]),
+
+  // 지갑 불필요 페이지
   route("home", "routes/home.tsx"),
-  route("login", "routes/login.tsx"),
   route("signup", "routes/signup.tsx"),
   route("forgot-password", "routes/forgot-password.tsx"),
   route("onboarding/choco", "routes/onboarding/choco.tsx"),
-  route("wallet-setup", "routes/wallet-setup.tsx"),
 
   // 약관 및 정책
   route("terms", "routes/terms.tsx"),
@@ -36,15 +48,7 @@ export default [
   route("notices", "routes/notices/index.tsx"),
   route("notices/:id", "routes/notices/$id.tsx"),
 
-  // 프로필 (구체적인 라우트를 먼저 등록)
-  route("profile/edit", "routes/profile/edit.tsx"),
-  route("profile/subscription", "routes/profile/subscription.tsx"),
-  route("profile/saved", "routes/profile/saved.tsx"),
-  route("profile/memories", "routes/profile/memories.tsx"),
-  route("profile", "routes/profile/index.tsx"),
-
-  // CHOCO 구매
-  route("buy-choco", "routes/buy-choco.tsx"),
+  // CHOCO 구매 (wallet-layout에 포함됨)
 
   // 상점 & 알림
   route("shop", "routes/shop/index.tsx"),
@@ -116,8 +120,7 @@ export default [
   route("api/context/:characterId/heartbeat", "routes/api/context/$characterId.heartbeat.ts"),
   route("api/context/:characterId/export", "routes/api/context/$characterId.export.ts"),
 
-  // Solana Actions & Blinks
-  route("blinks", "routes/blinks.tsx"),
+  // Solana Actions & Blinks (blinks 페이지는 wallet-layout에 포함됨)
   route("actions.json", "routes/actions.json.ts"),
   route(".well-known/solana-actions.json", "routes/well-known/solana-actions.ts"),
   route("api/actions/gift", "routes/api/actions/gift.ts"),
@@ -155,7 +158,6 @@ export default [
   route("admin/content/missions", "routes/admin/missions/index.tsx"),
   route("admin/content/missions/new", "routes/admin/missions/edit.tsx", { id: "admin-mission-new" }),
   route("admin/content/missions/:id", "routes/admin/missions/edit.tsx", { id: "admin-mission-edit" }),
-  route("admin/blinks", "routes/admin/blinks.tsx"),
   route("admin/system", "routes/admin/system.tsx"),
   route("admin/*", "routes/admin/$.tsx"),
 

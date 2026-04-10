@@ -285,16 +285,22 @@ export default function HomeScreen() {
       {/* Hero Section - Today's Pick */}
       <div className="p-4 pt-2">
         <div className="relative w-full overflow-hidden rounded-2xl bg-surface-dark shadow-lg">
-          <div
-            className="absolute inset-0 h-full w-full bg-cover bg-center"
-            style={{
-              backgroundImage: `url(${todaysPick?.media
-                ?.filter((m) => m.type === "COVER")
-                ?.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))[0]?.url
-                || todaysPick?.media?.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))[0]?.url
-                })`
-            }}
-          />
+          {(() => {
+            const heroUrl = todaysPick?.media
+              ?.filter((m) => m.type === "COVER")
+              ?.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))[0]?.url
+              || todaysPick?.media?.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))[0]?.url;
+            return heroUrl ? (
+              <img
+                src={heroUrl}
+                alt=""
+                fetchPriority="high"
+                loading="eager"
+                decoding="async"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : null;
+          })()}
           <div className="absolute inset-0 bg-linear-to-t from-background-dark via-background-dark/40 to-transparent"></div>
           <div className="relative flex min-h-[420px] flex-col justify-end p-6">
             <span className="mb-2 inline-flex w-fit items-center rounded-full bg-primary/20 px-3 py-1 text-xs font-bold text-primary backdrop-blur-sm border border-primary/30">
