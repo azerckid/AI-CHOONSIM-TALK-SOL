@@ -39,71 +39,62 @@ export function meta({ }: Route.MetaArgs) {
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await auth.api.getSession({ headers: request.headers });
 
-  // 인증된 사용자의 경우 지갑 상태 체크
-  let recentConversations: any[] = [];
-  let user: { evmAddress: string | null; walletStatus: string | null } | null = null;
-  let unreadNotificationCount = 0;
-
-  if (session) {
-    recentConversations = await db.query.conversation.findMany({
-      where: eq(schema.conversation.userId, session.user.id),
-      with: {
-        character: {
+  const [recentConversations, unreadResult, allCharacters, notices] = await Promise.all([
+    session
+      ? db.query.conversation.findMany({
+          where: eq(schema.conversation.userId, session.user.id),
           with: {
-            media: {
-              orderBy: [asc(schema.characterMedia.sortOrder)]
-            }
-          }
-        },
-        messages: {
-          orderBy: [desc(schema.message.createdAt)],
-          limit: 1,
+            character: {
+              with: {
+                media: {
+                  orderBy: [asc(schema.characterMedia.sortOrder)],
+                },
+              },
+            },
+            messages: {
+              orderBy: [desc(schema.message.createdAt)],
+              limit: 1,
+            },
+          },
+          orderBy: [desc(schema.conversation.updatedAt)],
+          limit: 5,
+        })
+      : Promise.resolve([]),
+    session
+      ? db
+          .select({ count: count() })
+          .from(schema.notification)
+          .where(
+            and(
+              eq(schema.notification.userId, session.user.id),
+              eq(schema.notification.isRead, false)
+            )
+          )
+      : Promise.resolve([{ count: 0 }]),
+    db.query.character.findMany({
+      with: {
+        media: {
+          orderBy: [asc(schema.characterMedia.sortOrder)],
         },
       },
-      orderBy: [desc(schema.conversation.updatedAt)],
-      limit: 5,
-    });
+    }),
+    db.query.notice.findMany({
+      where: eq(schema.notice.isActive, true),
+      orderBy: [desc(schema.notice.isPinned), desc(schema.notice.createdAt)],
+      limit: 3,
+    }),
+  ]);
 
-    const unreadResult = await db
-      .select({ count: count() })
-      .from(schema.notification)
-      .where(
-        and(
-          eq(schema.notification.userId, session.user.id),
-          eq(schema.notification.isRead, false)
-        )
-      );
-    unreadNotificationCount = unreadResult[0]?.count ?? 0;
-  }
-
-  // 모든 캐릭터 가져오기
-  const allCharacters = await db.query.character.findMany({
-    with: {
-      media: {
-        orderBy: [asc(schema.characterMedia.sortOrder)]
-      },
-    }
-  });
+  const unreadNotificationCount = unreadResult[0]?.count ?? 0;
 
   // 서비스 중인 캐릭터만 (isOnline=true)
   const serviceCharacters = allCharacters.filter((c: { isOnline: boolean }) => c.isOnline);
 
   // Today's Pick: 서비스 중인 첫 번째 캐릭터
-  const now = DateTime.now().setZone("Asia/Seoul");
   const todaysPick = serviceCharacters[0] || allCharacters[0];
 
   // Trending Idols: 순서 유지
   const trendingIdols = allCharacters.slice(0, 6);
-
-  // 공지사항 및 이벤트 가져오기
-  const notices = await db.query.notice.findMany({
-    where: eq(schema.notice.isActive, true),
-    orderBy: [
-      desc(schema.notice.isPinned),
-      desc(schema.notice.createdAt)
-    ],
-    limit: 3
-  });
 
   return Response.json({
     user: session?.user || null,
