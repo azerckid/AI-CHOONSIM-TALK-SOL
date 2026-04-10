@@ -1,12 +1,244 @@
-# 춘심 (Choonsim) × Solana
+# Choonsim (춘심) × Solana
 
 > **AI Virtual Companion powered by Solana** — Seoulana Hackathon 2026
 
-[![Deploy](https://img.shields.io/badge/Vercel-Live-brightgreen?logo=vercel)](https://web-beryl-six.vercel.app)
+[![Deploy](https://img.shields.io/badge/Vercel-Live-brightgreen?logo=vercel)](https://choonsim-talk-sol.vercel.app/home)
 [![Solana](https://img.shields.io/badge/Solana-Devnet-9945FF?logo=solana)](https://explorer.solana.com/?cluster=devnet)
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
-**라이브 데모**: https://web-beryl-six.vercel.app
+**Live Demo**: https://choonsim-talk-sol.vercel.app/home
+
+---
+
+## About
+
+Choonsim is an AI virtual companion app built on a real K-pop fandom IP with 33,000 followers on X (Twitter).
+
+Beyond simple AI chat, it uses the Solana blockchain to **record the relationship between fans and AI characters on-chain**:
+
+- Engrave conversations permanently as cNFTs → view them in the `/profile/memories` album
+- Interact instantly via Blinks on X (Gift / Check-in / Subscribe)
+- AI agent automatically checks wallet balance and suggests Blinks
+- In-app economy powered by CHOCO SPL Token-2022
+- Automatic wallet creation with email/social login only (Privy Embedded Wallet)
+- Login with Phantom wallet signature (SIWS)
+- Up to 99% reduction in CHOCO reward distribution costs via ZK Compression
+
+---
+
+## Solana Features
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Solana Actions & Blinks** | Execute Gift / Check-in / Subscribe actions directly from X (Twitter) | ✅ Live |
+| **Token Extensions (Token-2022)** | 1% Transfer Fee · CHOCO SPL token (1B supply) | ✅ Deployed |
+| **Compressed NFT (cNFT)** | Metaplex Bubblegum Merkle Tree memory engraving (~0.0001 SOL) | ✅ Deployed |
+| **Solana AI Agent Kit** | 5 Solana tools integrated into LangGraph chat pipeline | ✅ Live |
+| **Embedded Wallet (Privy)** | Email/social login → auto wallet creation, payments without Phantom | ✅ Live |
+| **Sign In With Solana (SIWS)** | Login with Phantom signature, integrates with existing social accounts | ✅ Live |
+| **ZK Compression** | Light Protocol Compressed Token — up to 99% cost reduction for check-in rewards | ✅ Deployed |
+
+---
+
+## On-Chain Addresses (Devnet)
+
+```
+CHOCO Token-2022 Mint        : E2o1MKpnwh5vELG4FDgiX2NA33L11hXPVfAPD3ai4GWf
+cNFT Merkle Tree             : AJxCqbFdWLmQ7xMqBQN3AXja9paZJZ9qrqvwViXVkXGF
+Compressed CHOCO Mint (ZK)   : ATHJdhUxqek9hJjfobda6sdGjLEZSmFhZoniRnsxMmEJ
+Agent Wallet                 : CaURTs8NibhmX8kAT9wHAkFv32b4NhuLBEAPxZXkuVyC
+Treasury Wallet              : Akfuxv8pQvrLpMyEVEFaBrTfCS4f3y6kQCpYmvYQcxag
+```
+
+---
+
+## Solana Actions & Blinks
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET/POST /api/actions/gift` | CHOCO gift (100 / 500 / 1,000) |
+| `GET/POST /api/actions/checkin` | Daily check-in + 50 CHOCO reward (Memo on-chain) |
+| `GET/POST /api/actions/subscribe` | SOL subscription (0.01 SOL/month) |
+| `POST /api/actions/checkin/verify` | Transaction confirmation + CHOCO DB update + ZK Compressed CHOCO minting |
+| `GET /actions.json` | Blinks registry (for dialect registration) |
+
+**Blink examples:**
+```
+https://dial.to/?action=solana-action:https://choonsim-talk-sol.vercel.app/api/actions/checkin
+https://dial.to/?action=solana-action:https://choonsim-talk-sol.vercel.app/api/actions/gift
+```
+
+---
+
+## AI Agent Kit Tools
+
+5 Solana tools automatically called by Choonsim AI during conversation:
+
+| Tool | Trigger Example | Action |
+|------|----------------|--------|
+| `checkChocoBalance` | "How much CHOCO do I have?" | Query SPL Token-2022 balance |
+| `getSolBalance` | "Check my wallet balance" | Query SOL balance |
+| `getCheckinBlink` | "I want free CHOCO" | Return Check-in Blink URL |
+| `getGiftBlink` | "I want to send a gift" | Return Gift Blink URL |
+| `getMemoryNFTInfo` | "I want to save this as an NFT" | cNFT engraving guide + Mint API info |
+
+---
+
+## cNFT Memory Engraving
+
+Permanently record special conversations as cNFTs on Solana Devnet.
+
+```bash
+POST /api/solana/mint-memory
+Content-Type: application/json
+
+{
+  "ownerAddress": "<user solana wallet>",
+  "name": "First Chat with Choonsim",
+  "description": "A special moment on 2026-03-25",
+  "characterId": "chunsim"
+}
+# Cost: 200 CHOCO / Engraving fee: ~0.0001 SOL
+```
+
+Engraved cNFTs can be viewed on the `/profile/memories` page via DAS API (`getAssetsByOwner`).
+
+---
+
+## Embedded Wallet (Privy)
+
+A Solana wallet is automatically created with just email or social login. Pay without installing Phantom.
+
+- CHOCO payment card in chat → automatically selects Privy embedded wallet or Phantom
+- `signTransaction` + `sendRawTransaction` + signature status polling (60s, 2.5s interval)
+
+---
+
+## Sign In With Solana (SIWS)
+
+Login with Phantom wallet signature. Automatically logs into an existing account if the same wallet address is linked to an existing social/email account.
+
+- Ed25519 signature verification (tweetnacl)
+- nonce → stored in DB (5-minute TTL)
+- Better Auth cookie issued directly (HMAC-SHA256 Web Crypto API)
+
+---
+
+## ZK Compression (Light Protocol)
+
+Uses Light Protocol Compressed Token for check-in reward distribution.
+
+- Standard SPL Transfer cost ~0.002 SOL → Compressed Transfer ~0.00001 SOL (**99% reduction**)
+- No ATA (Associated Token Account) required
+- Integrated with Helius Photon indexer RPC (`ZK_COMPRESSION_RPC_URL`)
+
+---
+
+## Pages
+
+| Route | Description |
+|-------|-------------|
+| `/` | Landing page |
+| `/login` | Social login + Sign In With Solana (Phantom) |
+| `/chat/:id` | 1:1 AI chat with Choonsim (LangGraph + Gemini 2.5 Flash) |
+| `/chats` | Chat list |
+| `/blinks` | Solana Blinks demo page |
+| `/profile` | Profile + Solana wallet section |
+| `/profile/memories` | cNFT memory album (DAS API `getAssetsByOwner`) |
+| `/shop` | CHOCO item store |
+| `/buy-choco` | CHOCO purchase page |
+| `/fandom` | Fandom feed |
+| `/missions` | Daily missions |
+| `/pricing` | Subscription plans |
+| `/guide` | CHOCO & item guide |
+
+---
+
+## Tech Stack
+
+- **Frontend**: React Router v7, React 19, Tailwind CSS v4, shadcn/ui
+- **AI**: LangGraph + Gemini 2.5 Flash, Solana AI Agent Kit v2
+- **Blockchain**: Solana (Devnet), `@solana/web3.js`, `@solana/spl-token`, Metaplex Bubblegum, `@solana/actions`, `@lightprotocol/stateless.js`, `@lightprotocol/compressed-token`
+- **Wallet**: Solana Wallet Adapter, Privy Embedded Wallet (`@privy-io/react-auth`)
+- **Auth**: Better Auth (Google / Kakao / Twitter OAuth) + SIWS (tweetnacl Ed25519)
+- **Database**: Turso (libSQL) + Drizzle ORM
+- **Payments**: PayPal, Toss Payments, Coinbase Commerce, Solana Pay
+- **Deploy**: Vercel Edge (React Router v7 SSR)
+
+---
+
+## Getting Started
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Configure environment
+cp apps/web/.env.example apps/web/.env.development
+# Required: TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, GEMINI_API_KEY
+# Solana: SOLANA_RPC_URL, SOLANA_AGENT_PRIVATE_KEY, CHOCO_MINT_ADDRESS, MERKLE_TREE_ADDRESS
+# ZK Compression: ZK_COMPRESSION_RPC_URL, CHOCO_COMPRESSED_MINT_ADDRESS
+# Privy: VITE_PRIVY_APP_ID
+
+# 3. Run dev server
+npm run dev
+
+# (Optional) Verify Solana stack — 10/10 checks
+cd apps/web && npx tsx scripts/verify-solana-stack.ts
+```
+
+---
+
+## Key Files
+
+```
+apps/web/app/
+├── lib/solana/
+│   ├── connection.server.ts        # RPC connection + CORS headers
+│   ├── cnft.server.ts              # Metaplex Bubblegum mintV1 helper
+│   ├── agent-kit.server.ts         # SolanaAgentKit v2 — 5 tools
+│   ├── siws.server.ts              # SIWS signature verification + session creation
+│   └── zk-compression.server.ts    # Light Protocol Compressed Token
+├── components/
+│   ├── auth/SiwsButton.tsx          # Sign In With Solana button
+│   ├── payment/PrivyChocoPayCard.tsx # Privy embedded wallet payment card
+│   └── solana/PrivyWalletProvider.tsx
+├── routes/
+│   ├── blinks.tsx                  # Blinks demo page
+│   ├── actions.json.ts             # Blinks registry
+│   ├── login.tsx                   # Login (social + SIWS)
+│   ├── profile/
+│   │   ├── index.tsx               # Profile + Solana wallet section
+│   │   └── memories.tsx            # cNFT memory album
+│   └── api/
+│       ├── actions/
+│       │   ├── gift.ts             # CHOCO Gift Blink
+│       │   ├── checkin.ts          # Daily Check-in Blink
+│       │   ├── checkin.verify.ts   # Transaction verification + CHOCO reward + ZK mint
+│       │   └── subscribe.ts        # SOL subscription Blink
+│       ├── auth/siws/
+│       │   ├── nonce.ts            # SIWS nonce issuance
+│       │   └── verify.ts           # SIWS signature verification + session issuance
+│       └── solana/
+│           ├── mint-memory.ts      # cNFT engraving API
+│           └── memories.ts         # DAS API query
+```
+
+---
+
+## Seoulana Hackathon 2026
+
+> **WarmUp: Seoulana Hackathon** by SuperTeam Korea
+> Prize Pool: $6,000
+> Deadline: 2026-04-05 23:59 KST
+
+*Built with love for Seoulana Hackathon 🌸*
+
+---
+
+# 춘심 (Choonsim) × Solana
+
+**라이브 데모**: https://choonsim-talk-sol.vercel.app/home
 
 ---
 
@@ -64,8 +296,8 @@ Treasury Wallet              : Akfuxv8pQvrLpMyEVEFaBrTfCS4f3y6kQCpYmvYQcxag
 
 **Blink 실행 예시:**
 ```
-https://dial.to/?action=solana-action:https://web-beryl-six.vercel.app/api/actions/checkin
-https://dial.to/?action=solana-action:https://web-beryl-six.vercel.app/api/actions/gift
+https://dial.to/?action=solana-action:https://choonsim-talk-sol.vercel.app/api/actions/checkin
+https://dial.to/?action=solana-action:https://choonsim-talk-sol.vercel.app/api/actions/gift
 ```
 
 ---
