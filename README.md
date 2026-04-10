@@ -5,6 +5,8 @@
 [![Deploy](https://img.shields.io/badge/Vercel-Live-brightgreen?logo=vercel)](https://choonsim-talk-sol.vercel.app/home)
 [![Solana](https://img.shields.io/badge/Solana-Devnet-9945FF?logo=solana)](https://explorer.solana.com/?cluster=devnet)
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+[![X: Choonsim](https://img.shields.io/badge/X-@chooncme-000000?logo=x)](https://x.com/chooncme)
+[![X: Builder](https://img.shields.io/badge/X-@azerckid-000000?logo=x)](https://x.com/azerckid)
 
 **Live Demo**: https://choonsim-talk-sol.vercel.app/home
 
@@ -238,7 +240,7 @@ apps/web/app/
 
 # 춘심 (Choonsim) × Solana
 
-**라이브 데모**: https://choonsim-talk-sol.vercel.app/home
+**라이브 데모**: https://choonsim-talk-sol.vercel.app/home | **X(춘심)**: https://x.com/chooncme | **X(개발자)**: https://x.com/azerckid
 
 ---
 
