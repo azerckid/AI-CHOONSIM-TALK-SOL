@@ -36,21 +36,24 @@ const SPLASH_DISPLAY_MS = 2200;
 const SPLASH_FADE_MS = 700;
 
 function SplashScreen() {
-  const [phase, setPhase] = useState<"enter" | "visible" | "exit" | "done">("done");
+  // "enter"로 초기화 → 서버 렌더링 시점부터 홈 콘텐츠를 덮음
+  // 재방문 시: hydration 직후 useEffect에서 즉시 "done"으로 전환
+  const [phase, setPhase] = useState<"enter" | "exit" | "done">("enter");
 
   useEffect(() => {
-    if (typeof sessionStorage === "undefined") return;
-    if (sessionStorage.getItem(SPLASH_KEY)) return;
+    // 재방문: sessionStorage 플래그 확인 후 즉시 제거
+    if (sessionStorage.getItem(SPLASH_KEY)) {
+      setPhase("done");
+      return;
+    }
 
+    // 첫 방문: 플래그 저장 후 애니메이션 시퀀스 실행
     sessionStorage.setItem(SPLASH_KEY, "1");
-    setPhase("enter");
 
-    const toVisible = setTimeout(() => setPhase("visible"), 400);
-    const toExit    = setTimeout(() => setPhase("exit"),    SPLASH_DISPLAY_MS);
-    const toDone    = setTimeout(() => setPhase("done"),    SPLASH_DISPLAY_MS + SPLASH_FADE_MS);
+    const toExit = setTimeout(() => setPhase("exit"),  SPLASH_DISPLAY_MS);
+    const toDone = setTimeout(() => setPhase("done"),  SPLASH_DISPLAY_MS + SPLASH_FADE_MS);
 
     return () => {
-      clearTimeout(toVisible);
       clearTimeout(toExit);
       clearTimeout(toDone);
     };
@@ -61,7 +64,7 @@ function SplashScreen() {
   return (
     <div
       className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#221019] ${
-        phase === "exit" ? "splash-exit" : "splash-enter"
+        phase === "exit" ? "splash-exit pointer-events-none" : "splash-enter"
       }`}
       aria-hidden="true"
     >
