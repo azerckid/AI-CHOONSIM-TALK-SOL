@@ -8,7 +8,7 @@ import {
   useNavigation,
 } from "react-router";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
+import { useState, useLayoutEffect } from "react";
 
 import type { Route } from "./+types/root";
 import "~/lib/i18n";
@@ -31,23 +31,22 @@ export const links: Route.LinksFunction = () => [
 import { MeshBackground } from "~/components/effects/mesh-background";
 
 // ─── Splash Screen ────────────────────────────────────────────────────────────
-const SPLASH_KEY = "choonsim_splash_shown";
+const SPLASH_KEY = "choonsim_splash_v2";   // 키 변경 → 이전 세션 무효화
 const SPLASH_DISPLAY_MS = 2200;
 const SPLASH_FADE_MS = 700;
 
 function SplashScreen() {
-  // "enter"로 초기화 → 서버 렌더링 시점부터 홈 콘텐츠를 덮음
-  // 재방문 시: hydration 직후 useEffect에서 즉시 "done"으로 전환
+  // "enter"로 초기화 → SSR HTML에 스플래시가 포함되어 홈을 처음부터 덮음
   const [phase, setPhase] = useState<"enter" | "exit" | "done">("enter");
 
-  useEffect(() => {
-    // 재방문: sessionStorage 플래그 확인 후 즉시 제거
+  // useLayoutEffect: 브라우저 페인트 이전에 실행
+  // → 재방문 시 스플래시가 한 프레임도 보이지 않고 즉시 제거됨
+  useLayoutEffect(() => {
     if (sessionStorage.getItem(SPLASH_KEY)) {
       setPhase("done");
       return;
     }
 
-    // 첫 방문: 플래그 저장 후 애니메이션 시퀀스 실행
     sessionStorage.setItem(SPLASH_KEY, "1");
 
     const toExit = setTimeout(() => setPhase("exit"),  SPLASH_DISPLAY_MS);
