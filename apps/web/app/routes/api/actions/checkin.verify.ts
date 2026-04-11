@@ -136,7 +136,7 @@ export async function action({ request }: ActionFunctionArgs) {
       if (existingCheckin && existing?.id) {
         await tx_
           .update(schema.userMission)
-          .set({ status: "COMPLETED", lastUpdated: new Date() })
+          .set({ status: "COMPLETED", lastUpdated: new Date(), txSignature })
           .where(eq(schema.userMission.id, existing.id));
       } else {
         await tx_.insert(schema.userMission).values({
@@ -146,6 +146,7 @@ export async function action({ request }: ActionFunctionArgs) {
           status: "COMPLETED",
           progress: 1,
           lastUpdated: new Date(),
+          txSignature,
         });
       }
     });
