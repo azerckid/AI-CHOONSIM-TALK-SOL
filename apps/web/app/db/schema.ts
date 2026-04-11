@@ -530,6 +530,7 @@ export const userMission = sqliteTable("UserMission", {
     status: text("status").notNull().default("IN_PROGRESS"),
     progress: integer("progress").notNull().default(0),
     lastUpdated: integer("lastUpdated", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    txSignature: text("txSignature"),
 }, (table) => {
     return [
         unique("UserMission_userId_missionId_unique").on(table.userId, table.missionId),
