@@ -1,8 +1,13 @@
 import { cn } from "~/lib/utils";
 import { ChocoPayCard } from "~/components/payment/ChocoPayCard";
+import { SwapTxCard } from "~/components/payment/SwapTxCard";
 
 // [PHANTOM:100] 마커 파싱
 const PHANTOM_MARKER = /\[PHANTOM:(\d+)\]/;
+
+// [SWAP_TX:paymentId:base64tx] 마커 파싱
+// paymentId = UUID (하이픈 포함, 콜론 없음), txBase64 = base64 (]를 포함하지 않음)
+const SWAP_TX_MARKER = /\[SWAP_TX:([^:[\]]+):([^\]]+)\]/;
 
 const URL_PATTERN = /(https?:\/\/[^\s]+)/g;
 
@@ -162,13 +167,35 @@ export function MessageBubble({
           </div>
         )}
         <div className="px-5 py-3 bg-white dark:bg-surface-dark rounded-2xl rounded-tl-sm text-slate-800 dark:text-gray-100 shadow-sm text-[15px] leading-relaxed relative whitespace-pre-wrap break-words">
-          <RichContent text={content.replace(PHANTOM_MARKER, "").trimEnd()} />
+          <RichContent
+            text={content
+              .replace(PHANTOM_MARKER, "")
+              .replace(SWAP_TX_MARKER, "")
+              .trimEnd()}
+          />
           {isStreaming && (
             <span className="inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse align-middle" />
           )}
           {(() => {
-            const m = PHANTOM_MARKER.exec(content);
-            return m ? <ChocoPayCard choco={parseInt(m[1], 10)} /> : null;
+            const swapMatch = SWAP_TX_MARKER.exec(content);
+            if (swapMatch) {
+              // CHOCO 금액을 메시지 텍스트에서 파싱 (예: "100 CHOCO")
+              const chocoMatch = content.match(/(\d[\d,]*)\s+CHOCO/);
+              const choco = chocoMatch
+                ? parseInt(chocoMatch[1].replace(/,/g, ""), 10)
+                : 100;
+              return (
+                <SwapTxCard
+                  paymentId={swapMatch[1]}
+                  txBase64={swapMatch[2]}
+                  choco={choco}
+                />
+              );
+            }
+            const phantomMatch = PHANTOM_MARKER.exec(content);
+            return phantomMatch ? (
+              <ChocoPayCard choco={parseInt(phantomMatch[1], 10)} />
+            ) : null;
           })()}
         </div>
         {timestamp && (
