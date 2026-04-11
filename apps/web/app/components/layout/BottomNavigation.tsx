@@ -21,6 +21,12 @@ export function BottomNavigation() {
   const location = useLocation();
   const currentPath = location.pathname;
 
+  const triggerHaptic = () => {
+    if (typeof window !== "undefined" && window.navigator.vibrate) {
+      window.navigator.vibrate(5); // Ultra-short buzz
+    }
+  };
+
   // 활성화 상태 확인 함수 (라우트 매칭 개선)
   const isActiveRoute = (itemPath: string, currentPath: string): boolean => {
     if (itemPath === currentPath) return true;
@@ -40,7 +46,7 @@ export function BottomNavigation() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 w-full bg-white/90 dark:bg-background-dark/95 backdrop-blur-lg border-t border-gray-200 dark:border-white/5 pt-3 px-6 z-40"
+      className="fixed bottom-0 left-0 w-full bg-white/90 dark:bg-background-dark/95 backdrop-blur-xl border-t border-gray-200 dark:border-white/5 pt-3 px-6 z-40 transition-all"
       style={{
         paddingBottom: "max(env(safe-area-inset-bottom), 1.25rem)",
       }}
@@ -52,25 +58,29 @@ export function BottomNavigation() {
             <Link
               key={item.path}
               to={item.path}
-              className="flex flex-col items-center gap-1 w-12 group"
+              onClick={triggerHaptic}
+              className="flex flex-col items-center gap-1 w-12 group transition-all active:scale-90"
             >
               <span
                 className={cn(
-                  "material-symbols-outlined text-[28px] transition-colors",
+                  "material-symbols-outlined text-[28px] transition-all duration-300",
                   isActive
-                    ? "text-primary"
+                    ? "text-primary scale-110"
                     : "text-gray-400 dark:text-gray-500"
                 )}
-                style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                style={{
+                  ...(isActive ? { fontVariationSettings: "'FILL' 1" } : {}),
+                  ...(isActive ? { filter: "drop-shadow(0 0 8px rgba(238, 43, 140, 0.4))" } : {})
+                }}
               >
                 {item.icon}
               </span>
               <span
                 className={cn(
-                  "text-[10px] font-medium transition-colors",
+                  "text-[10px] font-black transition-all",
                   isActive
-                    ? "text-primary"
-                    : "text-gray-400 dark:text-gray-500"
+                    ? "text-primary tracking-tight"
+                    : "text-gray-400 dark:text-gray-500 font-medium"
                 )}
               >
                 {item.label}
