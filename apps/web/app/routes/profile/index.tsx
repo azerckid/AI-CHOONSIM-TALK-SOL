@@ -391,11 +391,39 @@ export default function ProfileScreen() {
 
         {/* Solana Premium Wallet Card */}
         <section className="px-4 mb-8">
-          <div className="group relative">
+          <div 
+            className="group relative perspective-1000"
+            onMouseMove={(e) => {
+              const card = e.currentTarget;
+              const rect = card.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              const y = e.clientY - rect.top;
+              const centerX = rect.width / 2;
+              const centerY = rect.height / 2;
+              const rotateX = (y - centerY) / 10;
+              const rotateY = (centerX - x) / 10;
+              
+              card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+              
+              const shine = card.querySelector(".card-shine") as HTMLElement;
+              if (shine) {
+                shine.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,0.2) 0%, transparent 60%)`;
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = `rotateX(0deg) rotateY(0deg)`;
+              const shine = e.currentTarget.querySelector(".card-shine") as HTMLElement;
+              if (shine) shine.style.background = "transparent";
+            }}
+            style={{ transition: "transform 0.1s ease-out" }}
+          >
             {/* 보이지 않는 광원 효과 (Backglow) */}
             <div className="absolute -inset-1 bg-linear-to-r from-primary/30 to-purple-600/30 rounded-[32px] blur-2xl opacity-50 group-hover:opacity-80 transition duration-1000" />
             
-            <div className="glass-card premium-shine relative rounded-[32px] p-6 overflow-hidden border border-white/10 active:scale-[0.98] transition-all duration-300">
+            <div className="glass-card relative rounded-[32px] p-6 overflow-hidden border border-white/10 transition-all duration-300 transform-style-3d">
+              {/* Dynamic Shine Layer */}
+              <div className="card-shine absolute inset-0 pointer-events-none z-10" />
+              
               {/* Card Header */}
               <div className="flex justify-between items-start mb-10">
                 <div className="flex flex-col gap-1">
