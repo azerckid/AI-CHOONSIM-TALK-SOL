@@ -8,7 +8,8 @@ import type { MissionsLoaderData } from "~/lib/types/routes";
 import { BottomNavigation } from "~/components/layout/BottomNavigation";
 import { cn } from "~/lib/utils";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Confetti } from "~/components/effects/confetti";
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -104,10 +105,14 @@ export default function MissionsPage() {
     const { missions } = useLoaderData<typeof loader>() as MissionsLoaderData;
     const navigate = useNavigate();
     const fetcher = useFetcher();
+    const [showConfetti, setShowConfetti] = useState(false);
 
     useEffect(() => {
         if (fetcher.data?.success) {
             toast.success(`${fetcher.data.reward} CHOCO claimed!`);
+            setShowConfetti(true);
+            // 5초 후 Confetti 상태 초기화
+            setTimeout(() => setShowConfetti(false), 5000);
         } else if (fetcher.data?.error) {
             toast.error(fetcher.data.error);
         }
@@ -122,6 +127,7 @@ export default function MissionsPage() {
 
     return (
         <div className="bg-background-dark text-white font-display antialiased min-h-screen pb-24 max-w-md mx-auto shadow-2xl">
+            {showConfetti && <Confetti onComplete={() => setShowConfetti(false)} />}
             {/* Header */}
             <div className="sticky top-0 z-50 flex items-center bg-background-dark/80 backdrop-blur-md p-4 border-b border-white/5">
                 <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:text-primary transition-colors">
