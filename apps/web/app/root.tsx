@@ -8,7 +8,7 @@ import {
   useNavigation,
 } from "react-router";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 import type { Route } from "./+types/root";
 import "~/lib/i18n";
@@ -31,19 +31,21 @@ export const links: Route.LinksFunction = () => [
 import { MeshBackground } from "~/components/effects/mesh-background";
 
 // ─── Splash Screen ────────────────────────────────────────────────────────────
-const SPLASH_KEY = "choonsim_splash_v2";   // 키 변경 → 이전 세션 무효화
+const SPLASH_KEY = "choonsim_splash_v2";
 const SPLASH_DISPLAY_MS = 2200;
 const SPLASH_FADE_MS = 700;
 
+// 모듈 레벨 플래그 — StrictMode의 unmount/remount 사이클에서도 살아남음
+// useRef와 달리 컴포넌트 재마운트 시 초기화되지 않음
+let _splashScheduled = false;
+
 function SplashScreen() {
-  // "enter"로 초기화 → SSR HTML에 스플래시가 포함되어 홈을 처음부터 덮음
   const [phase, setPhase] = useState<"enter" | "exit" | "done">("enter");
-  // dev StrictMode의 effect 이중 실행을 방지하는 guard
-  const initiated = useRef(false);
 
   useEffect(() => {
-    if (initiated.current) return;
-    initiated.current = true;
+    // 두 번째 실행(StrictMode) 차단
+    if (_splashScheduled) return;
+    _splashScheduled = true;
 
     // 재방문(같은 세션): 즉시 제거
     if (sessionStorage.getItem(SPLASH_KEY)) {
@@ -51,16 +53,11 @@ function SplashScreen() {
       return;
     }
 
-    // 첫 방문: 키 저장 후 애니메이션 시퀀스 실행
+    // 첫 방문: 키 저장 후 타이머 실행
+    // cleanup 없음 — StrictMode cleanup이 타이머를 지우면 splash가 영구 정지되므로 의도적으로 생략
     sessionStorage.setItem(SPLASH_KEY, "1");
-
-    const toExit = setTimeout(() => setPhase("exit"),  SPLASH_DISPLAY_MS);
-    const toDone = setTimeout(() => setPhase("done"),  SPLASH_DISPLAY_MS + SPLASH_FADE_MS);
-
-    return () => {
-      clearTimeout(toExit);
-      clearTimeout(toDone);
-    };
+    setTimeout(() => setPhase("exit"), SPLASH_DISPLAY_MS);
+    setTimeout(() => setPhase("done"), SPLASH_DISPLAY_MS + SPLASH_FADE_MS);
   }, []);
 
   if (phase === "done") return null;
