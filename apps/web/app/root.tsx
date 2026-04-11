@@ -8,7 +8,7 @@ import {
   useNavigation,
 } from "react-router";
 import { useTranslation } from "react-i18next";
-import { useState, useLayoutEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import type { Route } from "./+types/root";
 import "~/lib/i18n";
@@ -38,15 +38,20 @@ const SPLASH_FADE_MS = 700;
 function SplashScreen() {
   // "enter"로 초기화 → SSR HTML에 스플래시가 포함되어 홈을 처음부터 덮음
   const [phase, setPhase] = useState<"enter" | "exit" | "done">("enter");
+  // dev StrictMode의 effect 이중 실행을 방지하는 guard
+  const initiated = useRef(false);
 
-  // useLayoutEffect: 브라우저 페인트 이전에 실행
-  // → 재방문 시 스플래시가 한 프레임도 보이지 않고 즉시 제거됨
-  useLayoutEffect(() => {
+  useEffect(() => {
+    if (initiated.current) return;
+    initiated.current = true;
+
+    // 재방문(같은 세션): 즉시 제거
     if (sessionStorage.getItem(SPLASH_KEY)) {
       setPhase("done");
       return;
     }
 
+    // 첫 방문: 키 저장 후 애니메이션 시퀀스 실행
     sessionStorage.setItem(SPLASH_KEY, "1");
 
     const toExit = setTimeout(() => setPhase("exit"),  SPLASH_DISPLAY_MS);
