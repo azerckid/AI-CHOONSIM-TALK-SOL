@@ -12,6 +12,7 @@ import bs58 from "bs58";
 
 interface Props {
   onError?: (msg: string) => void;
+  onSuccess?: () => void;
 }
 
 type Status = "idle" | "connecting" | "signing" | "verifying";
@@ -25,7 +26,7 @@ const PhantomIcon = () => (
   </svg>
 );
 
-export function SiwsButton({ onError }: Props) {
+export function SiwsButton({ onError, onSuccess }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const navigate = useNavigate();
   const isLoading = status !== "idle";
@@ -68,7 +69,11 @@ export function SiwsButton({ onError }: Props) {
         throw new Error(err.error || "인증 실패");
       }
 
-      navigate("/home");
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate("/home");
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("User rejected") || msg.includes("cancelled") || msg.includes("rejected")) {
