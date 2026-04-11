@@ -463,3 +463,53 @@ iframe[name^="zoid-paypal-buttons"] {
 .paypal-buttons-context-iframe {
   background: transparent !important;
 }
+
+/* Premium UI Enhancements */
+@layer utilities {
+  .glass-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 
+      0 8px 32px 0 rgba(0, 0, 0, 0.4),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+
+  .neon-glow-pink {
+    filter: drop-shadow(0 0 8px rgba(238, 43, 140, 0.6));
+  }
+
+  .premium-shine {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .premium-shine::after {
+    content: "";
+    position: absolute;
+    top: -150%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      transparent 20%,
+      rgba(255, 255, 255, 0.1) 48%,
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(255, 255, 255, 0.1) 52%,
+      transparent 80%
+    );
+    transform: rotate(25deg);
+    animation: shine-sweep 6s infinite;
+  }
+
+  @keyframes shine-sweep {
+    0% { transform: translate(-30%, -30%) rotate(25deg); }
+    20%, 100% { transform: translate(130%, 130%) rotate(25deg); }
+  }
+
+  .text-glow-choco {
+    text-shadow: 0 0 10px rgba(238, 43, 140, 0.5), 0 0 20px rgba(238, 43, 140, 0.2);
+  }
+}

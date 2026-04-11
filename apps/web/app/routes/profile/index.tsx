@@ -304,123 +304,182 @@ export default function ProfileScreen() {
         </section>
 
         {/* Stats Dashboard */}
-        <section className="px-4 mb-6 space-y-4">
-          <div className="bg-surface-dark/50 border border-white/5 rounded-2xl p-4 backdrop-blur-sm">
+        <section className="px-4 mb-8 space-y-4">
+          <div className="glass-card rounded-[24px] p-5 shadow-xl">
             <div className="grid grid-cols-3 divide-x divide-white/10">
-              <div className="flex flex-col items-center gap-1 px-2">
-                <span className="text-2xl font-bold text-white tracking-tight">{stats.daysTogether}일</span>
-                <span className="text-xs text-white/50 font-medium">Days Together</span>
+              <div className="flex flex-col items-center gap-1.5 px-2">
+                <span className="text-2xl font-black text-white tracking-tighter">{stats.daysTogether}d</span>
+                <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Together</span>
               </div>
-              <div className="flex flex-col items-center gap-1 px-2">
-                <span className="text-2xl font-bold text-primary tracking-tight">Lv.{stats.affinityLevel}</span>
-                <span className="text-xs text-white/50 font-medium">Affinity</span>
+              <div className="flex flex-col items-center gap-1.5 px-2">
+                <span className="text-2xl font-black text-primary tracking-tighter text-glow-choco">Lv.{stats.affinityLevel}</span>
+                <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Affinity</span>
               </div>
               <button
                 onClick={() => setIsItemStoreOpen(true)}
-                className="flex flex-col items-center gap-1 px-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer py-1 -my-1"
+                className="flex flex-col items-center gap-1.5 px-2 hover:bg-white/5 rounded-xl transition-all cursor-pointer py-1 -my-1"
               >
-                <span className="text-2xl font-bold text-white tracking-tight">
-                  {stats.hearts >= 1000 ? `${(stats.hearts / 1000).toFixed(1)}k` : stats.hearts}
-                </span>
-                <span className="text-xs text-white/50 font-medium flex items-center gap-1">
-                  Hearts
-                  <span className="material-symbols-outlined text-[10px] text-primary">add_circle</span>
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-2xl font-black text-white tracking-tighter">
+                    {stats.hearts >= 1000 ? `${(stats.hearts / 1000).toFixed(1)}k` : stats.hearts}
+                  </span>
+                  <span className="material-symbols-outlined text-[14px] text-primary translate-y-[2px]">favorite</span>
+                </div>
+                <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Hearts</span>
               </button>
             </div>
           </div>
 
           {/* 오늘의 토큰 사용량 */}
-          <div className="bg-surface-dark/50 border border-white/5 rounded-2xl p-4 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-white/90">Today's Usage</h3>
-              <span className="text-xs text-white/50">
-                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              </span>
+          <div className="glass-card rounded-[24px] p-5 shadow-xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+              <span className="material-symbols-outlined text-4xl">analytics</span>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1">
+            
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-sm font-black text-white/90 tracking-tight">System Usage</h3>
+                <p className="text-[9px] font-bold text-white/30 uppercase tracking-[0.1em]">Daily Analytics</p>
+              </div>
+              <div className="px-2.5 py-1 rounded-full bg-white/5 border border-white/5">
+                <span className="text-[10px] font-bold text-white/60">
+                  {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 relative z-10">
+              <div className="flex flex-col gap-1.5 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px] text-blue-400">speed</span>
-                  <span className="text-lg font-bold text-white tracking-tight">
+                  <div className="size-6 rounded-lg bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                    <span className="material-symbols-outlined text-[16px] text-blue-400">speed</span>
+                  </div>
+                  <span className="text-lg font-black text-white tracking-tighter">
                     {formatTokenCount(todayUsage.totalTokens)}
                   </span>
                 </div>
-                <span className="text-xs text-white/50 font-medium ml-7">Total Tokens</span>
+                <span className="text-[9px] text-white/40 font-bold uppercase tracking-widest ml-1">Total Tokens</span>
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1.5 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px] text-green-400">chat_bubble</span>
-                  <span className="text-lg font-bold text-white tracking-tight">
+                  <div className="size-6 rounded-lg bg-green-500/10 flex items-center justify-center border border-green-500/20">
+                    <span className="material-symbols-outlined text-[16px] text-green-400">chat_bubble</span>
+                  </div>
+                  <span className="text-lg font-black text-white tracking-tighter">
                     {todayUsage.messageCount}
                   </span>
                 </div>
-                <span className="text-xs text-white/50 font-medium ml-7">Messages</span>
+                <span className="text-[9px] text-white/40 font-bold uppercase tracking-widest ml-1">Messages</span>
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-white/10 grid grid-cols-2 gap-4 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-white/60">Input Tokens</span>
-                <span className="text-white/90 font-medium">{formatTokenCount(todayUsage.promptTokens)}</span>
+
+            <div className="mt-4 pt-4 border-t border-white/5 grid grid-cols-2 gap-4">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[10px] font-bold text-white/30 uppercase tracking-tighter">Input</span>
+                <span className="text-[11px] font-bold text-white/80">{formatTokenCount(todayUsage.promptTokens)}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-white/60">Output Tokens</span>
-                <span className="text-white/90 font-medium">{formatTokenCount(todayUsage.completionTokens)}</span>
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[10px] font-bold text-white/30 uppercase tracking-tighter">Output</span>
+                <span className="text-[11px] font-bold text-white/80">{formatTokenCount(todayUsage.completionTokens)}</span>
               </div>
             </div>
+            
+            {/* 상단 미세 선형 그라데이션 */}
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-linear-to-r from-transparent via-white/10 to-transparent" />
           </div>
         </section>
 
-        {/* Solana Section */}
-        <section className="px-4 mb-6">
-          <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3 ml-2">Solana</h3>
-          <div className="bg-surface-dark/50 border border-white/5 rounded-2xl p-4 backdrop-blur-sm space-y-3">
-
-            {/* Phantom 지갑 연결 & 주소 등록 */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px] text-[#9945FF]">account_balance_wallet</span>
-                  <span className="text-sm font-semibold text-white/90">Phantom Wallet</span>
+        {/* Solana Premium Wallet Card */}
+        <section className="px-4 mb-8">
+          <div className="group relative">
+            {/* 보이지 않는 광원 효과 (Backglow) */}
+            <div className="absolute -inset-1 bg-linear-to-r from-primary/30 to-purple-600/30 rounded-[32px] blur-2xl opacity-50 group-hover:opacity-80 transition duration-1000" />
+            
+            <div className="glass-card premium-shine relative rounded-[32px] p-6 overflow-hidden border border-white/10 active:scale-[0.98] transition-all duration-300">
+              {/* Card Header */}
+              <div className="flex justify-between items-start mb-10">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <div className="size-8 rounded-full bg-linear-to-tr from-[#9945FF] to-[#14F195] p-1.5 shadow-lg shadow-purple-500/20">
+                      <svg viewBox="0 0 384 512" className="text-white fill-current">
+                        <path d="M384 397.1c0 5.7-2.3 11.2-6.3 15.2L311.2 480c-4 4-9.5 6.3-15.2 6.3H12.5c-9.5 0-14.7-11.1-8.5-18.3l66.5-76.7c4-4.6 9.8-7.3 15.9-7.3h285.1c9.4 0 12.5 11.7 2.5 17.1zM12.5 25.7h283.5c5.7 0 11.2 2.3 15.2 6.3l66.5 76.7c4 4 6.3 9.5 6.3 15.2s-2.3 11.2-6.3 15.2L311.2 216c-4 4-9.5 6.3-15.2 6.3H12.5c-9.5 0-14.7-11.1-8.5-18.3l66.5-76.7c4-4.6 9.8-7.3 15.9-7.3H12.5c-9.5 0-12.5-11.7-2.5-17.1L76.5 33c4-4.6 9.8-7.3 15.9-7.3z" />
+                      </svg>
+                    </div>
+                    <span className="text-[10px] font-black tracking-[0.2em] text-white/40 uppercase">Solana Network</span>
+                  </div>
                 </div>
-                <WalletButtonInline />
-              </div>
-
-              {/* 지갑 주소 등록 폼 */}
-              <WalletAddressForm currentWallet={user?.solanaWallet ?? null} />
-            </div>
-
-            <div className="h-px bg-white/5" />
-            {/* 기억 앨범 바로가기 */}
-            <button
-              onClick={() => navigate("/profile/memories")}
-              className="w-full flex items-center justify-between hover:bg-white/5 rounded-xl p-2 -mx-2 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-[#9945FF]">auto_awesome</span>
-                <span className="text-sm font-medium text-white/80">On-chain Memory Album</span>
-              </div>
-              <span className="material-symbols-outlined text-[16px] text-white/30">chevron_right</span>
-            </button>
-            {/* SOL 잔액 */}
-            {user?.solanaWallet && (
-              <div className="flex items-center justify-between px-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-white/50">SOL Balance</span>
+                <div className="flex flex-col items-end gap-2">
+                  <WalletButtonInline />
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-tighter">Live</span>
+                  </div>
                 </div>
-                <span className="text-sm font-bold text-[#9945FF]">
-                  {solBalance !== null ? `${solBalance.toFixed(4)} SOL` : "—"}
-                </span>
               </div>
-            )}
-            {/* CHOCO Token 정보 */}
-            <div className="flex items-center justify-between px-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-white/50">CHOCO Balance</span>
+
+              {/* Wallet Address Display */}
+              <div className="mb-8">
+                <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.1em] mb-1.5 ml-1">Wallet Address</p>
+                <div className="flex items-center gap-2 group/addr">
+                  <div className="px-4 py-2.5 bg-black/20 rounded-xl border border-white/5 flex-1 overflow-hidden">
+                    <code className="text-white/90 font-mono text-sm tracking-tight truncate block">
+                      {user?.solanaWallet || "지갑을 먼저 등록해주세요"}
+                    </code>
+                  </div>
+                  {user?.solanaWallet && (
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(user.solanaWallet);
+                        toast.success("Address copied");
+                      }}
+                      className="size-11 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-primary hover:bg-white/10 transition-all active:scale-90"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">content_copy</span>
+                    </button>
+                  )}
+                </div>
               </div>
-              <span className="text-sm font-bold text-primary">
-                {parseInt(user?.chocoBalance ?? "0").toLocaleString()} 🍫
-              </span>
+
+              {/* Balance Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/5 rounded-[20px] p-4 border border-white/5">
+                  <p className="text-[9px] font-bold text-white/30 uppercase tracking-[0.2em] mb-1">SOL Balance</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-xl font-black text-white tracking-tighter">
+                      {solBalance !== null ? solBalance.toFixed(3) : "—"}
+                    </span>
+                    <span className="text-[10px] font-bold text-white/40">SOL</span>
+                  </div>
+                </div>
+                <div className="bg-primary/5 rounded-[20px] p-4 border border-primary/10">
+                  <p className="text-[9px] font-bold text-primary/40 uppercase tracking-[0.2em] mb-1">CHOCO Balance</p>
+                  <div className="flex items-baseline gap-1 overflow-hidden">
+                    <span className="text-xl font-black text-primary tracking-tighter text-glow-choco truncate">
+                      {parseInt(user?.chocoBalance ?? "0").toLocaleString()}
+                    </span>
+                    <span className="text-[10px] font-bold text-primary/60">🍫</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Bottom Decoration & Quick Action */}
+              <div className="mt-6 pt-4 border-t border-white/5 flex justify-between items-center">
+                <button 
+                  onClick={() => navigate("/profile/memories")}
+                  className="flex items-center gap-1.5 text-white/40 hover:text-white transition-colors group"
+                >
+                  <span className="material-symbols-outlined text-[16px] text-[#9945FF] group-hover:rotate-12 transition-transform">auto_awesome</span>
+                  <span className="text-[10px] font-bold underline decoration-white/10 underline-offset-4 tracking-tight">On-chain Memory Album</span>
+                </button>
+                
+                <button 
+                  onClick={() => navigate("/missions")}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all active:scale-95 group"
+                >
+                  <span className="material-symbols-outlined text-[18px] animate-pulse">event_available</span>
+                  <span className="text-[11px] font-extrabold uppercase tracking-tight">Daily Check-in</span>
+                </button>
+              </div>
             </div>
           </div>
         </section>
