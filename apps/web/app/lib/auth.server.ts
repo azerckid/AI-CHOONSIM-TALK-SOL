@@ -311,21 +311,48 @@ export async function requireUserId(request: Request): Promise<string | null> {
 
 /**
  * Admin 권한이 없으면 에러 반환 (Loader/Action에서 사용)
+ * 접근 성공/실패 모두 구조화된 감사 로그를 남긴다.
  */
 export async function requireAdmin(request: Request): Promise<string> {
     const session = await auth.api.getSession({
         headers: request.headers,
     });
 
+    const url = new URL(request.url);
+    const logBase = {
+        url: url.pathname,
+        method: request.method,
+        ts: new Date().toISOString(),
+    };
+
     if (!session || !session.user) {
+        console.warn(JSON.stringify({
+            event: "admin_access_denied",
+            reason: "unauthenticated",
+            ...logBase,
+        }));
         throw new Response("Unauthorized", { status: 401 });
     }
 
     const hasAdminAccess = await isAdmin(session.user.id);
 
     if (!hasAdminAccess) {
+        console.warn(JSON.stringify({
+            event: "admin_access_denied",
+            reason: "forbidden",
+            userId: session.user.id,
+            email: session.user.email,
+            ...logBase,
+        }));
         throw new Response("Forbidden", { status: 403 });
     }
+
+    console.info(JSON.stringify({
+        event: "admin_access_granted",
+        userId: session.user.id,
+        email: session.user.email,
+        ...logBase,
+    }));
 
     return session.user.id;
 }
