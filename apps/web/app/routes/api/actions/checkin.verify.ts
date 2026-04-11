@@ -10,6 +10,7 @@ import * as schema from "~/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { solanaConnection } from "~/lib/solana/connection.server";
 import { mintCompressedChoco } from "~/lib/solana/zk-compression.server";
+import { PublicKey } from "@solana/web3.js";
 
 const CHECKIN_CHOCO_REWARD = 50;
 const MISSION_ID = "daily_checkin_solana";
@@ -29,6 +30,19 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   try {
+    // 유저의 등록된 Solana 지갑 확인
+    const user = await db.query.user.findFirst({
+      where: eq(schema.user.id, userId),
+      columns: { solanaWallet: true },
+    });
+
+    if (!user?.solanaWallet) {
+      return Response.json(
+        { error: "등록된 Solana 지갑이 없습니다. 지갑을 먼저 연결해주세요." },
+        { status: 403 }
+      );
+    }
+
     // 오늘 체크인 여부 확인 — lastUpdated가 오늘이면 이미 완료
     const todayEpoch = Math.floor(new Date().setHours(0, 0, 0, 0) / 1000);
 
