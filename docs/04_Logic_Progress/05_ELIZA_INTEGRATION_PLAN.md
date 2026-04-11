@@ -61,9 +61,18 @@
 
 ## 3. 구현 단계
 
-### Phase A: 환경 설정 (3일)
+### Phase A: 환경 설정 (3일) — 1주차 (4/11~4/17)
 
-#### A-1. 모노레포에 Eliza 패키지 추가
+- [ ] **A-1.** `packages/eliza-agent/` 디렉토리 생성 및 모노레포 구조 설정
+- [ ] **A-2.** `@elizaos/core`, `@elizaos/plugin-solana` 패키지 설치
+- [ ] **A-2.** `@elizaos/client-discord` 설치 및 Discord Application 등록
+- [ ] **A-2.** `@elizaos/client-telegram` 설치 및 BotFather에서 봇 토큰 발급
+- [ ] **A-2.** `@elizaos/client-twitter` 설치 (X API 비용 확인 후 결정)
+- [ ] **A-3.** `.env.development`에 Eliza 관련 환경변수 추가
+- [ ] **A-3.** `CHOONSIM_API_SECRET` 시크릿 생성 및 Vercel 환경변수 등록
+- [ ] **A.** `packages/eliza-agent/tsconfig.json` + `package.json` 작성
+- [ ] **A.** Turbo 모노레포 `turbo.json`에 eliza-agent 워크스페이스 추가
+
 ```
 AI-CHOONSIM-TALK-SOL/
 ├── apps/
@@ -79,7 +88,6 @@ AI-CHOONSIM-TALK-SOL/
         └── tsconfig.json
 ```
 
-#### A-2. 패키지 설치
 ```bash
 cd packages/eliza-agent
 npm install @elizaos/core @elizaos/plugin-solana
@@ -88,7 +96,6 @@ npm install @elizaos/client-twitter   # X 커넥터
 npm install @elizaos/client-telegram  # 텔레그램 커넥터
 ```
 
-#### A-3. 환경변수 추가 (`.env.development`)
 ```env
 # Eliza — Discord
 DISCORD_BOT_TOKEN=
@@ -109,7 +116,14 @@ CHOONSIM_API_SECRET=  # 내부 서비스 인증용 시크릿
 
 ---
 
-### Phase B: 춘심 Character JSON 정의 (2일)
+### Phase B: 춘심 Character JSON 정의 (2일) — 1주차 (4/11~4/17)
+
+- [ ] **B-1.** `packages/eliza-agent/src/character.ts` 파일 작성
+- [ ] **B-2.** `bio` 배열 — 춘심 자기소개 문장 (한국어·영어 혼용) 작성
+- [ ] **B-3.** `messageExamples` — 팬과의 대화 few-shot 예시 10개 이상 작성
+- [ ] **B-4.** `style.post` — X 게시물용 말투 가이드라인 작성
+- [ ] **B-5.** 기존 `app/lib/ai/prompts.ts`의 시스템 프롬프트와 일관성 확인
+- [ ] **B.** Character JSON 로컬에서 Eliza playground로 동작 확인
 
 Eliza의 핵심은 Character 파일입니다. 춘심의 성격·말투·세계관을 JSON으로 정의합니다.
 
@@ -190,7 +204,15 @@ export const choonsimCharacter: Character = {
 
 ---
 
-### Phase C: Turso Memory Adapter 구현 (3일)
+### Phase C: Turso Memory Adapter 구현 (3일) — 2주차 (4/18~4/24)
+
+- [ ] **C-1.** `packages/eliza-agent/src/memory-adapter.ts` 파일 작성
+- [ ] **C-2.** `createMemory()` — 대화 요약을 Turso `UserMemoryItem`에 저장
+- [ ] **C-3.** `getMemories()` — `/api/context/:characterId/memory` GET 연동
+- [ ] **C-4.** `getMemoriesByRoomIds()` — roomId → userId 매핑 구현
+- [ ] **C-5.** elizaOS `DatabaseAdapter` 인터페이스 전체 메서드 스텁 구현 (필수 메서드 확인)
+- [ ] **C-6.** 웹앱 `/api/context` 엔드포인트에 `X-Internal-Secret` 인증 미들웨어 추가 (Phase F 선행)
+- [ ] **C.** 단위 테스트: 메모리 저장 → 조회 왕복 동작 확인
 
 Eliza의 메모리 인터페이스를 구현해 기존 Turso DB의 UserContext 시스템에 연결합니다.
 
@@ -265,7 +287,14 @@ export class TursoMemoryAdapter implements Partial<IMemoryManager> {
 
 ---
 
-### Phase D: Solana 온체인 액션 플러그인 (3일)
+### Phase D: Solana 온체인 액션 플러그인 (3일) — 3주차 (4/25~5/01)
+
+- [ ] **D-1.** `packages/eliza-agent/src/solana-actions.ts` 파일 작성
+- [ ] **D-2.** `buyChocoAction` — "초코 사줘" 감지 → Blink URL 반환
+- [ ] **D-3.** `checkinAction` — "체크인" 감지 → 체크인 Blink URL 반환
+- [ ] **D-4.** `engraveMemoryAction` — "기억 새기자" 감지 → 웹앱 채팅으로 유도
+- [ ] **D-5.** 각 Action의 `validate()` 함수 — 한국어·영어 키워드 모두 포함
+- [ ] **D.** Discord 봇 로컬 테스트: DM으로 "초코 100개 사줘" → Blink URL 정상 반환 확인
 
 Eliza에서 직접 온체인 트랜잭션을 실행하는 커스텀 액션을 구현합니다.
 
@@ -349,7 +378,13 @@ export const checkinAction: Action = {
 
 ---
 
-### Phase E: Eliza 런타임 엔트리포인트 (1일)
+### Phase E: Eliza 런타임 엔트리포인트 (1일) — 3주차 (4/25~5/01)
+
+- [ ] **E-1.** `packages/eliza-agent/src/index.ts` 엔트리포인트 작성
+- [ ] **E-2.** `AgentRuntime` 초기화 — Character + Memory Adapter + Actions 연결
+- [ ] **E-3.** Discord 클라이언트 초기화 및 로컬 봇 동작 확인
+- [ ] **E-4.** Telegram 클라이언트 초기화 및 로컬 봇 동작 확인
+- [ ] **E-5.** 공유 메모리 확인: Telegram DM → 웹앱 채팅에서 동일 기억 조회
 
 **`packages/eliza-agent/src/index.ts`**
 ```typescript
@@ -400,7 +435,12 @@ startChoonsimAgent().catch(console.error);
 
 ---
 
-### Phase F: /api/context 내부 인증 미들웨어 (1일)
+### Phase F: /api/context 내부 인증 미들웨어 (1일) — 4주차 (5/02~5/10)
+
+- [ ] **F-1.** `apps/web/app/lib/auth.server.ts`에 `requireInternalSecret()` 함수 추가
+- [ ] **F-2.** `/api/context/:characterId/memory` POST 엔드포인트에 인증 적용
+- [ ] **F-3.** Vercel 환경변수에 `CHOONSIM_API_SECRET` 등록
+- [ ] **F.** Eliza → 웹앱 API 호출 시 403 없이 정상 동작 확인
 
 Eliza Agent가 웹앱의 context API를 호출할 때 인증하는 미들웨어 추가.
 
@@ -421,7 +461,15 @@ export function requireInternalSecret(request: Request) {
 
 ---
 
-### Phase G: Vercel + Railway 배포 분리 (2일)
+### Phase G: Vercel + Railway 배포 분리 (2일) — 4주차 (5/02~5/10)
+
+- [ ] **G-1.** Railway 계정 생성 및 프로젝트 연결
+- [ ] **G-2.** `packages/eliza-agent/railway.toml` 배포 설정 파일 작성
+- [ ] **G-3.** Railway 대시보드에서 환경변수 전체 등록 (Discord/Telegram/CHOONSIM_API_SECRET 등)
+- [ ] **G-4.** Railway 배포 후 Discord 봇 온라인 상태 확인
+- [ ] **G-5.** Railway 배포 후 Telegram 봇 응답 확인
+- [ ] **G-6.** 웹앱(Vercel) ↔ Eliza(Railway) 메모리 공유 E2E 테스트
+- [ ] **G.** 데모 시나리오 전체 흐름 최종 검증 (섹션 6 기준)
 
 Eliza Agent는 **장시간 실행 서버 프로세스**이므로 Vercel(서버리스)에 배포 불가.
 

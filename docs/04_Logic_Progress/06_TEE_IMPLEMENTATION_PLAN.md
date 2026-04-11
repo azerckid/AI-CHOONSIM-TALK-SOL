@@ -85,7 +85,13 @@ Lit Action (IPFS에 배포된 불변 코드)
 
 ## 5. 구현 단계
 
-### Phase A: Lit Protocol 설정 (2일)
+### Phase A: Lit Protocol 설정 (2일) — 1주차 (4/11~4/17)
+
+- [ ] **A-1.** `@lit-protocol/lit-node-client`, `@lit-protocol/constants`, `@lit-protocol/auth-helpers` 패키지 설치
+- [ ] **A-2.** `apps/web/app/lib/solana/lit.server.ts` 파일 작성 — LitNodeClient 싱글턴
+- [ ] **A-3.** DatilDev 테스트넷 연결 확인 (`client.connect()` 성공 로그)
+- [ ] **A-4.** `.env.development`에 Lit 관련 환경변수 항목 추가 (값은 Phase B 후 채움)
+- [ ] **A.** Lit Explorer(`https://explorer.litprotocol.com`)에서 DatilDev 노드 상태 확인
 
 #### A-1. 패키지 설치
 ```bash
@@ -117,7 +123,14 @@ export async function getLitClient(): Promise<LitNodeClient> {
 
 ---
 
-### Phase B: PKP (Programmable Key Pair) 생성 (1일)
+### Phase B: PKP (Programmable Key Pair) 생성 (1일) — 1주차 (4/11~4/17)
+
+- [ ] **B-1.** `apps/web/scripts/mint-agent-pkp.ts` 스크립트 작성
+- [ ] **B-2.** `@lit-protocol/contracts-sdk` 설치 및 PKP 민팅 실행
+- [ ] **B-3.** 발급된 `PKP 공개키` + `tokenId` → `.env` 및 Vercel 환경변수에 등록
+- [ ] **B-4.** PKP 공개키를 Solana 주소로 변환 확인 (`@lit-protocol/pkp-solana` 사용)
+- [ ] **B-5.** Solana Devnet에서 PKP 주소로 SOL 소량 에어드랍 (수수료용)
+- [ ] **B.** Solana Explorer에서 PKP 주소 확인 가능한지 검증
 
 PKP는 Lit 노드 네트워크가 공동 관리하는 키 쌍입니다.  
 Solana PKP를 생성하면 **기존 `SOLANA_AGENT_PRIVATE_KEY`를 대체**합니다.
@@ -159,7 +172,16 @@ LIT_CAPACITY_CREDIT_TOKEN_ID= # Rate limit 크레딧 (테스트넷 무료)
 
 ---
 
-### Phase C: Lit Action 코드 작성 (3일)
+### Phase C: Lit Action 코드 작성 (3일) — 2주차 (4/18~4/24)
+
+- [ ] **C-1.** `apps/web/lit-actions/choonsim-sign-action.js` 파일 작성
+- [ ] **C-2.** `ALLOWED_ACTIONS` 목록 및 `MAX_CHOCO_PER_TX` 한도 정의
+- [ ] **C-3.** 액션 타입별 조건 검증 로직 구현 (TRANSFER_CHOCO / MINT_CNFT / CHECKIN_REWARD)
+- [ ] **C-4.** `LitActions.signEcdsa()` 호출 및 응답 포맷 정의
+- [ ] **C-5.** Lit Action 로컬 시뮬레이션 테스트 (`lit-node-client` executeJs)
+- [ ] **C-6.** Pinata 또는 web3.storage에 Lit Action JS 파일 IPFS 업로드
+- [ ] **C-7.** 발급된 IPFS CID → `.env`의 `LIT_ACTION_IPFS_CID` 등록
+- [ ] **C.** IPFS 공개 URL(`https://ipfs.io/ipfs/<CID>`)에서 코드 원문 접근 가능 확인
 
 Lit Action은 IPFS에 배포되는 불변 JavaScript입니다.  
 이 코드가 "춘심이의 의사결정 규칙"을 정의합니다.
@@ -216,7 +238,16 @@ LitActions.setResponse({
 
 ---
 
-### Phase D: 기존 agent-kit.server.ts 교체 (2일)
+### Phase D: 기존 agent-kit.server.ts 교체 (2일) — 3주차 (4/25~5/01)
+
+- [ ] **D-1.** `@lit-protocol/pkp-solana` 패키지 설치
+- [ ] **D-2.** `apps/web/app/lib/solana/lit-signer.server.ts` 파일 작성
+- [ ] **D-3.** `signWithLitPKP()` 함수 구현 — sessionSigs 발급 + executeJs 호출
+- [ ] **D-4.** `PKPSolanaWallet` 인스턴스 생성 및 `signTransaction()` 동작 확인
+- [ ] **D-5.** `agent-kit.server.ts`에 피처 플래그 `USE_LIT_SIGNER` 추가
+- [ ] **D-6.** `USE_LIT_SIGNER=false`로 기존 흐름 정상 동작 확인 (회귀 방지)
+- [ ] **D-7.** `USE_LIT_SIGNER=true`로 Lit PKP 서명 흐름 동작 확인
+- [ ] **D.** Ed25519 변환 이슈 없는지 실제 Devnet 트랜잭션으로 최종 검증
 
 현재 `getAgentKeypair()` 함수를 Lit 서명으로 교체합니다.
 
@@ -304,7 +335,14 @@ const signature = await pkpWallet.signTransaction(tx);
 
 ---
 
-### Phase E: transferChocoSPL 함수 교체 (1일)
+### Phase E: transferChocoSPL 함수 교체 (1일) — 3주차 (4/25~5/01)
+
+- [ ] **E-1.** `agent-kit.server.ts`의 `getAgentKeypair()` 함수 옆에 `getAgentWallet()` 함수 추가 (PKPSolanaWallet 반환)
+- [ ] **E-2.** `transferChocoSPL()` 함수 내부에서 `USE_LIT_SIGNER` 플래그 분기 추가
+- [ ] **E-3.** `Lit PKP` 경로: `pkpWallet.signTransaction(tx)` → `connection.sendRawTransaction()` 흐름 검증
+- [ ] **E-4.** Devnet에서 CHOCO SPL 전송 트랜잭션 성공 확인 (실제 잔액 변화)
+- [ ] **E-5.** 결제 흐름 (`/api/payment/solana/verify-sig`) 엔드투엔드 테스트 — Lit 서명 버전
+- [ ] **E.** 기존 `USE_LIT_SIGNER=false` 경로와 동일 결과 확인 (회귀 없음)
 
 **`apps/web/app/lib/solana/agent-kit.server.ts`** 수정:
 
@@ -344,7 +382,15 @@ export async function transferChocoSPL(
 
 ---
 
-### Phase F: Remote Attestation 증명 페이지 (2일)
+### Phase F: Remote Attestation 증명 페이지 (2일) — 4주차 (5/02~5/10)
+
+- [ ] **F-1.** `apps/web/app/routes/trust.tsx` 파일 생성 (신뢰 증명 페이지)
+- [ ] **F-2.** `app/routes.ts`에 `/trust` 경로 등록
+- [ ] **F-3.** loader에서 PKP 주소, Lit Action CID, 최근 트랜잭션 5개 조회 (Helius RPC)
+- [ ] **F-4.** Solana Explorer 링크, IPFS 코드 링크, Lit Explorer 링크 UI 구성
+- [ ] **F-5.** 헤더 네비게이션에 `/trust` 링크 추가 (Footer 또는 About 섹션)
+- [ ] **F-6.** 페이지 내 "에이전트 지갑에서 발생한 최근 트랜잭션" 테이블 렌더링
+- [ ] **F.** 심사위원 데모 시나리오 전체 실행 — `/trust` 방문 → Explorer 확인 → IPFS 코드 열람 → "서버 관리자 키 탈취 불가" 증명 완료
 
 **"춘심이 키는 Lit 노드가 관리한다"는 것을 사용자가 직접 검증할 수 있는 페이지 추가.**
 
