@@ -93,10 +93,29 @@ export async function action({ request }: ActionFunctionArgs) {
       );
     }
 
-    // Memo instruction 확인
     const accountKeys =
       tx.transaction.message.staticAccountKeys?.map((k) => k.toBase58()) ?? [];
 
+    // 서명자(fee payer = accountKeys[0])가 로그인한 유저의 지갑인지 검증
+    const feePayer = accountKeys[0];
+    let feePayerBase58: string;
+    try {
+      feePayerBase58 = new PublicKey(feePayer).toBase58();
+    } catch {
+      return Response.json(
+        { error: "트랜잭션에서 서명자를 읽을 수 없습니다." },
+        { status: 400 }
+      );
+    }
+
+    if (feePayerBase58 !== user.solanaWallet) {
+      return Response.json(
+        { error: "트랜잭션 서명자가 로그인한 지갑과 일치하지 않습니다." },
+        { status: 403 }
+      );
+    }
+
+    // Memo instruction 확인
     if (!accountKeys.includes(MEMO_PROGRAM_ID)) {
       return Response.json(
         { error: "유효하지 않은 체크인 트랜잭션입니다." },
