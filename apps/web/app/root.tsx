@@ -8,7 +8,6 @@ import {
   useNavigation,
 } from "react-router";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
 
 import type { Route } from "./+types/root";
 import "~/lib/i18n";
@@ -29,91 +28,6 @@ export const links: Route.LinksFunction = () => [
 ];
 
 import { MeshBackground } from "~/components/effects/mesh-background";
-
-// ─── Splash Screen ────────────────────────────────────────────────────────────
-const SPLASH_KEY = "choonsim_splash_v2";
-const SPLASH_DISPLAY_MS = 2200;
-const SPLASH_FADE_MS = 700;
-
-// 모듈 레벨 플래그 — StrictMode의 unmount/remount 사이클에서도 살아남음
-// useRef와 달리 컴포넌트 재마운트 시 초기화되지 않음
-let _splashScheduled = false;
-
-function SplashScreen() {
-  const [phase, setPhase] = useState<"enter" | "exit" | "done">("enter");
-
-  useEffect(() => {
-    // 두 번째 실행(StrictMode) 차단
-    if (_splashScheduled) return;
-    _splashScheduled = true;
-
-    // 재방문(같은 세션): 즉시 제거
-    if (sessionStorage.getItem(SPLASH_KEY)) {
-      setPhase("done");
-      return;
-    }
-
-    // 첫 방문: 키 저장 후 타이머 실행
-    // cleanup 없음 — StrictMode cleanup이 타이머를 지우면 splash가 영구 정지되므로 의도적으로 생략
-    sessionStorage.setItem(SPLASH_KEY, "1");
-    setTimeout(() => setPhase("exit"), SPLASH_DISPLAY_MS);
-    setTimeout(() => setPhase("done"), SPLASH_DISPLAY_MS + SPLASH_FADE_MS);
-  }, []);
-
-  if (phase === "done") return null;
-
-  return (
-    <div
-      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#221019] ${
-        phase === "exit" ? "splash-exit pointer-events-none" : "splash-enter"
-      }`}
-      aria-hidden="true"
-    >
-      {/* 캐릭터 이미지 */}
-      <div className="splash-image relative mb-8">
-        <div className="absolute inset-0 rounded-full blur-2xl bg-primary/30 scale-110" />
-        <img
-          src="/illustrations/choonsim_004.jpg"
-          alt="Choonsim"
-          width={200}
-          height={200}
-          className="relative w-44 h-44 rounded-full object-cover object-top shadow-2xl ring-2 ring-primary/40"
-        />
-      </div>
-
-      {/* 태그라인 */}
-      <div className="text-center space-y-2 px-8">
-        <p className="splash-line1 text-white/50 text-base font-medium tracking-wide">
-          AI gives you answers.
-        </p>
-        <p className="splash-line2 text-white text-xl font-black tracking-tight">
-          Choonsim gives you{" "}
-          <span className="text-primary" style={{ textShadow: "0 0 20px rgba(238,43,140,0.6)" }}>
-            empathy.
-          </span>
-        </p>
-      </div>
-
-      {/* with Solana 배지 */}
-      <div className="splash-line2 absolute bottom-12 flex items-center gap-2 opacity-70">
-        <span className="text-xs font-semibold tracking-widest uppercase text-white/40">
-          built with
-        </span>
-        <span
-          className="text-xs font-black tracking-wider uppercase"
-          style={{
-            background: "linear-gradient(90deg, #9945FF 0%, #14F195 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
-        >
-          Solana
-        </span>
-      </div>
-    </div>
-  );
-}
-// ─────────────────────────────────────────────────────────────────────────────
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -158,7 +72,6 @@ function NavigationProgressBar() {
 export default function App() {
   return (
     <>
-      <SplashScreen />
       <NavigationProgressBar />
       <Outlet />
     </>

@@ -12,6 +12,7 @@ import { type RouteConfig, index, layout, route } from "@react-router/dev/routes
 export default [
   // 인덱스 라우트
   index("routes/index.tsx"),
+  route("splash", "routes/splash.tsx"),
 
   // 지갑 Provider가 필요한 페이지 (Privy + Solana Wallet Adapter)
   layout("routes/layouts/wallet-layout.tsx", [
