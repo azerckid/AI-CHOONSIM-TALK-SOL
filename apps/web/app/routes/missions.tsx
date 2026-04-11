@@ -10,6 +10,7 @@ import { cn } from "~/lib/utils";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Confetti } from "~/components/effects/confetti";
+import { PremiumLoader } from "~/components/ui/premium-loader";
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -17,18 +18,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
         throw new Response(null, { status: 302, headers: { Location: "/login" } });
     }
 
-    // 1. 모든 활성 미션 가져오기
     const allMissions = await db.query.mission.findMany({
         where: eq(schema.mission.isActive, true),
         orderBy: [desc(schema.mission.createdAt)],
     });
 
-    // 2. 유저의 미션 진행 상태 가져오기
     const userMissions = await db.query.userMission.findMany({
         where: eq(schema.userMission.userId, session.user.id),
     });
 
-    // 3. 미션 데이터 결합
     const missions = allMissions.map((m) => {
         const userProgress = userMissions.find((um) => um.missionId === m.id);
         return {
@@ -65,7 +63,6 @@ export async function action({ request }: ActionFunctionArgs) {
             return Response.json({ error: "Mission not ready to claim" }, { status: 400 });
         }
 
-        // 트랜잭션: 상태 변경 및 CHOCO 지급 (1 Credit = 1 CHOCO)
         const rewardChoco = userMission.mission.rewardCredits.toString();
 
         await db.transaction(async (tx) => {
@@ -73,7 +70,6 @@ export async function action({ request }: ActionFunctionArgs) {
                 .set({ status: "CLAIMED" })
                 .where(eq(schema.userMission.id, userMission.id));
 
-            // 사용자 CHOCO 잔액 조회 및 업데이트
             const user = await tx.query.user.findFirst({
                 where: eq(schema.user.id, session.user.id),
                 columns: { chocoBalance: true },
@@ -106,12 +102,12 @@ export default function MissionsPage() {
     const navigate = useNavigate();
     const fetcher = useFetcher();
     const [showConfetti, setShowConfetti] = useState(false);
+    const isClaiming = fetcher.state !== "idle" && fetcher.formData?.get("intent") === "claim";
 
     useEffect(() => {
         if (fetcher.data?.success) {
             toast.success(`${fetcher.data.reward} CHOCO claimed!`);
             setShowConfetti(true);
-            // 5초 후 Confetti 상태 초기화
             setTimeout(() => setShowConfetti(false), 5000);
         } else if (fetcher.data?.error) {
             toast.error(fetcher.data.error);
@@ -126,9 +122,15 @@ export default function MissionsPage() {
     };
 
     return (
-        <div className="bg-background-dark text-white font-display antialiased min-h-screen pb-24 max-w-md mx-auto shadow-2xl">
+        <div className="bg-background-dark text-white font-display antialiased min-h-screen pb-24 max-w-md mx-auto shadow-2xl relative">
             {showConfetti && <Confetti onComplete={() => setShowConfetti(false)} />}
-            {/* Header */}
+            
+            {isClaiming && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <PremiumLoader message="Claiming Choco..." />
+                </div>
+            )}
+
             <div className="sticky top-0 z-50 flex items-center bg-background-dark/80 backdrop-blur-md p-4 border-b border-white/5">
                 <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:text-primary transition-colors">
                     <span className="material-symbols-outlined">arrow_back</span>
@@ -137,7 +139,6 @@ export default function MissionsPage() {
             </div>
 
             <div className="p-4 space-y-6">
-                {/* Daily Progress Overview */}
                 <div className="bg-gradient-to-br from-primary/20 to-purple-600/20 rounded-[32px] p-6 border border-white/10 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
                         <span className="material-symbols-outlined text-6xl">military_tech</span>
@@ -159,7 +160,6 @@ export default function MissionsPage() {
                     </div>
                 </div>
 
-                {/* Categories */}
                 <div className="space-y-4">
                     <h2 className="text-xs font-black text-white/40 uppercase tracking-[0.3em] flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary text-sm font-bold">radar</span>

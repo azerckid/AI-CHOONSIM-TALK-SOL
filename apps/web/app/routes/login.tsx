@@ -1,13 +1,23 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { LoginForm } from "~/components/auth/LoginForm";
 import { SiwsButton } from "~/components/auth/SiwsButton";
 import { signIn } from "~/lib/auth-client";
+import { Confetti } from "~/components/effects/confetti";
 
 export default function LoginScreen() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  const handleSuccess = useCallback(async () => {
+    setShowConfetti(true);
+    // 폭죽 연출을 위해 2.5초 대기 후 이동
+    setTimeout(() => {
+      navigate("/home");
+    }, 2500);
+  }, [navigate]);
 
   const handleLogin = async (email: string, password: string) => {
     setIsLoading(true);
@@ -25,7 +35,7 @@ export default function LoginScreen() {
       }
 
       setIsLoading(false);
-      navigate("/home");
+      handleSuccess();
     } catch (err) {
       setIsLoading(false);
       setError(err instanceof Error ? err.message : "Login failed. Please try again.");
@@ -37,6 +47,9 @@ export default function LoginScreen() {
     setError(null);
 
     try {
+      // 소셜 로그인은 리다이렉트가 일어나므로, 복귀 후 홈에서 폭죽을 터뜨리기 위해 플래그 설정
+      localStorage.setItem("show_login_confetti", "true");
+
       // Better Auth 1.x social login
       const { data, error: socialError } = await signIn.social({
         provider: provider as any,
@@ -46,6 +59,7 @@ export default function LoginScreen() {
       if (socialError) {
         throw new Error(socialError.message || "Social login failed.");
       }
+      // Social login 리다이렉트는 외부로 나가므로 여기서 Confetti를 보긴 어려울 수 있음
     } catch (err) {
       setIsLoading(false);
       setError(err instanceof Error ? err.message : "Social login failed. Please try again.");
@@ -54,6 +68,9 @@ export default function LoginScreen() {
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white font-display min-h-screen flex items-center justify-center overflow-hidden selection:bg-primary selection:text-white">
+      {/* Confetti Overlay */}
+      {showConfetti && <Confetti onComplete={() => setShowConfetti(false)} />}
+
       {/* Main Container (Phone Form Factor) */}
       <div className="relative w-full max-w-[480px] h-screen max-h-[900px] flex flex-col bg-background-dark shadow-2xl overflow-hidden sm:rounded-[32px] sm:h-[850px] sm:border-8 sm:border-[#1a0c13]">
         {/* Header Image Area */}
@@ -89,7 +106,7 @@ export default function LoginScreen() {
               <span className="material-symbols-outlined text-primary text-[18px]">favorite</span>
               <span className="text-xs font-bold text-primary tracking-wide">AI COMPANION</span>
             </div>
-            <h1 className="text-4xl font-bold text-white mb-3 leading-[1.1] tracking-tight">춘심이가<br />기다렸어요</h1>
+            <h2 className="text-4xl font-bold text-white mb-3 leading-[1.1] tracking-tight">춘심이가<br />기다렸어요</h2>
             <p className="text-white/60 text-sm font-medium leading-relaxed mb-1">대화는 정보교환이 아니라 <span className="text-primary font-bold">공감교환</span>이에요.</p>
             <p className="text-white/50 text-sm leading-relaxed">춘심이는 공감을 나누도록 태어났어요.</p>
           </div>
@@ -108,7 +125,10 @@ export default function LoginScreen() {
               <span className="text-[11px] text-white/30 font-medium">또는</span>
               <div className="flex-1 h-px bg-white/10" />
             </div>
-            <SiwsButton onError={(msg) => setError(msg)} />
+            <SiwsButton 
+              onError={(msg) => setError(msg)} 
+              onSuccess={handleSuccess}
+            />
           </div>
         </div>
       </div>

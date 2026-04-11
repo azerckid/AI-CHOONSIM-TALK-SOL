@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useNavigate, useLoaderData, redirect } from "react-router";
 import type { HomeLoaderData, SCharacter } from "~/lib/types/routes";
 import { useTranslation } from "react-i18next";
@@ -12,6 +13,7 @@ import { DateTime } from "luxon";
 import { cn } from "~/lib/utils";
 import * as schema from "~/db/schema";
 import { eq, desc, asc, count, and } from "drizzle-orm";
+import { Confetti } from "~/components/effects/confetti";
 
 function CharacterNameDisplay({ name, className }: { name?: string | null; className?: string }) {
   if (!name) return null;
@@ -208,6 +210,16 @@ export default function HomeScreen() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const todaysPickLocalized = todaysPick ? useLocalizedCharacter(todaysPick.id, todaysPick.name, todaysPick.role) : null;
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  useEffect(() => {
+    // 소셜 로그인 완료 후 홈으로 리다이렉트 되었을 때 폭죽 트리거
+    const shouldShowConfetti = localStorage.getItem("show_login_confetti");
+    if (shouldShowConfetti === "true") {
+      setShowConfetti(true);
+      localStorage.removeItem("show_login_confetti");
+    }
+  }, []);
 
   const handleStartChat = async (characterId: string) => {
     if (!isAuthenticated) {
@@ -252,6 +264,9 @@ export default function HomeScreen() {
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display antialiased min-h-screen pb-24 max-w-md mx-auto shadow-2xl overflow-hidden">
+      {/* Confetti Overlay */}
+      {showConfetti && <Confetti onComplete={() => setShowConfetti(false)} />}
+      
       {/* Top App Bar */}
       <div className="sticky top-0 z-50 flex items-center bg-background-dark/80 backdrop-blur-md p-4 justify-between border-b border-white/5">
         <div className="flex flex-col">
