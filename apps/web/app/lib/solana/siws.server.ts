@@ -53,10 +53,10 @@ export function verifySignature(
  * 같은 지갑은 항상 같은 credentials을 갖는다.
  */
 export function deriveSiwsCredentials(walletAddress: string): { email: string; password: string } {
-  const secret =
-    process.env.BETTER_AUTH_SECRET ||
-    process.env.BETTER_AUTH_URL ||
-    "choonsim-siws-fallback-secret";
+  const secret = process.env.BETTER_AUTH_SECRET;
+  if (!secret) {
+    throw new Error("BETTER_AUTH_SECRET 환경 변수가 설정되지 않았습니다.");
+  }
   const password = createHmac("sha256", secret)
     .update(`siws:${walletAddress}`)
     .digest("hex");
