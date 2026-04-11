@@ -43,6 +43,19 @@ export async function action({ request }: ActionFunctionArgs) {
       );
     }
 
+    // txSignature 재사용 방지 — 다른 유저가 동일 서명 제출 차단
+    const signatureUsed = await db.query.userMission.findFirst({
+      where: eq(schema.userMission.txSignature, txSignature),
+      columns: { id: true },
+    });
+
+    if (signatureUsed) {
+      return Response.json(
+        { error: "이미 사용된 트랜잭션 서명입니다." },
+        { status: 409 }
+      );
+    }
+
     // 오늘 체크인 여부 확인 — lastUpdated가 오늘이면 이미 완료
     const todayEpoch = Math.floor(new Date().setHours(0, 0, 0, 0) / 1000);
 
