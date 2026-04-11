@@ -1,5 +1,6 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { useState, useCallback } from "react";
+import { useLoaderData } from "react-router";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { Transaction } from "@solana/web3.js";
 import { AdminLayout } from "~/components/admin/AdminLayout";
@@ -13,13 +14,34 @@ import {
   Gift,
   Calendar,
   Zap,
+  Link2,
 } from "lucide-react";
+import { db } from "~/lib/db.server";
+import * as schema from "~/db/schema";
+import { count, ne, isNotNull, eq, and, gte } from "drizzle-orm";
 
 import { toast } from "sonner";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAdmin(request);
-  return {};
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const [[checkinRow], [subscriberRow], [walletRow]] = await Promise.all([
+    db.select({ total: count() }).from(schema.userMission)
+      .where(and(eq(schema.userMission.status, "COMPLETED"), gte(schema.userMission.lastUpdated, todayStart))),
+    db.select({ total: count() }).from(schema.user).where(ne(schema.user.subscriptionTier, "FREE")),
+    db.select({ total: count() }).from(schema.user).where(isNotNull(schema.user.solanaWallet)),
+  ]);
+
+  return {
+    stats: {
+      todayCheckins: checkinRow?.total ?? 0,
+      subscribers: subscriberRow?.total ?? 0,
+      walletFans: walletRow?.total ?? 0,
+    },
+  };
 }
 
 type ActionState = "idle" | "loading" | "signing" | "success" | "error";
@@ -65,6 +87,7 @@ const ACTION_CARDS: ActionCard[] = [
 ];
 
 export default function AdminBlinksPage() {
+  const { stats } = useLoaderData<typeof loader>();
   const { publicKey, connected, signTransaction } = useWallet();
   const { connection } = useConnection();
   const [states, setStates] = useState<Record<string, ActionState>>({});
@@ -215,6 +238,52 @@ export default function AdminBlinksPage() {
               The <span className="font-bold">Test</span> buttons below let you verify each action works before posting publicly.
               Connect your Phantom wallet (Devnet) to run a test transaction.
             </span>
+          </div>
+        </div>
+
+        {/* Live Stats */}
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { label: "Today's Check-ins", value: stats.todayCheckins, icon: "calendar_today", color: "text-blue-400" },
+            { label: "Subscribers", value: stats.subscribers, icon: "bolt", color: "text-violet-400" },
+            { label: "Wallet Fans", value: stats.walletFans, icon: "account_balance_wallet", color: "text-primary" },
+          ].map((s) => (
+            <div key={s.label} className="bg-[#1A1821] border border-white/5 rounded-2xl px-5 py-4 flex items-center gap-3">
+              <span className={`material-symbols-outlined text-xl ${s.color}`}>{s.icon}</span>
+              <div>
+                <p className="text-2xl font-black text-white">{s.value.toLocaleString()}</p>
+                <p className="text-[11px] text-white/30 font-medium">{s.label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Linked Actions Chain */}
+        <div className="bg-[#1A1821] border border-white/5 rounded-[32px] p-6 space-y-4">
+          <h2 className="text-xs font-black text-white/40 uppercase tracking-[0.3em] flex items-center gap-2">
+            <Link2 className="w-3.5 h-3.5 text-primary" />
+            Linked Actions — Interoperable Blinks Chain
+          </h2>
+          <p className="text-xs text-white/30 leading-relaxed">
+            Each action automatically chains to the next after completion. Fans stay engaged without leaving X.
+          </p>
+          <div className="flex items-center gap-3 flex-wrap">
+            {[
+              { label: "Check-in", sub: "+50 CHOCO", color: "bg-blue-600/20 border-blue-600/40 text-blue-300" },
+              { label: "Subscribe", sub: "+3,000 CHOCO", color: "bg-violet-600/20 border-violet-600/40 text-violet-300" },
+              { label: "Gift CHOCO", sub: "spread love", color: "bg-pink-600/20 border-pink-600/40 text-pink-300" },
+              { label: "Check-in", sub: "loop", color: "bg-blue-600/10 border-blue-600/20 text-blue-400/60" },
+            ].map((step, i, arr) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className={`px-3 py-2 rounded-xl border text-xs font-bold ${step.color}`}>
+                  <p>{step.label}</p>
+                  <p className="text-[10px] opacity-70 font-normal">{step.sub}</p>
+                </div>
+                {i < arr.length - 1 && (
+                  <span className="text-white/20 text-lg font-black">→</span>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 

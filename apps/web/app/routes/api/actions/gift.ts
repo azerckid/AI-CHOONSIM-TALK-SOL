@@ -1,11 +1,13 @@
 /**
  * Solana Action — Gift CHOCO 🍫
  *
- * GET  /api/actions/gift            → Action 메타데이터 반환
- * POST /api/actions/gift?to=<addr>  → 선물 트랜잭션 생성 (서명 대기)
+ * GET  /api/actions/gift            → 메타데이터 (라이브 팬 지갑 수)
+ * POST /api/actions/gift?to=<addr>  → 선물 트랜잭션 + Linked Action (체크인 유도)
  *
- * Blink URL 예시:
- *   https://dial.to/?action=solana-action:https://<host>/api/actions/gift?to=<addr>
+ * Meta-Blinks 고도화:
+ *   - 실제 Choonsim Cloudinary 이미지 아이콘
+ *   - Solana 지갑 등록 팬 수 (DB 라이브 쿼리)
+ *   - POST 완료 후 → checkin Blink로 Linked Action 체이닝
  */
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import {
@@ -20,22 +22,39 @@ import {
   createAssociatedTokenAccountInstruction,
 } from "@solana/spl-token";
 import { solanaConnection, ACTIONS_CORS_HEADERS } from "~/lib/solana/connection.server";
+import { db } from "~/lib/db.server";
+import * as schema from "~/db/schema";
+import { count, isNotNull } from "drizzle-orm";
 
-// CHOCO Token-2022 상수
 const CHOCO_DECIMALS = 6;
 
-/** OPTIONS preflight */
-export function loader({ request }: LoaderFunctionArgs) {
+const CHOONSIM_ICON =
+  "https://res.cloudinary.com/dpmw96p8k/image/upload/v1774674780/choonsim/choonsim.png";
+
+export async function loader({ request }: LoaderFunctionArgs) {
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: ACTIONS_CORS_HEADERS });
   }
 
-  // GET — Action 메타데이터
+  // Solana 지갑 등록 팬 수 (라이브)
+  let walletFanCount = 0;
+  try {
+    const [row] = await db
+      .select({ total: count() })
+      .from(schema.user)
+      .where(isNotNull(schema.user.solanaWallet));
+    walletFanCount = row?.total ?? 0;
+  } catch {
+    // DB 오류 시 통계 없이 진행
+  }
+
   const payload = {
-    icon: "https://res.cloudinary.com/dpmw96p8k/image/upload/v1/choonsim/gift-action-icon.png",
+    icon: CHOONSIM_ICON,
     title: "Gift CHOCO to a Fan 🍫",
     description:
-      "Send CHOCO tokens to another fan. The recipient can enjoy more conversations with Choonsim.",
+      walletFanCount > 0
+        ? `${walletFanCount} fans have Solana wallets — send them CHOCO! The recipient can enjoy more conversations with Choonsim.`
+        : "Send CHOCO tokens to another fan. The recipient can enjoy more conversations with Choonsim.",
     label: "Gift CHOCO",
     links: {
       actions: [
@@ -79,7 +98,6 @@ export function loader({ request }: LoaderFunctionArgs) {
   return Response.json(payload, { headers: ACTIONS_CORS_HEADERS });
 }
 
-/** POST — 트랜잭션 생성 */
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: ACTIONS_CORS_HEADERS });
@@ -102,7 +120,6 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const mintAddress = process.env.CHOCO_TOKEN_MINT_ADDRESS;
     if (!mintAddress) {
-      // CHOCO 토큰이 아직 배포되지 않은 경우 — SOL 더미 트랜잭션으로 데모
       return buildDemoTransaction(senderAddress, amount);
     }
 
@@ -117,7 +134,6 @@ export async function action({ request }: ActionFunctionArgs) {
     const senderPubkey = new PublicKey(senderAddress);
     const recipientPubkey = new PublicKey(toAddress);
 
-    // ATA 주소 계산
     const senderAta = getAssociatedTokenAddressSync(mintPubkey, senderPubkey);
     const recipientAta = getAssociatedTokenAddressSync(mintPubkey, recipientPubkey);
 
@@ -127,7 +143,6 @@ export async function action({ request }: ActionFunctionArgs) {
     tx.lastValidBlockHeight = lastValidBlockHeight;
     tx.feePayer = senderPubkey;
 
-    // 받는 사람 ATA 계정 없으면 생성
     const recipientAtaInfo = await solanaConnection.getAccountInfo(recipientAta);
     if (!recipientAtaInfo) {
       tx.add(
@@ -140,7 +155,6 @@ export async function action({ request }: ActionFunctionArgs) {
       );
     }
 
-    // CHOCO 전송 instruction
     tx.add(
       createTransferCheckedInstruction(
         senderAta,
@@ -155,10 +169,25 @@ export async function action({ request }: ActionFunctionArgs) {
     const serialized = tx.serialize({ requireAllSignatures: false });
     const base64Tx = Buffer.from(serialized).toString("base64");
 
+    // Linked Action — 선물 완료 후 체크인 Blink로 연결 (Interoperable Blinks)
     return Response.json(
       {
         transaction: base64Tx,
-        message: `🍫 ${amount} CHOCO gift transaction is ready!`,
+        message: `🍫 ${amount.toLocaleString()} CHOCO gift transaction is ready!`,
+        links: {
+          next: {
+            type: "inline",
+            action: {
+              type: "action",
+              icon: CHOONSIM_ICON,
+              title: "Choonsim Daily Check-in ✅",
+              description:
+                "You gifted CHOCO — now check in to earn your own 50 CHOCO reward!",
+              label: "Claim 50 CHOCO",
+              href: "/api/actions/checkin",
+            },
+          },
+        },
       },
       { headers: ACTIONS_CORS_HEADERS }
     );
@@ -184,7 +213,6 @@ async function buildDemoTransaction(senderAddress: string, amount: number) {
   tx.lastValidBlockHeight = lastValidBlockHeight;
   tx.feePayer = senderPubkey;
 
-  // 0 lamport 더미 전송 (서명만 연습)
   tx.add(
     SystemProgram.transfer({
       fromPubkey: senderPubkey,
@@ -199,7 +227,20 @@ async function buildDemoTransaction(senderAddress: string, amount: number) {
   return Response.json(
     {
       transaction: base64Tx,
-      message: `🍫 [DEMO] ${amount} CHOCO gift — will be sent for real after CHOCO token is deployed.`,
+      message: `🍫 [DEMO] ${amount} CHOCO gift — live after CHOCO token is deployed.`,
+      links: {
+        next: {
+          type: "inline",
+          action: {
+            type: "action",
+            icon: CHOONSIM_ICON,
+            title: "Choonsim Daily Check-in ✅",
+            description: "Now check in to earn your own 50 CHOCO reward!",
+            label: "Claim 50 CHOCO",
+            href: "/api/actions/checkin",
+          },
+        },
+      },
     },
     { headers: ACTIONS_CORS_HEADERS }
   );
