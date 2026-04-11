@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router";
 
 const SPLASH_KEY = "choonsim_splash_v2";
-const DISPLAY_MS = 2000;
+const DISPLAY_MS = 3500;
 
 // 모듈 레벨 — StrictMode 이중 실행 방지
 let _ran = false;
