@@ -15,7 +15,7 @@
 CLAUDE.md
 AGENTS.md
 
-/.vscode/
+/.vscode/*
 node_modules/
 
 # React Router
@@ -50,3 +50,6 @@ docs/**/*.docx
 
 # Solmate hook scripts (project-local)
 .claude/hooks/
+
+# Allow shared VS Code settings
+!.vscode/settings.json
