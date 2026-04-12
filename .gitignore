@@ -47,3 +47,6 @@ build_debug.log
 docs/01_Concept_Design/22_YECHANGPAE_BUSINESS_PLAN_DRAFT.md
 docs/*.docx
 docs/**/*.docx
+
+# Solmate hook scripts (project-local)
+.claude/hooks/

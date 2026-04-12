@@ -33,6 +33,7 @@ export default [
   route("signup", "routes/signup.tsx"),
   route("forgot-password", "routes/forgot-password.tsx"),
   route("onboarding/choco", "routes/onboarding/choco.tsx"),
+  route("pitch", "routes/pitch.tsx"),
 
   // 약관 및 정책
   route("terms", "routes/terms.tsx"),
