@@ -9,7 +9,7 @@ import { BottomNavigation } from "~/components/layout/BottomNavigation";
 import { ChatListSkeleton } from "~/components/chat/ChatListSkeleton";
 import { NetworkError } from "~/components/ui/NetworkError";
 import { ApiError } from "~/components/ui/ApiError";
-import { cn } from "~/lib/utils";
+import { cn, stripMessageMarkers } from "~/lib/utils";
 import { db } from "~/lib/db.server";
 import { auth } from "~/lib/auth.server";
 import type { LoaderFunctionArgs } from "react-router";
@@ -74,7 +74,7 @@ function ChatListItemWithLocale({ chat, lastMsg, character, avatarUrl }: { chat:
     <ChatListItem
       id={chat.id}
       name={name}
-      lastMessage={lastMsg?.content || t("chat.startConversationHint")}
+      lastMessage={lastMsg?.content ? stripMessageMarkers(lastMsg.content) : t("chat.startConversationHint")}
       timestamp={lastMsg ? new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
       avatarUrl={avatarUrl}
       isRead={lastMsg ? lastMsg.read : true}

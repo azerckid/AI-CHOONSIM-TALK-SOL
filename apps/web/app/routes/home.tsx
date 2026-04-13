@@ -10,7 +10,7 @@ import type { LoaderFunctionArgs } from "react-router";
 import type { Route } from "./+types/home";
 import { BottomNavigation } from "~/components/layout/BottomNavigation";
 import { DateTime } from "luxon";
-import { cn } from "~/lib/utils";
+import { cn, stripMessageMarkers } from "~/lib/utils";
 import * as schema from "~/db/schema";
 import { eq, desc, asc, count, and } from "drizzle-orm";
 import { Confetti } from "~/components/effects/confetti";
@@ -148,7 +148,7 @@ function ContinueChatCard({ conversation, formatTimeAgo }: { conversation: HomeL
         </div>
         {lastMessage && (
           <p className="text-gray-400 text-sm truncate">
-            {lastMessage.content}
+            {stripMessageMarkers(lastMessage.content)}
           </p>
         )}
       </div>
