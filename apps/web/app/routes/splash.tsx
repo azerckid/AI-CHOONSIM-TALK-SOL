@@ -1,27 +1,19 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 
-const SPLASH_KEY = "choonsim_splash_v2";
 const DISPLAY_MS = 3500;
-
-// 모듈 레벨 — StrictMode 이중 실행 방지
-let _ran = false;
 
 export default function SplashPage() {
   const navigate = useNavigate();
+  // useRef: 컴포넌트 인스턴스별로 추적 → 재진입 시 정상 동작
+  // (모듈 레벨 변수를 쓰면 첫 방문 이후 재진입 시 타이머가 실행되지 않음)
+  const startedRef = useRef(false);
 
   useEffect(() => {
-    if (_ran) return;
-    _ran = true;
+    if (startedRef.current) return; // StrictMode 이중 실행 방지
+    startedRef.current = true;
 
-    // 같은 세션 재방문 → 즉시 홈으로
-    if (sessionStorage.getItem(SPLASH_KEY)) {
-      navigate("/home", { replace: true });
-      return;
-    }
-
-    sessionStorage.setItem(SPLASH_KEY, "1");
-    // cleanup 없음: StrictMode가 타이머를 죽이지 못하게 의도적으로 생략
+    // cleanup 없음: StrictMode unmount 후 타이머가 유지되도록 의도적으로 생략
     setTimeout(() => navigate("/home", { replace: true }), DISPLAY_MS);
   }, [navigate]);
 
