@@ -1,12 +1,12 @@
+/* Google Fonts — must precede all other @import statements */
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
-
-/* Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
 
 
 
@@ -186,7 +186,7 @@ body {
   }
 
   body {
-    @apply font-sans bg-background text-foreground;
+    @apply font-body bg-background text-foreground;
     /* 모바일 터치 최적화 */
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
@@ -194,7 +194,7 @@ body {
   }
 
   html {
-    @apply font-sans;
+    @apply font-body;
     /* iOS Safari bounce 스크롤 방지 */
     overscroll-behavior: none;
     /* 스크롤 부드럽게 */
