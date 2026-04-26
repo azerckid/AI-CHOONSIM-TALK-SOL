@@ -357,7 +357,8 @@ export function getChoonsimSolanaTools(userId: string, conversationId?: string) 
           return (
             `Memory engraved! 🎖️ ${MINT_COST_CHOCO} CHOCO used.\n"${nftName}"\nNow forever sealed on-chain! 💕` +
             `\n---\n` +
-            `Explorer: ${explorerUrl}`
+            `Explorer: ${explorerUrl}\n` +
+            `Tip: You can view this memory NFT in Profile → Memories Album.`
           );
         } catch (err) {
           console.error("[engraveMemory] error:", err);

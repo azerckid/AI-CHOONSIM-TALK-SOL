@@ -272,36 +272,43 @@ const callModelNode = async (state: typeof ChatStateAnnotation.State) => {
             }
         }
 
-        // 툴 실행 후 — LLM이 유저 언어로 재응답
-        // 기계 마커([SWAP_TX:...] 등)는 보존하고 나머지 텍스트는 LLM이 유저 언어로 재작성
+        // 툴 실행 후 — LLM이 유저 언어로 재응답 (실패 시 원본 툴 결과로 fallback)
         const rawContent = typeof response.content === "string" ? response.content : "";
-        const markerRegex = /\[(SWAP_TX|CNFT_MINTED|CHECKIN_BLINK|GIFT_BLINK)[^\]]*:[^\]]*\]/g;
+        const markerRegex = /\[(SWAP_TX|CNFT_MINTED|CHECKIN_BLINK|GIFT_BLINK)[^[\]]*\]/g;
         const markers = rawContent.match(markerRegex) || [];
         const toolDataText = rawContent.replace(markerRegex, "").trim();
 
         const lastUserMsg = [...state.messages].reverse().find(m => m._getType() === "human");
         const lastUserText = typeof lastUserMsg?.content === "string" ? lastUserMsg.content : "";
 
-        const reformatMessages: BaseMessage[] = [
-            new SystemMessage(
-                state.systemInstruction +
-                `\n\n[LANGUAGE RULE — CRITICAL]\n` +
-                `The user's last message was: "${lastUserText}"\n` +
-                `You MUST respond in the EXACT same language as that message.\n` +
-                `If it's English → respond in English.\n` +
-                `If it's Japanese → respond in Japanese.\n` +
-                `If it's Spanish → respond in Spanish.\n` +
-                `Do NOT use Korean unless the user wrote in Korean.\n\n` +
-                `[Tool Result Data]\n${toolDataText}\n\n` +
-                `Using the above tool result, write a natural response to the user in their language.`
-            ),
-            ...state.messages,
-        ];
-        const reformatResponse = await model.invoke(reformatMessages);
-        let finalContent = typeof reformatResponse.content === "string" ? reformatResponse.content : "";
-        if (markers.length > 0) finalContent += `\n${markers.join("\n")}`;
-        reformatResponse.content = removeEmojis(finalContent);
-        return { messages: [reformatResponse] };
+        try {
+            const reformatMessages: BaseMessage[] = [
+                new SystemMessage(
+                    state.systemInstruction +
+                    `\n\n[LANGUAGE RULE — CRITICAL]\n` +
+                    `The user's last message was: "${lastUserText}"\n` +
+                    `You MUST respond in the EXACT same language as that message.\n` +
+                    `If it's English → respond in English.\n` +
+                    `If it's Japanese → respond in Japanese.\n` +
+                    `If it's Spanish → respond in Spanish.\n` +
+                    `Do NOT use Korean unless the user wrote in Korean.\n\n` +
+                    `[Tool Result Data]\n${toolDataText}\n\n` +
+                    `Using the above tool result, write a natural response to the user in their language.`
+                ),
+                ...state.messages,
+            ];
+            const reformatResponse = await model.invoke(reformatMessages);
+            let finalContent = typeof reformatResponse.content === "string" ? reformatResponse.content : "";
+            if (markers.length > 0) finalContent += `\n${markers.join("\n")}`;
+            reformatResponse.content = removeEmojis(finalContent);
+            return { messages: [reformatResponse] };
+        } catch (e) {
+            logger.error({ category: "SYSTEM", message: "Reformat LLM call failed, using raw tool result:", stackTrace: (e as Error).stack });
+            if (typeof response.content === "string") {
+                response.content = removeEmojis(response.content);
+            }
+            return { messages: [response] };
+        }
     }
 
     if (typeof response.content === "string") {
