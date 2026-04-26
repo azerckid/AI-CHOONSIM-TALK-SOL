@@ -191,13 +191,37 @@ const saveTravelPlanTool = {
 };
 
 
+// Gemini는 JSON Schema의 exclusiveMinimum을 지원하지 않으므로 제거
+function sanitizeToolSchema(obj: unknown): unknown {
+    if (Array.isArray(obj)) return obj.map(sanitizeToolSchema);
+    if (obj !== null && typeof obj === "object") {
+        const result: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+            if (k === "exclusiveMinimum") continue;
+            if (k === "exclusiveMaximum") continue;
+            result[k] = sanitizeToolSchema(v);
+        }
+        return result;
+    }
+    return obj;
+}
+
+function sanitizeTools(tools: unknown[]): unknown[] {
+    return tools.map((tool) => {
+        if (tool !== null && typeof tool === "object" && "schema" in (tool as object)) {
+            return { ...(tool as object), schema: sanitizeToolSchema((tool as Record<string, unknown>).schema) };
+        }
+        return tool;
+    });
+}
+
 /**
  * 노드 2: AI 응답 생성 (Agent Kit 연결)
  */
 const callModelNode = async (state: typeof ChatStateAnnotation.State) => {
     // Solana 도구: agent-kit.server.ts에서 가져옴 (userId 기반 동적 생성)
     const solanaTools = state.userId ? getChoonsimSolanaTools(state.userId) : [];
-    const allTools = [saveTravelPlanTool, ...solanaTools];
+    const allTools = sanitizeTools([saveTravelPlanTool, ...solanaTools]) as typeof solanaTools;
     const modelWithTools = model.bindTools(allTools);
 
     const messages: BaseMessage[] = [
@@ -247,6 +271,37 @@ const callModelNode = async (state: typeof ChatStateAnnotation.State) => {
                 }
             }
         }
+
+        // 툴 실행 후 — LLM이 유저 언어로 재응답
+        // 기계 마커([SWAP_TX:...] 등)는 보존하고 나머지 텍스트는 LLM이 유저 언어로 재작성
+        const rawContent = typeof response.content === "string" ? response.content : "";
+        const markerRegex = /\[(SWAP_TX|CNFT_MINTED|CHECKIN_BLINK|GIFT_BLINK)[^\]]*:[^\]]*\]/g;
+        const markers = rawContent.match(markerRegex) || [];
+        const toolDataText = rawContent.replace(markerRegex, "").trim();
+
+        const lastUserMsg = [...state.messages].reverse().find(m => m._getType() === "human");
+        const lastUserText = typeof lastUserMsg?.content === "string" ? lastUserMsg.content : "";
+
+        const reformatMessages: BaseMessage[] = [
+            new SystemMessage(
+                state.systemInstruction +
+                `\n\n[LANGUAGE RULE — CRITICAL]\n` +
+                `The user's last message was: "${lastUserText}"\n` +
+                `You MUST respond in the EXACT same language as that message.\n` +
+                `If it's English → respond in English.\n` +
+                `If it's Japanese → respond in Japanese.\n` +
+                `If it's Spanish → respond in Spanish.\n` +
+                `Do NOT use Korean unless the user wrote in Korean.\n\n` +
+                `[Tool Result Data]\n${toolDataText}\n\n` +
+                `Using the above tool result, write a natural response to the user in their language.`
+            ),
+            ...state.messages,
+        ];
+        const reformatResponse = await model.invoke(reformatMessages);
+        let finalContent = typeof reformatResponse.content === "string" ? reformatResponse.content : "";
+        if (markers.length > 0) finalContent += `\n${markers.join("\n")}`;
+        reformatResponse.content = removeEmojis(finalContent);
+        return { messages: [reformatResponse] };
     }
 
     if (typeof response.content === "string") {

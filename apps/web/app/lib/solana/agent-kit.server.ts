@@ -396,7 +396,7 @@ export function getChoonsimSolanaTools(userId: string, conversationId?: string) 
 
         const rpcUrl = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
         const recipient = process.env.SOLANA_RECEIVER_WALLET;
-        if (!recipient) return "결제 서버 설정 오류입니다. 관리자에게 문의해주세요.";
+        if (!recipient) return "Payment server configuration error. Please contact the administrator.";
 
         // Devnet 고정 가격: 1 CHOCO = 0.00001 SOL
         const SOL_PER_CHOCO = 0.00001;
@@ -444,9 +444,9 @@ export function getChoonsimSolanaTools(userId: string, conversationId?: string) 
         ).toString("base64");
 
         return (
-          `${amount.toLocaleString()} CHOCO 구매 준비 완료! 🍫\n` +
-          `지갑: ${user.solanaWallet.slice(0, 6)}…${user.solanaWallet.slice(-4)}\n` +
-          `${solAmount} SOL — Phantom에서 서명만 하면 즉시 충전돼요! 💕\n` +
+          `${amount.toLocaleString()} CHOCO purchase ready!\n` +
+          `Wallet: ${user.solanaWallet.slice(0, 6)}…${user.solanaWallet.slice(-4)}\n` +
+          `${solAmount} SOL — Sign with Phantom to complete!\n` +
           `[SWAP_TX:${paymentId}:${txBase64}]`
         );
       },

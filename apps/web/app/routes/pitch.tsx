@@ -276,18 +276,31 @@ export default function PitchDeck() {
           <div className="pitch-inner">
             <p className="pitch-sn">10 / 12</p>
             <h2>Traction & Global Proof</h2>
-            <p className="pitch-sub">A <em>proven IP</em> meets a <em>scalable infrastructure</em>.</p>
-            <div className="pitch-stats">
-              <Stat count={33000} display="33K+" suffix="K+" label="Verified Followers" />
-              <Stat count={20} display="+20" prefix="+" label="Daily Organic Growth" />
-              <Stat count={99} display="99%" suffix="%" label="Cost Reduction (cNFT)" />
-              <Stat count={500} display="500" label="Target Power Users" />
+            <p className="pitch-sub"><em>Hardcore early adopters</em> — small cohort, extreme loyalty, <em>exponential growth</em>.</p>
+            <div style={{ display: "flex", gap: 40, alignItems: "flex-start", flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: 260 }}>
+                <div className="pitch-stats" style={{ marginBottom: 20 }}>
+                  <Stat count={33000} display="33K+" suffix="K+" label="X Followers" />
+                  <Stat count={30} display="30+" suffix="+" label="Hard-Core Users" />
+                  <Stat count={300} display="300+" suffix="+" label="Emails Exchanged" />
+                </div>
+                <ul className="pitch-bullets">
+                  <li><strong>Not one-time visitors.</strong> These fans return obsessively — emailing Choonsim before the product was even complete.</li>
+                  <li><strong>Exponential trajectory:</strong> Volume doubling every few weeks. The curve has already bent.</li>
+                  <li><strong>Distribution:</strong> Japan 30% &bull; South America 30% &bull; Middle East 10%</li>
+                </ul>
+              </div>
+              <div className="pitch-growth-chart">
+                <p className="growth-chart-title">Fan Email Volume — 90 Days</p>
+                <div className="growth-bars">
+                  <GrowthBar label="Month 1" pct={15} val="~5" />
+                  <GrowthBar label="Month 2" pct={35} val="~12" />
+                  <GrowthBar label="Month 3" pct={65} val="~23" />
+                  <GrowthBar label="Now" pct={100} val="30+ ↑" highlight />
+                </div>
+                <p className="growth-chart-note">↑ Exponential — and accelerating</p>
+              </div>
             </div>
-            <ul className="pitch-bullets" style={{ marginTop: 16 }}>
-              <li><strong>Distribution:</strong> Japan 30% &bull; South America 30% &bull; Middle East 10%</li>
-              <li><strong>MVP Signal:</strong> Fans emailing Choonsim for 1:1 chats before the app.</li>
-              <li><strong>Unit Economics:</strong> cNFT mint ~0.000005 SOL. Effectively free.</li>
-            </ul>
           </div>
         </section>
 
@@ -350,6 +363,19 @@ function Stat({ count, display, prefix, suffix, label }: { count: number; displa
     <div className="pitch-stat">
       <div className="stat-num" data-count={count} data-display={display} data-prefix={prefix || ""} data-suffix={suffix || ""}>0</div>
       <div className="stat-desc">{label}</div>
+    </div>
+  );
+}
+
+function GrowthBar({ label, pct, val, highlight }: { label: string; pct: number; val: string; highlight?: boolean }) {
+  return (
+    <div className="growth-bar-row">
+      <span className="growth-bar-label">{label}</span>
+      <div className="growth-bar-track">
+        <div className={`growth-bar-fill ${highlight ? "growth-bar-hl" : ""}`} style={{ width: `${pct}%` }}>
+          <span>{val}</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -489,6 +515,23 @@ const pitchStyles = `
   /* ── badges ────────────────────────────── */
   .pitch-badges { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
   .pitch-badge { font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px; background: var(--p-card); border: 1px solid var(--p-border); color: var(--p-sec); }
+
+  /* ── growth chart ──────────────────────── */
+  .pitch-growth-chart { min-width: 260px; flex: 1; }
+  .growth-chart-title { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--p-muted); margin-bottom: 14px; }
+  .growth-bars { display: flex; flex-direction: column; gap: 10px; }
+  .growth-bar-row { display: flex; align-items: center; gap: 12px; }
+  .growth-bar-label { font-size: 11px; color: var(--p-muted); width: 54px; text-align: right; flex-shrink: 0; }
+  .growth-bar-track { flex: 1; height: 28px; background: rgba(255,255,255,0.04); border-radius: 6px; overflow: hidden; }
+  .growth-bar-fill { height: 100%; background: rgba(244,114,182,0.18); border-radius: 6px; display: flex; align-items: center; padding: 0 10px; font-size: 12px; font-weight: 600; color: var(--p-sec); }
+  .growth-bar-hl { background: linear-gradient(90deg, rgba(244,114,182,0.35), rgba(167,139,250,0.35)); color: var(--p-pink) !important; }
+  .growth-chart-note { font-size: 12px; color: var(--p-pink); margin-top: 12px; font-weight: 600; }
+  .pitch-slide.active .growth-bar-fill { animation: growBar 1.2s var(--p-ease) both; }
+  .pitch-slide.active .growth-bar-row:nth-child(1) .growth-bar-fill { animation-delay: .2s; }
+  .pitch-slide.active .growth-bar-row:nth-child(2) .growth-bar-fill { animation-delay: .4s; }
+  .pitch-slide.active .growth-bar-row:nth-child(3) .growth-bar-fill { animation-delay: .6s; }
+  .pitch-slide.active .growth-bar-row:nth-child(4) .growth-bar-fill { animation-delay: .8s; }
+  @keyframes growBar { from { width: 0 !important; opacity: 0; } }
 
   /* ── closing heart ─────────────────────── */
   .closing-heart { width: 80px; height: 80px; margin: 0 auto 32px; position: relative; }
