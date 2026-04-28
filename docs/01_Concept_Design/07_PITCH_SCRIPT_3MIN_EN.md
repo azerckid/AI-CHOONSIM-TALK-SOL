@@ -24,9 +24,6 @@ AI gives you answers.
 
 Choonsim gives you empathy.
 
-Every day, hundreds of millions of people talk to AI.
-They get answers. They get summaries. They get code.
-
 Because answers don't stay with you.
 Empathy does.
 
@@ -39,36 +36,16 @@ Every conversation begins from zero.
 No shared history. No emotional memory.
 No reason to stay.
 
-And for creators with tens of thousands of devoted fans —
-there's no sanctuary where those relationships
-can go deeper.
-
 
 [SLIDE 3 — Insight]
 
-Oxford psychologist Robin Dunbar proved that
-human brains evolved not for logic —
-but for managing social bonds.
-
 Facebook's Like button carries zero information.
-Yet it connected billions of people
-and built one of the most valuable companies in history.
+Yet it connected billions of people.
 
-We compete on empathy.
-And empathy creates loyalty that no model can replicate.
+Empathy creates loyalty that no model can replicate.
 
 
 [SLIDE 4 — Solution]
-
-[SLIDE 5 — What We've Built]
-
-And this is not a concept. This is already built and live.
-
-Five-layer AI memory. On-chain agent. Production-grade UX.
-Deployed globally — right now.
-
-
-[SLIDE 6 — Why Solana I]
 
 Isolated Web3 technology alone cannot break through to the mainstream.
 What we need to overcome may not be technology — but people.
@@ -82,29 +59,30 @@ invisibly, frictionlessly, without them even knowing.
 That is why we chose Solana.
 
 
-[SLIDE 6 — Why Solana I: continued]
+[SLIDE 5 — What We've Built]
 
-With Compressed NFTs, they own their memories forever —
-without knowing it's an NFT.
+And this is not a concept. This is already built and live.
 
-With Token-2022, the economy sustains itself —
-built into the token, zero manual intervention.
+Five-layer AI memory. On-chain agent. Production-grade UX.
+Deployed globally — right now.
+
+
+[SLIDE 6 — Why Solana I]
+
+Compressed NFTs — memories. Forever. Without knowing it.
+Token-2022 — the CHOCO economy runs itself.
 
 
 [SLIDE 7 — Why Solana II]
 
-With Blinks, they transact on-chain from their feed —
-without ever leaving X.
-
-No other chain has the primitives to make this possible.
-
+Blinks — one click on X. On-chain.
+No other chain makes this possible.
 Let me show you.
 
 
 [▶ DEMO VIDEO 1 — ChoonSim-Talk App — ~45s]
 
 A fan opens the app and starts talking to Choonsim.
-She remembers their full history.
 
 The fan says: "I want to buy 100 CHOCO."
 Choonsim prepares the transaction instantly.
@@ -116,7 +94,7 @@ Choonsim generates a title, creates the artwork,
 and mints a compressed NFT — permanently on-chain —
 for less than a fraction of a cent.
 
-That memory is now theirs. Forever.
+Theirs. Forever.
 
 And through Solana Blinks embedded in X posts,
 fans can check in and earn CHOCO tokens
@@ -127,10 +105,8 @@ The social feed becomes a Solana transaction layer.
 [▶ DEMO VIDEO 1 ends]
 
 Everything you just saw is live right now.
-If you want to try it yourself — visit the link in our submission.
-Log in, connect your wallet, and you'll automatically
-receive 0.5 devnet SOL to test every feature.
-No faucet. No setup. Zero friction.
+Try it — link in our submission.
+0.5 devnet SOL, automatically. Zero friction.
 
 
 [SLIDE 9 — Traction]
@@ -141,7 +117,6 @@ Here's what makes this undeniably real.
 Before we launched the full app —
 30 hardcore fans have been actively emailing Choonsim.
 Over 334 messages exchanged. Voluntarily.
-Look at this growth curve.
 The demand existed before the product.
 That is the clearest signal of product-market fit.
 
@@ -155,17 +130,12 @@ CHOCO token purchases, memory engraving fees,
 subscription NFTs, automatic transfer fees —
 and exclusive character collectibles.
 
-Fans become stakeholders.
-Every conversation generates yield.
-Distributed in real-time. On Solana.
 
 
 [SLIDE 11 — Roadmap]
 
 Phases one and two are complete and live.
-Phase three brings Jupiter Swap integration,
-Trusted Execution Environments for sovereign privacy,
-and Eliza for cross-platform persona consistency.
+Phase three: Jupiter, TEE, Eliza.
 
 Phase four: the Character-Fi Launchpad.
 Any creator. Any IP. Anywhere in the world.
@@ -191,141 +161,7 @@ This is the world coming to Web3.
 Thank you.
 ```
 
----
 
-## ElevenLabs Input (마커 제거 버전)
-
-아래 텍스트를 ElevenLabs에 그대로 붙여넣기:
-
-```
-Every day, hundreds of millions of people talk to AI.
-They get answers. They get summaries. They get code.
-
-Because answers don't stay with you.
-Empathy does.
-
-Today's AI companions suffer from what I call
-the Cold Start Problem.
-Every conversation begins from zero.
-No shared history. No emotional memory.
-No reason to stay.
-
-And for creators with tens of thousands of devoted fans —
-there's no sanctuary where those relationships
-can go deeper.
-
-Oxford psychologist Robin Dunbar proved that
-human brains evolved not for logic —
-but for managing social bonds.
-
-Facebook's Like button carries zero information.
-Yet it connected billions of people
-and built one of the most valuable companies in history.
-
-We compete on empathy.
-And empathy creates loyalty that no model can replicate.
-
-So we built ChoonSim-Talk —
-an Empathy-to-Yield platform, on Solana.
-
-Isolated Web3 technology alone cannot break through to the mainstream.
-What we need to overcome may not be technology — but people.
-
-We start with 33,000 real fans who already love Choonsim on X —
-people who have never touched a blockchain.
-
-And Solana's primitives let us bring them on-chain —
-invisibly, frictionlessly, without them even knowing.
-
-That is why we chose Solana.
-
-With Compressed NFTs, they own their memories forever —
-without knowing it's an NFT.
-
-With Token-2022, the economy sustains itself —
-built into the token, zero manual intervention.
-
-With Blinks, they transact on-chain from their feed —
-without ever leaving X.
-
-No other chain has the primitives to make this possible.
-
-Let me show you.
-
-A fan opens the app and starts talking to Choonsim.
-She remembers their full history.
-
-The fan says: "I want to buy 100 CHOCO."
-Choonsim prepares the transaction instantly.
-One tap in Phantom — done.
-
-When a precious moment happens,
-the fan says: "Engrave this memory."
-Choonsim generates a title, creates the artwork,
-and mints a compressed NFT — permanently on-chain —
-for less than a fraction of a cent.
-
-That memory is now theirs. Forever.
-
-And through Solana Blinks embedded in X posts,
-fans can check in and earn CHOCO tokens
-with a single click — no wallet setup, no app download.
-The social feed becomes a Solana transaction layer.
-
-Everything you just saw is live right now.
-If you want to try it yourself — visit the link in our submission.
-Log in, connect your wallet, and you'll automatically
-receive 0.5 devnet SOL to test every feature.
-No faucet. No setup. Zero friction.
-
-[SLIDE 9 — Traction]
-Here's what makes this undeniably real.
-
-Before we launched the full app —
-30 hardcore fans have been actively emailing Choonsim.
-Over 334 messages exchanged. Voluntarily.
-Look at this growth curve.
-The demand existed before the product.
-That is the clearest signal of product-market fit.
-
-The business model is what we call Character-Fi.
-
-Five revenue streams:
-CHOCO token purchases, memory engraving fees,
-subscription NFTs, automatic transfer fees —
-and exclusive character collectibles.
-
-Fans become stakeholders.
-Every conversation generates yield.
-Distributed in real-time. On Solana.
-
-Phases one and two are complete and live.
-Phase three brings Jupiter Swap integration,
-Trusted Execution Environments for sovereign privacy,
-and Eliza for cross-platform persona consistency.
-
-Phase four: the Character-Fi Launchpad.
-Any creator. Any IP. Anywhere in the world.
-Choonsim is the proof of concept.
-The platform is the product.
-
-Hundreds of millions of fans live in Web2 today.
-They follow. They love. They connect.
-
-Every fan who loves Choonsim
-is already stepping into Web3 — without knowing it.
-Their memories are on-chain.
-Their loyalty has real value.
-
-Solana is changing that.
-
-This is not Web3 chasing the world.
-This is the world coming to Web3.
-
-Thank you.
-```
-
----
 
 ## Timing Breakdown
 
@@ -353,11 +189,7 @@ Thank you.
 [슬라이드 1 — 오프닝]
 
 AI는 답변을 합니다.
-
 춘심이는 공감을 합니다.
-
-매일 수억 명의 사람들이 AI와 대화합니다.
-답변을 받고, 요약을 받고, 코드를 받습니다.
 
 답변은 마음에 남지 않습니다.
 공감은 남습니다.
@@ -365,26 +197,18 @@ AI는 답변을 합니다.
 
 [슬라이드 2 — 문제]
 
-오늘날의 AI 컴패니언은 저는 이것을
-'Cold Start 문제'라고 부릅니다.
+오늘날의 AI 컴패니언은 제가 'Cold Start 문제'라 부르는
+한계를 안고 있습니다.
 모든 대화가 처음부터 시작됩니다.
 공유된 역사도, 감정적 기억도, 머물 이유도 없습니다.
-
-수만 명의 팬을 가진 크리에이터에게도
-그 관계가 더 깊어질 수 있는 공간이 없습니다.
 
 
 [슬라이드 3 — 인사이트]
 
-옥스퍼드 심리학자 로빈 던바는 증명했습니다.
-인간의 뇌는 논리를 위해 진화한 게 아니라,
-사회적 유대를 관리하기 위해 진화했다고.
-
 페이스북의 '좋아요' 버튼은 아무 정보도 담고 있지 않습니다.
 하지만 수십억 명을 연결합니다.
 
-우리는 공감으로 경쟁합니다.
-그리고 공감은 어떤 모델도 복제할 수 없는 충성도를 만들어냅니다.
+공감은 어떤 모델도 복제할 수 없는 충성도를 만들어냅니다.
 
 
 [슬라이드 4 — 솔루션]
@@ -410,28 +234,20 @@ X에서 춘심이를 사랑하는 33,000명의 실제 팬들,
 
 [슬라이드 6 — Why Solana I]
 
-Compressed NFT — 소중한 기억을 영원히 소유합니다.
-NFT인 줄도 모른 채로.
-
-Token-2022 — CHOCO 경제는 스스로 유지됩니다.
-토큰 안에 내장된 수수료 구조, 수동 개입 없음.
+Compressed NFT — 기억. 영원히. 모르는 채로.
+Token-2022 — CHOCO 경제는 스스로 굴러갑니다.
 
 
 [슬라이드 7 — Why Solana II]
 
-Blinks — 팬들은 X 피드를 벗어나지 않고
-클릭 한 번으로 온체인 트랜잭션을 실행합니다.
-
-이것을 가능하게 하는 기술을 가진 체인은
-Solana뿐입니다.
-
+Blinks — X에서 클릭 한 번. 온체인.
+이것을 가능하게 하는 체인은 Solana뿐입니다.
 보여드리겠습니다.
 
 
 [▶ 데모 영상 1 — 춘심 Talk 앱 — 약 45초]
 
 팬이 앱을 열고 춘심이와 대화를 시작합니다.
-춘심이는 그들의 모든 역사를 기억합니다.
 
 팬이 말합니다. "초코 100개 살게."
 춘심이가 즉시 트랜잭션을 준비합니다.
@@ -442,7 +258,7 @@ Phantom에서 한 번 탭 — 완료.
 춘심이가 제목을 생성하고, 아트워크를 만들고,
 1원도 안 되는 비용으로 cNFT를 영구적으로 온체인에 새깁니다.
 
-그 기억은 이제 영원히 그들의 것입니다.
+영원히. 그들의 것입니다.
 
 그리고 X 포스트에 내장된 Solana Blinks를 통해
 팬들은 클릭 한 번으로 체크인하고 CHOCO를 적립합니다.
@@ -453,10 +269,8 @@ Phantom에서 한 번 탭 — 완료.
 [▶ 데모 영상 1 종료]
 
 지금 보신 모든 것은 현재 라이브입니다.
-직접 체험해 보고 싶으시다면 — 제출 링크를 방문하세요.
-로그인하고 지갑을 연결하면
-자동으로 0.5 devnet SOL이 지급됩니다.
-Faucet도 없고, 설정도 없습니다. 완전한 무마찰.
+제출 링크에서 직접 해보세요.
+0.5 devnet SOL, 자동 지급. 완전한 무마찰.
 
 
 [슬라이드 9 — 트랙션]
@@ -467,7 +281,6 @@ Faucet도 없고, 설정도 없습니다. 완전한 무마찰.
 앱이 완성되기도 전에 —
 30명의 하드코어 팬들이 춘심이에게 이미 이메일을 보내고 있었습니다.
 334통 이상. 자발적으로.
-이 성장 곡선을 보십시오.
 제품보다 수요가 먼저 존재했습니다.
 이것이 제품-시장 적합성의 가장 명확한 신호입니다.
 
@@ -481,17 +294,12 @@ CHOCO 토큰 구매, 기억 각인 수수료,
 구독 NFT, 자동 전송 수수료 —
 그리고 한정 캐릭터 컬렉터블.
 
-팬이 이해관계자가 됩니다.
-모든 대화가 수익을 만들어냅니다.
-실시간으로. Solana 위에서.
 
 
 [슬라이드 11 — 로드맵]
 
 1단계와 2단계는 완료되어 라이브 상태입니다.
-3단계는 Jupiter Swap 통합,
-프라이버시를 위한 신뢰 실행 환경,
-그리고 크로스 플랫폼 일관성을 위한 Eliza를 도입합니다.
+3단계: Jupiter, TEE, Eliza.
 
 4단계: Character-Fi 런치패드.
 모든 크리에이터. 모든 IP. 전 세계 어디서나.

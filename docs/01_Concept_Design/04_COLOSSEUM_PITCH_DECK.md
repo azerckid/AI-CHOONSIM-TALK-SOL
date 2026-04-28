@@ -16,7 +16,7 @@
 > "Hi everyone. Thank you for having me today. I want to start with a simple question. When was the last time an AI truly understood how you feel? Not what you asked — but how you *feel*. AI gives you answers. Choonsim gives you empathy. Let me show you what that means."
 
 ### Script (5-min) — ~25s
-> "Hello everyone, and thank you for this opportunity. Before I show you a single slide of data or technology, I want you to think about something. Every day, hundreds of millions of people talk to AI. They get answers. They get summaries. They get code. But when the screen goes dark, they feel... nothing. Because answers don't stay with you. Empathy does. AI gives you answers. Choonsim gives you empathy. And today, I'll show you how we're building that on Solana."
+> "Hello everyone, and thank you for this opportunity. Before I show you a single slide of data or technology, I want you to think about something. But when the screen goes dark, they feel... nothing. Because answers don't stay with you. Empathy does. AI gives you answers. Choonsim gives you empathy. And today, I'll show you how we're building that on Solana."
 
 ---
 
