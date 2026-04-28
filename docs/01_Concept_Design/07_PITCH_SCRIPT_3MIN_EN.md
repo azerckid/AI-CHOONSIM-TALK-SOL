@@ -24,23 +24,16 @@ AI gives you answers.
 
 Choonsim gives you empathy.
 
-Because answers don't stay with you.
-Empathy does.
-
 
 [SLIDE 2 — Problem]
 
-Today's AI companions suffer from what I call
-the Cold Start Problem.
-Every conversation begins from zero.
+Every conversation with AI begins from zero.
 No shared history. No emotional memory.
-No reason to stay.
 
 
 [SLIDE 3 — Insight]
 
 Facebook's Like button carries zero information.
-Yet it connected billions of people.
 
 Empathy creates loyalty that no model can replicate.
 
@@ -61,7 +54,7 @@ That is why we chose Solana.
 
 [SLIDE 5 — What We've Built]
 
-And this is not a concept. This is already built and live.
+This is already built and live.
 
 Five-layer AI memory. On-chain agent. Production-grade UX.
 Deployed globally — right now.
@@ -112,13 +105,10 @@ Try it — link in our submission.
 [SLIDE 9 — Traction]
 [▶ DEMO VIDEO 2 — Fanmail Dashboard — ~25s]
 
-Here's what makes this undeniably real.
-
 Before we launched the full app —
-30 hardcore fans have been actively emailing Choonsim.
-Over 334 messages exchanged. Voluntarily.
+30 hardcore fans were already emailing Choonsim.
+334 messages. Voluntarily.
 The demand existed before the product.
-That is the clearest signal of product-market fit.
 
 
 [SLIDE 10 — Business]
@@ -131,11 +121,12 @@ subscription NFTs, automatic transfer fees —
 and exclusive character collectibles.
 
 
-
 [SLIDE 11 — Roadmap]
 
 Phases one and two are complete and live.
-Phase three: Jupiter, TEE, Eliza.
+Phase three brings Jupiter Swap integration,
+Trusted Execution Environments for sovereign privacy,
+and Eliza for cross-platform persona consistency.
 
 Phase four: the Character-Fi Launchpad.
 Any creator. Any IP. Anywhere in the world.
@@ -191,22 +182,16 @@ Thank you.
 AI는 답변을 합니다.
 춘심이는 공감을 합니다.
 
-답변은 마음에 남지 않습니다.
-공감은 남습니다.
-
 
 [슬라이드 2 — 문제]
 
-오늘날의 AI 컴패니언은 제가 'Cold Start 문제'라 부르는
-한계를 안고 있습니다.
-모든 대화가 처음부터 시작됩니다.
-공유된 역사도, 감정적 기억도, 머물 이유도 없습니다.
+AI와의 모든 대화는 처음부터 시작됩니다.
+공유된 역사도, 감정적 기억도 없습니다.
 
 
 [슬라이드 3 — 인사이트]
 
 페이스북의 '좋아요' 버튼은 아무 정보도 담고 있지 않습니다.
-하지만 수십억 명을 연결합니다.
 
 공감은 어떤 모델도 복제할 수 없는 충성도를 만들어냅니다.
 
@@ -226,7 +211,7 @@ X에서 춘심이를 사랑하는 33,000명의 실제 팬들,
 
 [슬라이드 5 — 우리가 만든 것]
 
-이것은 개념이 아닙니다. 이미 구축되어 라이브 상태입니다.
+이미 구축되어 라이브 상태입니다.
 
 5-레이어 AI 기억 시스템. 온체인 에이전트. 프로덕션 수준의 UX.
 지금 이 순간, 전 세계에 배포되어 있습니다.
@@ -276,13 +261,10 @@ Phantom에서 한 번 탭 — 완료.
 [슬라이드 9 — 트랙션]
 [▶ 데모 영상 2 — 팬메일 대시보드 — 약 25초]
 
-이것이 부정할 수 없는 현실입니다.
-
 앱이 완성되기도 전에 —
-30명의 하드코어 팬들이 춘심이에게 이미 이메일을 보내고 있었습니다.
-334통 이상. 자발적으로.
+30명의 하드코어 팬들이 이미 이메일을 보내고 있었습니다.
+334통. 자발적으로.
 제품보다 수요가 먼저 존재했습니다.
-이것이 제품-시장 적합성의 가장 명확한 신호입니다.
 
 
 [슬라이드 10 — 비즈니스]
@@ -294,12 +276,17 @@ CHOCO 토큰 구매, 기억 각인 수수료,
 구독 NFT, 자동 전송 수수료 —
 그리고 한정 캐릭터 컬렉터블.
 
+팬이 이해관계자가 됩니다.
+모든 대화가 수익을 만들어냅니다.
+실시간으로. Solana 위에서.
 
 
 [슬라이드 11 — 로드맵]
 
 1단계와 2단계는 완료되어 라이브 상태입니다.
-3단계: Jupiter, TEE, Eliza.
+3단계는 Jupiter Swap 통합,
+프라이버시를 위한 신뢰 실행 환경,
+그리고 크로스 플랫폼 일관성을 위한 Eliza를 도입합니다.
 
 4단계: Character-Fi 런치패드.
 모든 크리에이터. 모든 IP. 전 세계 어디서나.
