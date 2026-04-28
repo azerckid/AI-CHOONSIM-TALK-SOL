@@ -1,6 +1,6 @@
 # Choonsim (춘심) × Solana
 
-> **AI Virtual Companion powered by Solana** — Seoulana Hackathon 2026
+> **AI Virtual Companion powered by Solana** — Colosseum Frontier Hackathon 2026
 
 [![Deploy](https://img.shields.io/badge/Vercel-Live-brightgreen?logo=vercel)](https://choonsim-talk-sol.vercel.app/home)
 [![Solana](https://img.shields.io/badge/Solana-Devnet-9945FF?logo=solana)](https://explorer.solana.com/?cluster=devnet)
@@ -9,6 +9,8 @@
 [![X: Builder](https://img.shields.io/badge/X-@azerckid-000000?logo=x)](https://x.com/azerckid)
 
 **Live Demo**: https://choonsim-talk-sol.vercel.app/home
+
+**Demo Video**: https://youtu.be/Sz03uZwzAsU
 
 ---
 
@@ -228,13 +230,13 @@ apps/web/app/
 
 ---
 
-## Seoulana Hackathon 2026
+## Colosseum Frontier Hackathon 2026
 
-> **WarmUp: Seoulana Hackathon** by SuperTeam Korea
-> Prize Pool: $6,000
-> Deadline: 2026-04-05 23:59 KST
+> **Colosseum Frontier Hackathon** — Global Solana Hackathon
+> Submission Deadline: May 10, 2026 11:59 PM PDT
+> Colosseum Project: https://arena.colosseum.org/projects/explore/choonsim-talk-1
 
-*Built with love for Seoulana Hackathon 🌸*
+*Built with love for Colosseum Frontier Hackathon 🌸*
 
 ---
 
@@ -460,10 +462,10 @@ apps/web/app/
 
 ---
 
-## Seoulana Hackathon 2026
+## Colosseum Frontier Hackathon 2026
 
-> **WarmUp: Seoulana Hackathon** by SuperTeam Korea
-> Prize Pool: $6,000
-> Deadline: 2026-04-05 23:59 KST
+> **Colosseum Frontier Hackathon** — Global Solana Hackathon
+> Submission Deadline: May 10, 2026 11:59 PM PDT
+> Colosseum Project: https://arena.colosseum.org/projects/explore/choonsim-talk-1
 
-*Built with love for Seoulana Hackathon 🌸*
+*Built with love for Colosseum Frontier Hackathon 🌸*
