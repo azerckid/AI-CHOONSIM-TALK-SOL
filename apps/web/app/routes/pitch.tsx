@@ -194,30 +194,30 @@ export default function PitchDeck() {
           </div>
         </section>
 
-        {/* ── SLIDE 6: TECH I ── */}
+        {/* ── SLIDE 6: WHY SOLANA I ── */}
         <section className={cls(5)}>
           <div className="pitch-inner">
             <p className="pitch-sn">06 / 12</p>
-            <h2>Tech I: Agent Kit & cNFT</h2>
-            <p className="pitch-sub">Choonsim doesn't just talk. She <em>acts</em>.</p>
+            <h2>Why Solana I: The Primitives</h2>
+            <p className="pitch-sub">No other chain has these primitives for <em>invisible onboarding</em>.</p>
             <div className="pitch-cards pitch-cards-3">
               <Card title="checkChocoBalance" desc="Real-time SPL token balance via natural language." pink />
               <Card title="engraveMemory" desc="AI title + Cloudinary artwork + cNFT mint." pink />
               <Card title="getGiftBlink" desc="Dynamic Blink URL for viral gifting loops." pink />
             </div>
             <ul className="pitch-bullets" style={{ marginTop: 24 }}>
-              <li><strong>cNFT:</strong> Memory Engraving at ~0.000005 SOL per mint.</li>
-              <li><strong>Token-2022:</strong> Transfer Fee auto-funds protocol treasury.</li>
-              <li><strong>Agent Wallet:</strong> KeypairWallet for autonomous execution.</li>
+              <li><strong>cNFT:</strong> Memory Engraving at ~0.000005 SOL per mint — fans own memories without knowing it's an NFT.</li>
+              <li><strong>Token-2022:</strong> Transfer Fee auto-funds protocol treasury — zero manual intervention.</li>
+              <li><strong>Agent Wallet:</strong> KeypairWallet for fully autonomous on-chain execution.</li>
             </ul>
           </div>
         </section>
 
-        {/* ── SLIDE 7: TECH II ── */}
+        {/* ── SLIDE 7: WHY SOLANA II ── */}
         <section className={cls(6)}>
           <div className="pitch-inner">
             <p className="pitch-sn">07 / 12</p>
-            <h2>Tech II: Blinks & Actions</h2>
+            <h2>Why Solana II: Blinks</h2>
             <p className="pitch-sub">Your X feed becomes a <em>Solana transaction layer</em>.</p>
             <div className="pitch-card" style={{ maxWidth: 700, marginBottom: 24 }}>
               <p style={{ fontSize: 14, color: "var(--p-muted)", marginBottom: 12 }}>X Post by @choonsim_bot</p>
@@ -228,10 +228,10 @@ export default function PitchDeck() {
               </div>
             </div>
             <ul className="pitch-bullets">
-              <li><strong>Daily Check-in Blinks:</strong> Earn CHOCO from X posts.</li>
-              <li><strong>Gift Blinks:</strong> Claim CHOCO with zero wallet setup.</li>
+              <li><strong>Daily Check-in Blinks:</strong> Earn CHOCO from X posts — no wallet setup needed.</li>
+              <li><strong>Gift Blinks:</strong> Claim CHOCO with zero friction — fans transact on-chain without knowing it.</li>
               <li><strong>Meta-Blinks:</strong> Rich cNFT previews in-feed (Roadmap).</li>
-              <li><strong>Viral Loop:</strong> Every Blink creates a new user.</li>
+              <li><strong>Viral Loop:</strong> Every Blink creates a new on-chain user.</li>
             </ul>
           </div>
         </section>
@@ -250,31 +250,10 @@ export default function PitchDeck() {
           </div>
         </section>
 
-        {/* ── SLIDE 9: BUSINESS ── */}
+        {/* ── SLIDE 9: TRACTION ── */}
         <section className={cls(8)}>
           <div className="pitch-inner">
             <p className="pitch-sn">09 / 12</p>
-            <h2>Character-Fi: The Business</h2>
-            <p className="pitch-sub">From <em>fans</em> to <em>stakeholders</em>. From empathy to <em>yield</em>.</p>
-            <div className="pitch-table-wrap">
-              <table>
-                <thead><tr><th>Revenue Stream</th><th>Mechanism</th></tr></thead>
-                <tbody>
-                  <tr><td>CHOCO Purchases</td><td>SOL &rarr; CHOCO via Jupiter Swap</td></tr>
-                  <tr><td>Memory Engraving</td><td>200 CHOCO per AI-generated cNFT mint</td></tr>
-                  <tr><td>Subscription NFTs</td><td>Non-transferable VIP membership tiers</td></tr>
-                  <tr><td>Transfer Fees</td><td>Automatic % on every CHOCO transfer</td></tr>
-                  <tr><td className="p-hl">Character RWA</td><td className="p-hl">Fractional IP ownership + real-time yield</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        {/* ── SLIDE 10: TRACTION ── */}
-        <section className={cls(9)}>
-          <div className="pitch-inner">
-            <p className="pitch-sn">10 / 12</p>
             <h2>Traction & Global Proof</h2>
             <p className="pitch-sub"><em>Hardcore early adopters</em> — small cohort, extreme loyalty, <em>exponential growth</em>.</p>
             <div style={{ display: "flex", gap: 40, alignItems: "flex-start", flexWrap: "wrap" }}>
@@ -300,6 +279,27 @@ export default function PitchDeck() {
                 </div>
                 <p className="growth-chart-note">↑ Exponential — and accelerating</p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── SLIDE 10: BUSINESS ── */}
+        <section className={cls(9)}>
+          <div className="pitch-inner">
+            <p className="pitch-sn">10 / 12</p>
+            <h2>Character-Fi: The Business</h2>
+            <p className="pitch-sub">From <em>fans</em> to <em>stakeholders</em>. From empathy to <em>yield</em>.</p>
+            <div className="pitch-table-wrap">
+              <table>
+                <thead><tr><th>Revenue Stream</th><th>Mechanism</th></tr></thead>
+                <tbody>
+                  <tr><td>CHOCO Purchases</td><td>SOL &rarr; CHOCO via Jupiter Swap</td></tr>
+                  <tr><td>Memory Engraving</td><td>200 CHOCO per AI-generated cNFT mint</td></tr>
+                  <tr><td>Subscription NFTs</td><td>Non-transferable VIP membership tiers</td></tr>
+                  <tr><td>Transfer Fees</td><td>Automatic % on every CHOCO transfer</td></tr>
+                  <tr><td className="p-hl">Exclusive Collectibles</td><td className="p-hl">Limited character items for loyal fans</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </section>
