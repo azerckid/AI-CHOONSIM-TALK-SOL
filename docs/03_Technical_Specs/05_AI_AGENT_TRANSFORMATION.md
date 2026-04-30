@@ -1,5 +1,6 @@
 # AI Agent 전환 구현 명세 — 춘심 Assistant → Agent
 > Created: 2026-03-27
+> Updated: 2026-04-30
 > Status: 구현 예정
 
 ---
@@ -161,3 +162,52 @@ Step 6. cron/presend.ts — 자율 보상 트리거 추가
 - 온체인 전송 실패 시 DB도 변경하지 않음 (원자성 유지)
 - Devnet 기준 구현 → 실서비스 전 Mainnet 전환 필요
 - SPL Token-2022 Transfer Fee 1% 자동 차감됨 (수신량 = 전송량 × 0.99)
+
+---
+
+## 9. LangGraph 개선 로드맵 (2026-04-30 추가)
+
+> 현재 구조 분석에서 발견된 문제와 단계별 개선 계획
+
+### 9-1. 현재 구조 문제
+
+| 문제 | 내용 |
+|------|------|
+| **이중 경로** | 실제 채팅은 `stream.ts`가 LangGraph를 우회해 모델을 직접 호출. `graph.ts`는 비스트리밍 경로에만 사용됨 |
+| **메모리 미작동** | `summarizeNode`가 `graph.ts`에만 존재 → 스트리밍 채팅에서 대화 요약이 실제로 반영되지 않음 |
+| **매 요청 재컴파일** | `createChatGraph()`가 `generateAIResponse()` 내부에서 매번 호출됨 |
+| **관찰성 부재** | LangSmith 트레이싱 없음 → Solana 도구 실패 추적 불가 |
+
+### 9-2. 단계별 개선 계획
+
+```
+Phase 0 — 해커톤 전 (지금, ~2026-05-11)
+  ✅ LangSmith 트레이싱 활성화
+     - .env.development에 LANGCHAIN_TRACING_V2=true + LANGCHAIN_API_KEY 추가
+     - 코드 수정 없음, 환경변수만으로 즉시 활성화
+     - 목적: 해커톤 데모 중 Solana 도구 오류 실시간 추적
+
+Phase 1 — 해커톤 후 (~2026-05-12 이후)
+  ○ stream.ts → graph.stream() 기반 통합
+     - stream.ts의 직접 model.stream() 호출을 graph.stream()으로 교체
+     - summarizeNode가 스트리밍 경로에도 실제 적용되도록 수정
+     - 그래프를 모듈 수준에서 한 번만 컴파일 (매 요청 재컴파일 제거)
+     - 기대 효과: 메모리(요약) 정상 작동, 코드 중복 제거
+
+Phase 2 — Eliza/TEE 통합 전 (project_eliza_tee_plans.md Phase 3 전)
+  ○ 통합된 그래프 위에 비동기 서브에이전트 노드 추가
+     - LangGraph Command API 기반 멀티에이전트 구조
+     - TEE 메모리 노드, Eliza 브리지 노드를 그래프 엣지로 연결
+     - LangSmith Fleet으로 노드별 비용/레이턴시 모니터링
+```
+
+### 9-3. Phase 0 적용 방법 (즉시 실행 가능)
+
+1. `apps/web/.env.development`에 아래 3줄 추가 (이미 추가됨):
+   ```
+   LANGCHAIN_TRACING_V2=true
+   LANGCHAIN_API_KEY=ls__...   ← https://smith.langchain.com 에서 발급
+   LANGCHAIN_PROJECT=choonsim-dev
+   ```
+2. `@langchain/langgraph ^1.0.7`이 LangSmith 통합 내장 → 추가 패키지 설치 불필요
+3. 이후 LangSmith 대시보드에서 노드별 실행 시간, 토큰 소비, 도구 호출 추적 가능
