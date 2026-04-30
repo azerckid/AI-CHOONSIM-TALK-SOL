@@ -13,7 +13,6 @@
 !.env.example
 
 CLAUDE.md
-AGENTS.md
 
 /.vscode/*
 node_modules/
@@ -53,3 +52,4 @@ docs/**/*.docx
 
 # Allow shared VS Code settings
 !.vscode/settings.json
+.git_backup
