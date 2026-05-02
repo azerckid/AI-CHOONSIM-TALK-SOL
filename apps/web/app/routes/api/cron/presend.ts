@@ -18,6 +18,7 @@ import { BioSchema } from "~/lib/schemas/bio";
 const CRON_SECRET = process.env.CRON_SECRET;
 const PRESEND_TICKET_ITEM_ID = "presend_ticket";
 const SUBSCRIBER_TIERS = ["BASIC", "PREMIUM", "ULTIMATE"];
+const BATCH_SIZE = 5;
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const authHeader = request.headers.get("Authorization");
@@ -63,6 +64,19 @@ async function runPresend(): Promise<number> {
 
   const weekStartKst = DateTime.now().setZone("Asia/Seoul").startOf("week");
 
+  // 유저별 선호 캐릭터 사전 조회 (대화 이력 없는 신규 유저용)
+  const userContextRows = await db
+    .select({ userId: schema.userContext.userId, characterId: schema.userContext.characterId })
+    .from(schema.userContext)
+    .where(inArray(schema.userContext.userId, Array.from(targetUserIds)));
+
+  const preferredCharMap = new Map<string, string>();
+  for (const ctx of userContextRows) {
+    if (!preferredCharMap.has(ctx.userId)) {
+      preferredCharMap.set(ctx.userId, ctx.characterId);
+    }
+  }
+
   const users = await db.query.user.findMany({
     where: inArray(schema.user.id, Array.from(targetUserIds)),
     columns: {
@@ -76,105 +90,135 @@ async function runPresend(): Promise<number> {
   });
 
   let sent = 0;
-  for (const user of users) {
-    const isSubscriber = user.subscriptionTier && SUBSCRIBER_TIERS.includes(user.subscriptionTier);
-    const hasTicket = ticketUserIds.has(user.id);
-    const usedFreeThisWeek =
-      isSubscriber &&
-      user.lastFreePresendAt &&
-      DateTime.fromJSDate(user.lastFreePresendAt).setZone("Asia/Seoul") >= weekStartKst;
-    const canUseFree = isSubscriber && !usedFreeThisWeek;
-    const canUseTicket = hasTicket;
-    if (!canUseFree && !canUseTicket) continue;
-
-    try {
-      const conversation = await db.query.conversation.findFirst({
-        where: eq(schema.conversation.userId, user.id),
-        orderBy: [desc(schema.conversation.updatedAt)],
-      });
-
-      const conv =
-        conversation ??
-        (
-          await db
-            .insert(schema.conversation)
-            .values({
-              id: crypto.randomUUID(),
-              characterId: "choonsim",
-              title: "춘심이와의 대화",
-              userId: user.id,
-              updatedAt: new Date(),
-            })
-            .returning()
-        )[0];
-
-      if (!conv) continue;
-
-      let memory = "";
-      let personaMode: PersonaMode = "hybrid";
-      if (user.bio) {
-        try {
-          const bioData = BioSchema.parse(JSON.parse(user.bio));
-          memory = bioData.memory;
-          personaMode = bioData.personaMode ?? "hybrid";
-        } catch (e) {
-          logger.warn({
-            category: "SYSTEM",
-            message: `Failed to parse bio JSON for user ${user.id}`,
-            metadata: { userId: user.id, error: String(e) },
-          });
-        }
-      }
-
-      const messageContent = await Promise.race([
-        generateProactiveMessage(user.name || "친구", memory, personaMode),
-        new Promise<string>((_, reject) =>
-          setTimeout(() => reject(new Error("AI timeout")), 25000)
-        ),
-      ]);
-
-      const trimmed = String(messageContent).trim().slice(0, 500);
-      if (!trimmed) continue;
-
-      await db.insert(schema.message).values({
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: trimmed,
-        conversationId: conv.id,
-      });
-
-      await sendWebPush(user.pushSubscription, {
-        title: "춘심이의 메시지",
-        body: trimmed.slice(0, 80) + (trimmed.length > 80 ? "…" : ""),
-        url: `/chat/${conv.id}`,
-      });
-
-      if (canUseFree) {
-        await db
-          .update(schema.user)
-          .set({ lastFreePresendAt: new Date(), updatedAt: new Date() })
-          .where(eq(schema.user.id, user.id));
-      } else if (canUseTicket) {
-        await db
-          .update(schema.userInventory)
-          .set({
-            quantity: sql`${schema.userInventory.quantity} - 1`,
-            updatedAt: new Date(),
-          })
-          .where(
-            and(
-              eq(schema.userInventory.userId, user.id),
-              eq(schema.userInventory.itemId, PRESEND_TICKET_ITEM_ID),
-              gt(schema.userInventory.quantity, 0)
-            )
-          );
-      }
-
-      sent++;
-    } catch (err) {
-      logger.error({ category: "SYSTEM", message: `[Presend] user ${user.id} 선톡 실패`, stackTrace: (err as Error).stack });
-    }
+  for (let i = 0; i < users.length; i += BATCH_SIZE) {
+    const batch = users.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map((user) =>
+        processUser(user, subscriberIds, ticketUserIds, weekStartKst, preferredCharMap)
+      )
+    );
+    sent += results.filter((r) => r.status === "fulfilled" && r.value).length;
   }
 
   return sent;
+}
+
+async function processUser(
+  user: {
+    id: string;
+    name: string | null;
+    pushSubscription: string | null;
+    subscriptionTier: string | null;
+    bio: string | null;
+    lastFreePresendAt: Date | null;
+  },
+  subscriberIds: Set<string>,
+  ticketUserIds: Set<string>,
+  weekStartKst: DateTime,
+  preferredCharMap: Map<string, string>
+): Promise<boolean> {
+  const isSubscriber = user.subscriptionTier && SUBSCRIBER_TIERS.includes(user.subscriptionTier);
+  const hasTicket = ticketUserIds.has(user.id);
+  const usedFreeThisWeek =
+    isSubscriber &&
+    user.lastFreePresendAt &&
+    DateTime.fromJSDate(user.lastFreePresendAt).setZone("Asia/Seoul") >= weekStartKst;
+  const canUseFree = isSubscriber && !usedFreeThisWeek;
+  const canUseTicket = hasTicket;
+  if (!canUseFree && !canUseTicket) return false;
+
+  try {
+    const conversation = await db.query.conversation.findFirst({
+      where: eq(schema.conversation.userId, user.id),
+      orderBy: [desc(schema.conversation.updatedAt)],
+    });
+
+    // 기존 대화가 없는 신규 유저: userContext에서 캐릭터 파악, 없으면 기본값
+    const fallbackCharId = preferredCharMap.get(user.id) ?? "choonsim";
+    const conv =
+      conversation ??
+      (
+        await db
+          .insert(schema.conversation)
+          .values({
+            id: crypto.randomUUID(),
+            characterId: fallbackCharId,
+            title: fallbackCharId === "choonsim" ? "춘심이와의 대화" : `${fallbackCharId}와의 대화`,
+            userId: user.id,
+            updatedAt: new Date(),
+          })
+          .returning()
+      )[0];
+
+    if (!conv) return false;
+
+    let memory = "";
+    let personaMode: PersonaMode = "hybrid";
+    if (user.bio) {
+      try {
+        const bioData = BioSchema.parse(JSON.parse(user.bio));
+        memory = bioData.memory;
+        personaMode = bioData.personaMode ?? "hybrid";
+      } catch (e) {
+        logger.warn({
+          category: "SYSTEM",
+          message: `Failed to parse bio JSON for user ${user.id}`,
+          metadata: { userId: user.id, error: String(e) },
+        });
+      }
+    }
+
+    const messageContent = await Promise.race([
+      generateProactiveMessage(user.name || "친구", memory, personaMode),
+      new Promise<string>((_, reject) =>
+        setTimeout(() => reject(new Error("AI timeout")), 25000)
+      ),
+    ]);
+
+    const trimmed = String(messageContent).trim().slice(0, 500);
+    if (!trimmed) return false;
+
+    await db.insert(schema.message).values({
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: trimmed,
+      conversationId: conv.id,
+    });
+
+    await sendWebPush(user.pushSubscription, {
+      title: "춘심이의 메시지",
+      body: trimmed.slice(0, 80) + (trimmed.length > 80 ? "…" : ""),
+      url: `/chat/${conv.id}`,
+    });
+
+    if (canUseFree) {
+      await db
+        .update(schema.user)
+        .set({ lastFreePresendAt: new Date(), updatedAt: new Date() })
+        .where(eq(schema.user.id, user.id));
+    } else if (canUseTicket) {
+      await db
+        .update(schema.userInventory)
+        .set({
+          quantity: sql`${schema.userInventory.quantity} - 1`,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(schema.userInventory.userId, user.id),
+            eq(schema.userInventory.itemId, PRESEND_TICKET_ITEM_ID),
+            gt(schema.userInventory.quantity, 0)
+          )
+        );
+    }
+
+    return true;
+  } catch (err) {
+    logger.error({
+      category: "SYSTEM",
+      message: `[Presend] user ${user.id} 선톡 실패`,
+      stackTrace: (err as Error).stack,
+    });
+    return false;
+  }
 }
