@@ -2,22 +2,34 @@ name: Presend (선톡)
 
 on:
   schedule:
-    - cron: '0 0 * * *'   # 09:00 KST (midnight UTC)
-  workflow_dispatch:       # 수동 트리거 (테스트용)
+    - cron: '0 0 * * *'   # 09:00 KST (00:00 UTC)
+  workflow_dispatch:
 
 jobs:
   presend:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/web
+
     steps:
-      - name: Call presend cron
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X GET \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "${{ secrets.APP_URL }}/api/cron/presend")
-          echo "HTTP Status: $STATUS"
-          if [ "$STATUS" != "200" ]; then
-            echo "Presend cron failed with status $STATUS"
-            exit 1
-          fi
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run presend script
+        run: npx tsx scripts/ops/run-presend.ts
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}

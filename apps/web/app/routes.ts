@@ -82,7 +82,6 @@ export default [
   route("api/messages/:id/like", "routes/api/messages/$id.like.ts"),
   route("api/upload", "routes/api/upload.ts"),
   route("api/test-cron", "routes/api/test-cron.ts"),
-  route("api/cron/presend", "routes/api/cron/presend.ts"),
   route("api/user/wallet", "routes/api/user/wallet.ts"),
   route("api/account/delete", "routes/api/account/delete.ts"),
   route("api/push-subscription", "routes/api/push-subscription.ts"),
