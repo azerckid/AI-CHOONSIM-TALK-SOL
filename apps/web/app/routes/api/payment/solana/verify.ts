@@ -9,8 +9,7 @@ import BigNumber from "bignumber.js";
 import { logger } from "~/lib/logger.server";
 import { transferChocoSPL } from "~/lib/solana/agent-kit.server";
 
-// Solana RPC Connection (기본적으로 메인넷 사용, 테스트 시 devnet으로 변경 가능)
-const SOLANA_RPC_ENDPOINT = process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com";
+const SOLANA_RPC_ENDPOINT = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
 const connection = new Connection(SOLANA_RPC_ENDPOINT, "confirmed");
 
 export async function action({ request }: ActionFunctionArgs) {
