@@ -15,7 +15,6 @@ import {
     type SubscriptionTier,
 } from "./prompts";
 import { model, urlToBase64 } from "./model";
-import { getChoonsimSolanaTools } from "../solana/agent-kit.server";
 
 // 그래프 상태 정의
 const ChatStateAnnotation = Annotation.Root({
@@ -144,100 +143,17 @@ function sanitizeTools(tools: unknown[]): unknown[] {
 }
 
 /**
- * 노드 2: AI 응답 생성 (Agent Kit 연결)
+ * 노드 2: AI 응답 생성
+ * Solana 도구는 stream.ts의 executeNaturalLanguageCommand에서 그래프 진입 전 처리됨.
+ * callModelNode는 순수 대화 응답만 담당 — tool binding 없이 model.invoke() 직접 호출.
  */
 const callModelNode = async (state: typeof ChatStateAnnotation.State) => {
-    // Solana 도구를 직접 bindTools() — sanitizeTools()로 spread하면 LangChain 인스턴스가 깨져 Gemini 400 오류 발생
-    const solanaTools = state.userId ? getChoonsimSolanaTools(state.userId) : [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const modelWithTools = solanaTools.length > 0 ? model.bindTools(solanaTools as any) : model;
-
     const messages: BaseMessage[] = [
         new SystemMessage(state.systemInstruction),
         ...state.messages,
     ];
 
-    const response = await modelWithTools.invoke(messages);
-
-    if (response.tool_calls && response.tool_calls.length > 0) {
-        for (const toolCall of response.tool_calls) {
-            const args = toolCall.args as Record<string, unknown>;
-
-            if (toolCall.name === "saveTravelPlan" && state.userId) {
-                const travelArgs = args as { title: string; description?: string; startDate?: string; endDate?: string };
-                try {
-                    await db.insert(schema.travelPlan).values({
-                        id: crypto.randomUUID(),
-                        userId: state.userId,
-                        title: travelArgs.title,
-                        description: travelArgs.description || "춘심이와 함께 만든 여행 계획",
-                        startDate: travelArgs.startDate ? new Date(travelArgs.startDate) : null,
-                        endDate: travelArgs.endDate ? new Date(travelArgs.endDate) : null,
-                        updatedAt: new Date(),
-                    });
-                    logger.info({ category: "SYSTEM", message: `Travel plan '${travelArgs.title}' saved for user ${state.userId}` });
-                } catch (e) {
-                    logger.error({ category: "SYSTEM", message: "Failed to save travel plan via tool:", stackTrace: (e as Error).stack });
-                }
-            } else {
-                // Solana 도구 실행 (agent-kit.server.ts의 tool 객체 직접 invoke)
-                const solanaTool = solanaTools.find((t) => t.name === toolCall.name);
-                if (solanaTool) {
-                    try {
-                        const result = await (solanaTool as { invoke(input: unknown): Promise<unknown> }).invoke(args);
-                        const toolResultContent = `[${toolCall.name}]\n${result}`;
-                        if (typeof response.content === "string") {
-                            response.content = response.content
-                                ? `${response.content}\n\n${toolResultContent}`
-                                : toolResultContent;
-                        } else {
-                            response.content = toolResultContent;
-                        }
-                    } catch (e) {
-                        logger.error({ category: "SYSTEM", message: `Tool ${toolCall.name} failed:`, stackTrace: (e as Error).stack });
-                    }
-                }
-            }
-        }
-
-        // 툴 실행 후 — LLM이 유저 언어로 재응답 (실패 시 원본 툴 결과로 fallback)
-        const rawContent = typeof response.content === "string" ? response.content : "";
-        const markerRegex = /\[(SWAP_TX|CNFT_MINTED|CHECKIN_BLINK|GIFT_BLINK)[^[\]]*\]/g;
-        const markers = rawContent.match(markerRegex) || [];
-        const toolDataText = rawContent.replace(markerRegex, "").trim();
-
-        const lastUserMsg = [...state.messages].reverse().find(m => m._getType() === "human");
-        const lastUserText = typeof lastUserMsg?.content === "string" ? lastUserMsg.content : "";
-
-        try {
-            const reformatMessages: BaseMessage[] = [
-                new SystemMessage(
-                    state.systemInstruction +
-                    `\n\n[LANGUAGE RULE — CRITICAL]\n` +
-                    `The user's last message was: "${lastUserText}"\n` +
-                    `You MUST respond in the EXACT same language as that message.\n` +
-                    `If it's English → respond in English.\n` +
-                    `If it's Japanese → respond in Japanese.\n` +
-                    `If it's Spanish → respond in Spanish.\n` +
-                    `Do NOT use Korean unless the user wrote in Korean.\n\n` +
-                    `[Tool Result Data]\n${toolDataText}\n\n` +
-                    `Using the above tool result, write a natural response to the user in their language.`
-                ),
-                ...state.messages,
-            ];
-            const reformatResponse = await model.invoke(reformatMessages);
-            let finalContent = typeof reformatResponse.content === "string" ? reformatResponse.content : "";
-            if (markers.length > 0) finalContent += `\n${markers.join("\n")}`;
-            reformatResponse.content = removeEmojis(finalContent);
-            return { messages: [reformatResponse] };
-        } catch (e) {
-            logger.error({ category: "SYSTEM", message: "Reformat LLM call failed, using raw tool result:", stackTrace: (e as Error).stack });
-            if (typeof response.content === "string") {
-                response.content = removeEmojis(response.content);
-            }
-            return { messages: [response] };
-        }
-    }
+    const response = await model.invoke(messages);
 
     if (typeof response.content === "string") {
         response.content = removeEmojis(response.content);
