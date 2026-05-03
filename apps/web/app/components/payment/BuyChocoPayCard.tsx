@@ -30,6 +30,7 @@ const STATUS_LABEL: Record<Status, string> = {
 };
 
 export function BuyChocoPayCard({ choco, onSuccess }: Props) {
+  // Phantom 설치 여부만 확인 (연결 여부와 분리)
   const [hasPhantom, setHasPhantom] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [grantedChoco, setGrantedChoco] = useState(0);
@@ -39,10 +40,7 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
 
   useEffect(() => {
     const phantom = (window as any).phantom?.solana;
-    if (!phantom?.isPhantom) return;
-    phantom.connect({ onlyIfTrusted: true })
-      .then(() => setHasPhantom(true))
-      .catch(() => setHasPhantom(false));
+    setHasPhantom(!!phantom?.isPhantom);
   }, []);
 
   async function handlePhantomPay() {
