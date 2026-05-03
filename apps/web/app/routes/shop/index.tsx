@@ -136,6 +136,28 @@ export default function ShopPage() {
         </div>
       </div>
 
+      {/* CHOCO 충전 배너 */}
+      <div className="px-4 pt-4">
+        <Link
+          to="/buy-choco"
+          className="flex items-center justify-between w-full bg-gradient-to-r from-primary/20 to-purple-500/10 border border-primary/30 rounded-2xl px-5 py-4 hover:border-primary/60 transition-all active:scale-[0.98]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-[24px] text-primary">toll</span>
+            </div>
+            <div>
+              <p className="text-white font-bold text-sm">CHOCO 충전</p>
+              <p className="text-white/40 text-xs mt-0.5">SOL · 카드 · PayPal로 충전</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 bg-primary rounded-full px-4 py-2">
+            <span className="text-white text-sm font-bold">충전하기</span>
+            <span className="material-symbols-outlined text-[16px] text-white">arrow_forward</span>
+          </div>
+        </Link>
+      </div>
+
       {/* Content */}
       <div className="p-4">
         {items.length === 0 ? (
