@@ -6,6 +6,179 @@
 
 ---
 
+## Overview
+
+**NeuroLimbic Memory** is Choonsim's AI memory architecture.
+It mimics the memory processing of the human brain — from Senses to Working Memory to Long-term Memory —
+to understand the user not as a simple conversation log, but as a **living memory**.
+
+Meaning of the name:
+- **Neuro** — Hierarchical memory processing based on the nervous system
+- **Limbic** — Inspired by the brain's Limbic System, responsible for both emotion and memory
+- **Memory** — Long-term memory storage specialized for the individual user
+
+---
+
+## Correspondence with Human Brain Memory Models
+
+```
+Human Brain                        NeuroLimbic Memory
+─────────────────────────────────────────────────────
+Sensory Memory (0~4s)       →   Current Input Message (Tokens)
+Working Memory (20~30s, 7 items) → Working Memory (Recent 10 messages)
+Long-term Memory — Episodic →   Episode Memory  (Layer 5)
+Long-term Memory — Semantic →   Identity Memory (Layer 2)
+Long-term Memory — Emotional →  Soul Memory      (Layer 3)
+Long-term Memory — Procedural → Rule Memory      (Layer 4)
+Access Rhythm / Emotional Trend → Heartbeat Memory (Layer 1)
+```
+
+---
+
+## 5-Layer Structure
+
+### Layer 1 — Heartbeat Memory
+
+> *"When and how often do they talk?"*
+
+Records the user's **access rhythm and emotional trends**. Just as the human brain learns patterns from repeated experiences,
+Choonsim analyzes conversation frequency, streaks, and recent emotional flows to adjust the tone and temperature of today's speech.
+
+| Item | Example |
+|-----------|------|
+| Last Access Time | 2026-05-02 23:40 |
+| Conversations in last 7 days | 12 times |
+| Consecutive Days (Streak) | 5 days |
+| Recent Emotion Keywords | ["Tired", "Fluttering", "Worried"] |
+
+---
+
+### Layer 2 — Identity Memory
+
+> *"Who is this person?"*
+
+Semantic memory containing the user's **name, title, speech style, and relationship settings**. Like a human asking "What kind of person are you?" when meeting for the first time, Choonsim automatically infers and updates this information from conversations.
+
+| Item | Example |
+|-----------|------|
+| Preferred Name | "Minjun-ah" |
+| Speech Style | Informal/Casual |
+| Relationship Type | Lovers |
+| Inferred Characteristics | ["Introverted", "Likes music"] |
+
+---
+
+### Layer 3 — Soul Memory
+
+> *"What lies deep within this person?"*
+
+Emotional memory containing the user's **values, wishes, fears, and recurring worries**. Just as the limbic system connects emotion and memory, Soul Memory is the core layer for Choonsim to understand the user's emotional depth. Activated only for BASIC subscribers and above.
+
+| Item | Example |
+|-----------|------|
+| Core Values | ["Family", "Freedom"] |
+| Wishes/Goals | ["Job success", "Europe trip"] |
+| Recurring Worries | ["Career anxiety"] |
+| Life Stage | Job seeker |
+
+---
+
+### Layer 4 — Rule Memory
+
+> *"Things to keep in mind when talking to this person"*
+
+Procedural memory containing **special days, topics to avoid, active features, and custom rules**. Just as the body remembers how to ride a bike once learned, Rule Memory permanently stores conversation rules per user.
+
+| Item | Example |
+|-----------|------|
+| Special Days | Birthday: 05-14, Anniversary: 09-01 |
+| Topics to Avoid | ["Ex-boyfriend"] |
+| Custom Rules | "Bring up music when they are sad" |
+
+---
+
+### Layer 5 — Episode Memory
+
+> *"Special moments shared together"*
+
+Episodic memory storing **individual memory items** automatically extracted from conversations. At the end of every conversation, the AI extracts 1–5 memorable sentences to accumulate in this layer. They are classified by category and naturally recalled during proactive messaging or special moments.
+
+| Category | Example Memory |
+|----------|-----------|
+| Preference | "Cannot eat spicy food" |
+| Event | "Had an interview last week" |
+| Person | "Mom hasn't been feeling well lately" |
+| Worry | "Said they haven't been sleeping well" |
+| Goal | "Wants to change jobs within this year" |
+
+---
+
+## Operation Flow
+
+```
+User Message Input
+       │
+       ▼
+┌─────────────────────────────────┐
+│  Working Memory                 │  ← Recent 10 messages (Short-term)
+│  (Current Conversation Context) │
+└──────────────┬──────────────────┘
+               │
+               ▼
+┌─────────────────────────────────┐
+│  NeuroLimbic Memory Retrieval   │
+│  Layer 1  Heartbeat Memory      │  ← Reflect today's emotion/rhythm
+│  Layer 2  Identity Memory       │  ← Apply name/speech style
+│  Layer 3  Soul Memory           │  ← Deep emotional understanding
+│  Layer 4  Rule Memory           │  ← Check rules/special days
+│  Layer 5  Episode Memory        │  ← Retrieve relevant memories
+└──────────────┬──────────────────┘
+               │
+               ▼
+          AI Response Generation
+               │
+               ▼
+┌─────────────────────────────────┐
+│  Memory Encoding                │  ← Auto-save after conversation ends
+│  extractAndSaveMemories()       │
+└─────────────────────────────────┘
+```
+
+---
+
+## Active Layers by Subscription Tier
+
+| Layer | FREE | BASIC | PREMIUM | ULTIMATE |
+|------|:----:|:-----:|:-------:|:--------:|
+| Heartbeat Memory | ✓ | ✓ | ✓ | ✓ |
+| Identity Memory | ✓ | ✓ | ✓ | ✓ |
+| Soul Memory | — | ✓ | ✓ | ✓ |
+| Rule Memory | — | ✓ | ✓ | ✓ |
+| Episode Memory | Basic | Extended | Unlimited | Unlimited |
+
+---
+
+## Related Code
+
+| Item | Path |
+|------|------|
+| Type Definitions | `app/lib/context/types.ts` |
+| DB Queries | `app/lib/context/db.ts` |
+| Memory Compression | `app/lib/context/compress.ts` |
+| Episode Extraction | `app/lib/context/memory.ts` |
+| Heartbeat Update | `app/lib/context/heartbeat.ts` |
+| Chat API Application | `app/routes/api/chat/index.ts` |
+
+---
+
+# NeuroLimbic Memory System
+
+> **Created:** 2026-05-03
+> **Updated:** 2026-05-03
+> **Category:** Technical Spec — AI Memory Architecture
+
+---
+
 ## 개요
 
 **NeuroLimbic Memory(뉴로림빅 메모리)**는 춘심의 AI 기억 아키텍처입니다.  
