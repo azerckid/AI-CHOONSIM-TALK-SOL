@@ -147,23 +147,23 @@ export default function BuyChocoPage() {
           )}
         </div>
 
-        {/* Solana Pay 버튼 (Phantom QR) */}
+        {/* Privy 임베디드 지갑 결제 (기본) */}
+        <PrivyChocoPayCard choco={selectedChoco} />
+
+        {/* 구분선 */}
+        <div className="flex items-center gap-3 my-4">
+          <div className="flex-1 h-px bg-white/10" />
+          <span className="text-xs text-white/30">또는 외부 지갑으로</span>
+          <div className="flex-1 h-px bg-white/10" />
+        </div>
+
+        {/* Solana Pay QR (Phantom 모바일) */}
         <SolanaPayButton
           amount={usdAmount}
           credits={selectedChoco}
           description={`${selectedChoco} CHOCO 구매`}
           onSuccess={() => setDone(true)}
         />
-
-        {/* 구분선 */}
-        <div className="flex items-center gap-3 my-4">
-          <div className="flex-1 h-px bg-white/10" />
-          <span className="text-xs text-white/30">또는</span>
-          <div className="flex-1 h-px bg-white/10" />
-        </div>
-
-        {/* Privy 임베디드 지갑 결제 */}
-        <PrivyChocoPayCard choco={selectedChoco} />
 
         <p className="text-center text-xs text-white/30 mt-4">
           Devnet 기준 · SOL 시세 자동 반영 · 결제 후 자동 충전
