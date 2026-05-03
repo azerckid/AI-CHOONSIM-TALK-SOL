@@ -28,6 +28,7 @@ interface UseChatStreamOptions {
     optimisticIntervalRef: React.MutableRefObject<ReturnType<typeof setInterval> | null>;
     lastOptimisticDeductionRef: React.MutableRefObject<number>;
     abortControllerRef: React.MutableRefObject<AbortController | null>;
+    onInsufficientChoco?: () => void;
 }
 
 type TypewriterItem = {
@@ -57,6 +58,7 @@ export function useChatStream(opts: UseChatStreamOptions) {
         optimisticIntervalRef,
         lastOptimisticDeductionRef,
         abortControllerRef,
+        onInsufficientChoco,
     } = opts;
 
     const revalidator = useRevalidator();
@@ -224,9 +226,6 @@ export function useChatStream(opts: UseChatStreamOptions) {
 
                             // ── 에러 처리 ──
                             if (data.error && data.code === 402) {
-                                toast.error("CHOCO 잔액이 부족합니다.", {
-                                    action: { label: "CHOCO 충전하기", onClick: () => window.location.href = "/profile/subscription" },
-                                });
                                 setIsAiStreaming(false);
                                 setIsOptimisticTyping(false);
                                 if (optimisticIntervalRef.current) {
@@ -236,6 +235,13 @@ export function useChatStream(opts: UseChatStreamOptions) {
                                 if (lastOptimisticDeductionRef.current > 0) {
                                     setCurrentUserChocoBalance((p) => p + lastOptimisticDeductionRef.current);
                                     setLastOptimisticDeduction(0);
+                                }
+                                if (onInsufficientChoco) {
+                                    onInsufficientChoco();
+                                } else {
+                                    toast.error("CHOCO 잔액이 부족합니다.", {
+                                        action: { label: "CHOCO 충전하기", onClick: () => window.location.href = "/profile/subscription" },
+                                    });
                                 }
                                 return;
                             }

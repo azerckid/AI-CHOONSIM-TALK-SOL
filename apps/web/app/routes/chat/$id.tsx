@@ -206,6 +206,7 @@ export default function ChatRoom() {
     optimisticIntervalRef,
     lastOptimisticDeductionRef,
     abortControllerRef,
+    onInsufficientChoco: () => setIsItemStoreOpen(true),
   });
 
   // Sync ref with state for async access
