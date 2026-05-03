@@ -10,7 +10,7 @@
  * 반드시 PrivyWalletProvider 하위에서 사용해야 합니다.
  */
 import { useState, useEffect, useCallback } from "react";
-import { usePrivy, useLoginWithOAuth, useLoginWithEmail } from "@privy-io/react-auth";
+import { usePrivy, useLoginWithOAuth, useLoginWithEmail, useCreateWallet } from "@privy-io/react-auth";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
@@ -53,6 +53,16 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
   const [checkingBalance, setCheckingBalance] = useState(false);
 
   const embeddedWallet = wallets.find((w: any) => w.walletClientType === "privy") ?? wallets[0] ?? null;
+  const { createWallet } = useCreateWallet();
+  const [creatingWallet, setCreatingWallet] = useState(false);
+
+  // 로그인 됐는데 지갑이 없으면 자동 생성
+  useEffect(() => {
+    if (authenticated && ready && wallets.length === 0 && !creatingWallet) {
+      setCreatingWallet(true);
+      createWallet().catch(() => {}).finally(() => setCreatingWallet(false));
+    }
+  }, [authenticated, ready, wallets.length]);
 
   // 헤드리스 로그인 훅
   const { initOAuth } = useLoginWithOAuth();
@@ -344,6 +354,11 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
 
   const buttonUI = ready && !authenticated ? (
     connectUI
+  ) : creatingWallet ? (
+    <div className="flex items-center justify-center gap-2 text-xs text-white/40 py-2">
+      <span className="w-3 h-3 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+      내장 지갑 생성 중...
+    </div>
   ) : checkingBalance ? (
     <div className="flex items-center justify-center gap-2 text-xs text-white/40 py-2">
       <span className="w-3 h-3 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
