@@ -10,7 +10,7 @@
  * 반드시 PrivyWalletProvider 하위에서 사용해야 합니다.
  */
 import { useState, useEffect, useCallback } from "react";
-import { usePrivy } from "@privy-io/react-auth";
+import { usePrivy, useLoginWithOAuth, useLoginWithEmail } from "@privy-io/react-auth";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
@@ -53,6 +53,14 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
   const [checkingBalance, setCheckingBalance] = useState(false);
 
   const embeddedWallet = wallets.find((w: any) => w.walletClientType === "privy") ?? wallets[0] ?? null;
+
+  // 헤드리스 로그인 훅
+  const { initOAuth } = useLoginWithOAuth();
+  const { sendCode, loginWithCode } = useLoginWithEmail();
+  const [emailInput, setEmailInput] = useState("");
+  const [otpInput, setOtpInput] = useState("");
+  const [emailStep, setEmailStep] = useState<"input" | "otp">("input");
+  const [emailLoading, setEmailLoading] = useState(false);
 
   const requiredSol = parseFloat((choco * SOL_PER_CHOCO + FEE_BUFFER).toFixed(6));
 
@@ -238,14 +246,104 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
     </div>
   ) : null;
 
+  // 헤드리스 이메일 OTP 핸들러
+  async function handleSendCode() {
+    if (!emailInput.trim()) return;
+    setEmailLoading(true);
+    try {
+      await sendCode({ email: emailInput.trim() });
+      setEmailStep("otp");
+    } catch (e) {
+      toast.error("이메일 전송 실패. 다시 시도해주세요.");
+    } finally {
+      setEmailLoading(false);
+    }
+  }
+
+  async function handleLoginWithCode() {
+    if (!otpInput.trim()) return;
+    setEmailLoading(true);
+    try {
+      await loginWithCode({ code: otpInput.trim() });
+    } catch (e) {
+      toast.error("코드가 올바르지 않아요. 다시 확인해주세요.");
+    } finally {
+      setEmailLoading(false);
+    }
+  }
+
+  const connectUI = (
+    <div className="space-y-2">
+      <p className="text-xs text-white/40 text-center mb-3">내장 지갑 연결</p>
+      {/* Google */}
+      <button
+        onClick={() => initOAuth({ provider: "google" })}
+        className="w-full flex items-center justify-center gap-2 bg-white/8 hover:bg-white/15 border border-white/10 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
+      >
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#EA4335" d="M9 3.48c1.69 0 2.83.73 3.48 1.34l2.54-2.48C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.96l2.91 2.26C4.6 5.05 6.62 3.48 9 3.48z"/><path fill="#FBBC05" d="M17.64 9.2c0-.74-.06-1.28-.19-1.84H9v3.34h4.96c-.1.83-.64 2.08-1.84 2.92l2.84 2.2c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M3.88 10.78A5.54 5.54 0 0 1 3.58 9c0-.62.11-1.22.29-1.78L.96 4.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l2.92-2.26z"/><path fill="#4285F4" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.84-2.2c-.76.53-1.78.9-3.12.9-2.38 0-4.4-1.57-5.12-3.74L.97 13.04C2.45 15.98 5.48 18 9 18z"/></svg>
+        Google로 연결
+      </button>
+      {/* Twitter/X */}
+      <button
+        onClick={() => initOAuth({ provider: "twitter" })}
+        className="w-full flex items-center justify-center gap-2 bg-white/8 hover:bg-white/15 border border-white/10 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.91-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        X(Twitter)로 연결
+      </button>
+      {/* 구분선 */}
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-px bg-white/10" />
+        <span className="text-[10px] text-white/30">또는 이메일</span>
+        <div className="flex-1 h-px bg-white/10" />
+      </div>
+      {/* 이메일 OTP */}
+      {emailStep === "input" ? (
+        <div className="flex gap-2">
+          <input
+            type="email"
+            value={emailInput}
+            onChange={(e) => setEmailInput(e.target.value)}
+            placeholder="이메일 입력"
+            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#9945FF]/50"
+          />
+          <button
+            onClick={handleSendCode}
+            disabled={emailLoading || !emailInput.trim()}
+            className="px-3 py-2 bg-[#9945FF] hover:bg-[#7b35d9] disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-all"
+          >
+            {emailLoading ? "..." : "전송"}
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <p className="text-xs text-white/50">{emailInput}으로 코드를 전송했어요</p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={otpInput}
+              onChange={(e) => setOtpInput(e.target.value)}
+              placeholder="인증 코드 입력"
+              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#9945FF]/50"
+            />
+            <button
+              onClick={handleLoginWithCode}
+              disabled={emailLoading || !otpInput.trim()}
+              className="px-3 py-2 bg-[#9945FF] hover:bg-[#7b35d9] disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-all"
+            >
+              {emailLoading ? "..." : "확인"}
+            </button>
+          </div>
+          <button onClick={() => setEmailStep("input")} className="text-xs text-white/30 hover:text-white/60">
+            이메일 다시 입력
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   const buttonUI = ready && !authenticated ? (
-    <button
-      onClick={login}
-      className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
-    >
-      <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
-      내장 지갑 연결하기
-    </button>
+    connectUI
   ) : checkingBalance ? (
     <div className="flex items-center justify-center gap-2 text-xs text-white/40 py-2">
       <span className="w-3 h-3 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
