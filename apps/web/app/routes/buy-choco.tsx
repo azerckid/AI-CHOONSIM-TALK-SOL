@@ -15,8 +15,8 @@ import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { eq } from "drizzle-orm";
 import { useLoaderData } from "react-router";
+import { BuyChocoPayCard } from "~/components/payment/BuyChocoPayCard";
 import { SolanaPayButton } from "~/components/payment/SolanaPayButton";
-import { PrivyChocoPayCard } from "~/components/payment/PrivyChocoPayCard";
 import { CheckCircle, ArrowLeft } from "lucide-react";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -147,17 +147,17 @@ export default function BuyChocoPage() {
           )}
         </div>
 
-        {/* Privy 임베디드 지갑 결제 (기본) */}
-        <PrivyChocoPayCard choco={selectedChoco} />
+        {/* 결제 카드 — Phantom 감지 시 Phantom 우선, 없으면 임베디드 지갑 */}
+        <BuyChocoPayCard choco={selectedChoco} onSuccess={() => setDone(true)} />
 
         {/* 구분선 */}
         <div className="flex items-center gap-3 my-4">
           <div className="flex-1 h-px bg-white/10" />
-          <span className="text-xs text-white/30">또는 외부 지갑으로</span>
+          <span className="text-xs text-white/30">또는 QR로</span>
           <div className="flex-1 h-px bg-white/10" />
         </div>
 
-        {/* Solana Pay QR (Phantom 모바일) */}
+        {/* Solana Pay QR (Phantom 모바일 전용) */}
         <SolanaPayButton
           amount={usdAmount}
           credits={selectedChoco}
