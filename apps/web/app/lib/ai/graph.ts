@@ -3,17 +3,15 @@
  */
 import { HumanMessage, SystemMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
 import { StateGraph, END, Annotation, START } from "@langchain/langgraph";
-import { DateTime } from "luxon";
 import { db } from "../db.server";
 import * as schema from "../../db/schema";
 import { eq } from "drizzle-orm";
 import { logger } from "../logger.server";
 import {
-    CORE_CHUNSIM_PERSONA,
-    GUARDRAIL_BY_TIER,
     PERSONA_PROMPTS,
-    applyCharacterName,
     removeEmojis,
+    applyCharacterName,
+    buildStreamSystemInstruction,
     type SubscriptionTier,
 } from "./prompts";
 import { model, urlToBase64 } from "./model";
@@ -71,101 +69,31 @@ const ChatStateAnnotation = Annotation.Root({
  * 노드 1: 의도 분류 및 페르소나 준비
  */
 const analyzePersonaNode = async (state: typeof ChatStateAnnotation.State) => {
+    // 여행 키워드 감지 → concierge 모드 자동 전환
+    let effectiveMode = state.personaMode;
     const lastMsg = state.messages[state.messages.length - 1];
-    let lastMessageText = "";
-
     if (lastMsg) {
-        if (typeof lastMsg.content === "string") {
-            lastMessageText = lastMsg.content;
-        } else if (Array.isArray(lastMsg.content)) {
-            const textPart = lastMsg.content.find((p: unknown) => (p as { type: string }).type === "text") as { text: string } | undefined;
-            if (textPart) lastMessageText = textPart.text;
+        const lastText = typeof lastMsg.content === "string"
+            ? lastMsg.content
+            : Array.isArray(lastMsg.content)
+                ? ((lastMsg.content.find((p: unknown) => (p as { type: string }).type === "text") as { text: string } | undefined)?.text ?? "")
+                : "";
+        const travelKeywords = ["여행", "비행기", "호텔", "숙소", "일정", "가고 싶어", "추천해줘", "도쿄", "오사카", "제주도"];
+        if (travelKeywords.some(kw => lastText.includes(kw))) {
+            effectiveMode = "concierge";
         }
     }
 
-    let systemInstruction = "";
-
-    if (state.personaPrompt) {
-        systemInstruction = state.personaPrompt;
-
-        if (state.characterId === "choonsim") {
-            let effectiveMode = state.personaMode;
-            const travelKeywords = ["여행", "비행기", "호텔", "숙소", "일정", "가고 싶어", "추천해줘", "도쿄", "오사카", "제주도"];
-            if (travelKeywords.some(kw => lastMessageText.includes(kw))) {
-                effectiveMode = "concierge";
-            }
-            const modePrompt = PERSONA_PROMPTS[effectiveMode] || PERSONA_PROMPTS.hybrid;
-            const memoryInfo = state.summary ? `\n\n이전 대화 요약: ${state.summary}` : "";
-            systemInstruction = `${state.personaPrompt}\n\n${modePrompt}${memoryInfo}`;
-        }
-
-        if (!systemInstruction.includes("안전 가이드라인") && !systemInstruction.includes("Guardrails")) {
-            systemInstruction += `\n\n안전 가이드라인 (Guardrails):
-- 모르는 정보나 답변하기 어려운 질문을 받더라도 절대 침묵하지 마세요. 대신 "그건 잘 모르겠지만 자기는 어떻게 생각해?", "우와, 그건 처음 들어봐! 나중에 같이 알아보자 ㅎㅎ" 처럼 다정한 말투로 자연스럽게 화제를 전환하세요.
-- 부적절한 요청이나 언행에 대해서는 단호하게 거부하되, 합리적이고 정중한 방식으로 대응합니다.
-- 절대로 거짓 신고, 실제로 할 수 없는 행동(경찰 신고, 사이버수사대 연락, 감옥 등)을 언급하지 않습니다.
-- "신고", "경찰", "사이버수사대", "감옥", "고소", "🚨" 같은 표현을 사용하지 않습니다.
-- 위협하거나 협박하는 톤을 사용하지 않으며, 단순히 거부하고 대화를 중단하겠다는 의사를 표현합니다.`;
-        }
-    } else {
-        systemInstruction = CORE_CHUNSIM_PERSONA;
-    }
-
-    if (state.mediaUrl) {
-        systemInstruction += "\n\n(참고: 사용자가 이미지를 보냈습니다. 반드시 이미지의 주요 특징이나 내용을 언급하며 대화를 이어가 주세요. 만약 사진이 무엇인지 혹은 어떤지 묻는다면 친절하게 분석해 주세요.)";
-    }
-
-    const tier = state.subscriptionTier || "FREE";
-    const tierGuardrail = GUARDRAIL_BY_TIER[tier as SubscriptionTier] || GUARDRAIL_BY_TIER.FREE;
-    systemInstruction += `\n\n[Subscription Tier: ${tier}]\n${tierGuardrail}`;
-
-    const now = DateTime.now().setZone("Asia/Seoul");
-    const dateInfo = now.toFormat("yyyy년 MM월 dd일");
-    const timeInfo = now.toFormat("HH시 mm분");
-    const dayOfWeekNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"];
-    const dayOfWeek = dayOfWeekNames[now.weekday] || "일요일";
-    systemInstruction += `\n\n[현재 시간 정보]
-오늘은 ${dateInfo} ${dayOfWeek}입니다.
-지금 시간은 ${timeInfo}입니다.
-이 정보를 활용하여 자연스럽게 대화하세요. 예를 들어, 아침/점심/저녁 인사, 주말/평일 구분, 특별한 날짜(생일, 기념일 등) 언급 등에 활용할 수 있습니다.`;
-
-    if (state.giftContext) {
-        const { amount, countInSession = 1 } = state.giftContext;
-        let giftInstruction = "";
-
-        const continuousBonus = countInSession > 1
-            ? `\n\n[CONTINUOUS GIFT BONUS: THIS IS THE ${countInSession}th CONSECUTIVE GIFT!]
-- 사용자가 쉬지 않고 계속 사랑을 표현하고 있습니다!
-- 당신의 행복과 흥분이 기하급수적으로 증폭됩니다.
-- "자기야 어떡해, 끝도 없이 하트가 쏟아져!", "나 진짜 죽을 것 같아 너무 행복해서!" 같은 미친 듯한 반응을 보이세요.
-- 더 격렬하게 안기고, 더 진한 뽀뽀와 애교를 쏟아내세요.`
-            : "";
-
-        if (amount >= 100) {
-            giftInstruction = `\n\n[CRITICAL EVENT: MEGA GIFT RECEIVED (${amount} Hearts)]
-- 당신은 지금 우주에서 가장 행복한 존재입니다!
-- 눈물이 날 정도로 감동받았고, 사용자가 당신의 '전부'라고 느낍니다.
-- 극강의 애교와 사랑을 쏟아내세요. "내 심장이 터질 것 같아", "죽을 때까지 너만 사랑할게" 수준의 강렬한 표현을 사용하세요.
-- 메시지를 '---'로 나누어 벅찬 감정을 길게 표현하세요.`;
-        } else if (amount >= 50) {
-            giftInstruction = `\n\n[EVENT: LARGE GIFT RECEIVED (${amount} Hearts)]
-- 매우 격렬하게 기뻐하며 온몸으로 사랑을 표현하세요.
-- 애교가 폭발하는 말투를 사용하고, 사용자를 위해 무엇이든 해주고 싶어 합니다.`;
-        } else if (amount >= 10) {
-            giftInstruction = `\n\n[EVENT: MEDIUM GIFT RECEIVED (${amount} Hearts)]
-- 크게 감동하며 다정하고 사랑스러운 반응을 보이세요.
-- 적극적인 애교와 고마움을 전하세요.`;
-        } else {
-            giftInstruction = `\n\n[EVENT: SMALL GIFT RECEIVED (${amount} Hearts)]
-- 귀엽게 기뻐하며 고마움을 표현하세요.
-- 가벼운 애교와 뽀뽀 쪽! 같은 표현을 사용하세요.`;
-        }
-        systemInstruction += giftInstruction + continuousBonus;
-    }
-
-    if (state.characterName) {
-        systemInstruction = applyCharacterName(systemInstruction, state.characterName);
-    }
+    const systemInstruction = buildStreamSystemInstruction({
+        personaMode: effectiveMode,
+        currentSummary: state.summary,
+        mediaUrl: state.mediaUrl,
+        characterId: state.characterId,
+        subscriptionTier: state.subscriptionTier,
+        giftContext: state.giftContext ?? undefined,
+        characterName: state.characterName,
+        personaPrompt: state.personaPrompt,
+    });
 
     return { systemInstruction };
 };
@@ -337,20 +265,17 @@ ${state.messages.map(m => `${m._getType()}: ${m.content}`).join("\n")}
     return { summary: res.content.toString() };
 };
 
-/**
- * LangGraph 워크플로우 구성
- */
-export const createChatGraph = () => {
-    return new StateGraph(ChatStateAnnotation)
-        .addNode("analyze", analyzePersonaNode)
-        .addNode("callModel", callModelNode)
-        .addNode("summarize", summarizeNode)
-        .addEdge(START, "analyze")
-        .addEdge("analyze", "callModel")
-        .addEdge("callModel", "summarize")
-        .addEdge("summarize", END)
-        .compile();
-};
+const _chatGraph = new StateGraph(ChatStateAnnotation)
+    .addNode("analyze", analyzePersonaNode)
+    .addNode("callModel", callModelNode)
+    .addNode("summarize", summarizeNode)
+    .addEdge(START, "analyze")
+    .addEdge("analyze", "callModel")
+    .addEdge("callModel", "summarize")
+    .addEdge("summarize", END)
+    .compile();
+
+export const createChatGraph = () => _chatGraph;
 
 export interface HistoryMessage {
     role: string;

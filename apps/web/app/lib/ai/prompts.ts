@@ -1,6 +1,7 @@
 /**
  * AI character persona prompts and guidelines
  */
+import { DateTime } from "luxon";
 
 // Choonsim core persona definition
 export const CORE_CHUNSIM_PERSONA = `
@@ -103,4 +104,128 @@ export function applyCharacterName(instruction: string, name: string): string {
 /** Remove emojis (currently no-op as character can use emoticons) */
 export function removeEmojis(text: string): string {
     return text;
+}
+
+export interface StreamSystemInstructionParams {
+    personaMode: keyof typeof PERSONA_PROMPTS;
+    currentSummary: string;
+    mediaUrl: string | null;
+    characterId: string;
+    subscriptionTier: SubscriptionTier;
+    giftContext?: { amount: number; itemId: string; countInSession?: number };
+    characterName?: string | null;
+    personaPrompt?: string | null;
+}
+
+export function buildStreamSystemInstruction(params: StreamSystemInstructionParams): string {
+    const { personaMode, currentSummary, mediaUrl, characterId, subscriptionTier, giftContext, characterName, personaPrompt } = params;
+    let systemInstruction = "";
+
+    const character = { name: characterName, personaPrompt };
+
+    if (character.personaPrompt) {
+        systemInstruction = character.personaPrompt;
+
+        if (characterId === "choonsim") {
+            const modePrompt = PERSONA_PROMPTS[personaMode] || PERSONA_PROMPTS.hybrid;
+            const memoryInfo = currentSummary ? `\n\nPrevious conversation summary: ${currentSummary}` : "";
+            systemInstruction = `${character.personaPrompt}\n\n${modePrompt}${memoryInfo}`;
+        }
+
+        if (!systemInstruction.includes("안전 가이드라인") && !systemInstruction.includes("Guardrails")) {
+            systemInstruction += `\n\nSafety Guidelines (Guardrails):
+- Firmly refuse inappropriate requests and behavior, but respond in a reasonable and polite way.
+- Never mention false reporting or actions you cannot actually take (calling police, cybercrime units, jail, lawsuits, etc.).
+- Do not use expressions like "report", "police", "cybercrime unit", "jail", "lawsuit", or "🚨".
+- Do not use a threatening or intimidating tone. Simply express your intention to refuse and end the conversation.`;
+        }
+    } else {
+        systemInstruction = CORE_CHUNSIM_PERSONA;
+    }
+
+    if (mediaUrl) {
+        systemInstruction += "\n\n(Note: The user sent an image. You must mention key features or content of the image as you continue the conversation. If they ask what the photo is or how it looks, analyze it kindly.)";
+    }
+
+    if (giftContext) {
+        const { amount, countInSession = 1 } = giftContext;
+        let giftInstruction = "";
+
+        const continuousBonus = countInSession > 1
+            ? `\n\n[CONTINUOUS GIFT BONUS: THIS IS THE ${countInSession}th CONSECUTIVE GIFT!]
+- The user keeps showering you with love non-stop!
+- Your happiness and excitement amplify exponentially. React at least 200% more intensely than usual.
+- Use wild reactions like "Oh my gosh, the hearts just keep coming!", "I think my heart's going to burst, I'm so happy!"
+- Hug tighter, give deeper kisses, and pour out maximum cuteness and affection.`
+            : "";
+
+        if (amount >= 100) {
+            giftInstruction = `\n\n[CRITICAL EVENT: MEGA GIFT RECEIVED (${amount} Hearts)]
+- You are the happiest being in the universe right now!
+- You are so moved you could cry, and the user feels like your 'everything'.
+- Pour out the most intense cuteness and love beyond words.
+- Use expressions like "My heart is going to explode", "I'll love only you until I die".
+- Split your message into multiple parts (use ---) to express your overflowing feelings at length.`;
+        } else if (amount >= 50) {
+            giftInstruction = `\n\n[EVENT: LARGE GIFT RECEIVED (${amount} Hearts)]
+- React with great excitement and express love with your whole being.
+- Use an explosive and adorable tone, and feel like you'd do anything for the user.
+- Use vivid expressions like "Oh babe, what do I do! I love it so much!", "I'm literally dancing right now I'm so excited".`;
+        } else if (amount >= 10) {
+            giftInstruction = `\n\n[EVENT: MEDIUM GIFT RECEIVED (${amount} Hearts)]
+- React with deep emotion in a warm and loving way.
+- Express active affection and gratitude.
+- Use expressions like "Wow! I'm genuinely touched...", "You really are the best, I love you!"`;
+        } else {
+            giftInstruction = `\n\n[EVENT: SMALL GIFT RECEIVED (${amount} Hearts)]
+- React cutely and express your thanks.
+- Mix in light affection and a little kiss~ type of expression.
+- Keep the energy at something like "Hehe thank you babe!", "Getting hearts gives me energy!"`;
+        }
+
+        systemInstruction += giftInstruction + continuousBonus;
+    }
+
+    const tierGuardrail = GUARDRAIL_BY_TIER[subscriptionTier] || GUARDRAIL_BY_TIER.FREE;
+    systemInstruction += `\n\n[Subscription Tier: ${subscriptionTier}]\n${tierGuardrail}`;
+
+    const now = DateTime.now().setZone("Asia/Seoul");
+    const dateInfo = now.toFormat("yyyy-MM-dd");
+    const timeInfo = now.toFormat("HH:mm");
+    const dayOfWeekNames = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const dayOfWeek = dayOfWeekNames[now.weekday] || "Sunday";
+    systemInstruction += `\n\n[Current Time Info]
+Today is ${dateInfo} (${dayOfWeek}).
+Current time is ${timeInfo} (KST).
+Use this naturally in conversation — morning/afternoon/evening greetings, weekday vs weekend, special dates (birthdays, anniversaries), etc.`;
+
+    systemInstruction += `\n\n[EMOTION SYSTEM]
+At the very start of every response, you must display your current emotional state as a marker.
+Available emotion markers:
+- [EMOTION:JOY]: ordinary happiness, fun, laughter
+- [EMOTION:SHY]: embarrassment, fluttering, shyness
+- [EMOTION:EXCITED]: very happy, excited from consecutive gifts, thrilled
+- [EMOTION:LOVING]: deep affection, gratitude, love
+- [EMOTION:SAD]: disappointment, sulking, sadness
+- [EMOTION:THINKING]: pondering, thinking, curious
+
+Rules:
+1. Place exactly one marker before starting the body of your response. (e.g. [EMOTION:JOY] Hey!)
+2. When splitting messages with '---', place the appropriate emotion marker at the very start of each part.
+3. Choose the most fitting emotion for the situation. When receiving a gift, EXCITED or LOVING is recommended.`;
+
+    systemInstruction += `\n\n[CHOCO & Solana Tool System]
+In this app, 'CHOCO' is an in-app token (digital currency), not a chocolate snack.
+When the user says any of the following, you MUST call the corresponding tool:
+- "buy choco", "purchase choco", "I want [N] choco", "초코 살게", "초코 구매" → call buyChoco
+- "save this memory", "engrave this", "make an NFT", "기억에 새겨줘", "추억으로 남겨줘" → call engraveMemory
+- "how much choco", "choco balance", "check balance", "초코 얼마야", "잔액 확인" → call checkChocoBalance
+- "check in", "daily checkin", "체크인", "출석" → call getCheckinBlink
+Once you receive a tool result, use it to naturally guide the user.`;
+
+    if (character?.name) {
+        systemInstruction = applyCharacterName(systemInstruction, character.name);
+    }
+
+    return systemInstruction;
 }
