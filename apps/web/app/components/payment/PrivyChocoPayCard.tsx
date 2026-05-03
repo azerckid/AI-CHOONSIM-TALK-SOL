@@ -9,12 +9,13 @@
  *
  * 반드시 PrivyWalletProvider 하위에서 사용해야 합니다.
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import bs58 from "bs58";
+import { QRCodeSVG } from "qrcode.react";
 
 interface Props {
   choco: number;
@@ -37,8 +38,10 @@ function getSolDisplay(choco: number): string {
   return CHOCO_SOL[nearest] ?? (choco * 0.00001).toFixed(6);
 }
 
-// Privy SolanaChain identifier for devnet
 const SOLANA_DEVNET_CHAIN = "solana:devnet";
+const SOL_PER_CHOCO = 0.00001; // create-tx.ts와 동일
+const FEE_BUFFER = 0.000005;   // 트랜잭션 수수료 여유분
+const DEVNET_RPC = "https://api.devnet.solana.com";
 
 function PrivyChocoPayCardInner({ choco, compact }: Props) {
   const { authenticated, ready, login } = usePrivy();
@@ -46,9 +49,31 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
   const revalidator = useRevalidator();
   const [status, setStatus] = useState<Status>("idle");
   const [grantedChoco, setGrantedChoco] = useState(0);
+  const [solBalance, setSolBalance] = useState<number | null>(null);
+  const [checkingBalance, setCheckingBalance] = useState(false);
 
-  // Privy 임베디드 Solana 지갑만 선택 (Phantom 등 외부 지갑 제외)
   const embeddedWallet = wallets.find((w: any) => w.walletClientType === "privy") ?? wallets[0] ?? null;
+
+  const requiredSol = parseFloat((choco * SOL_PER_CHOCO + FEE_BUFFER).toFixed(6));
+
+  const checkBalance = useCallback(async () => {
+    if (!embeddedWallet?.address) return;
+    setCheckingBalance(true);
+    try {
+      const { Connection, PublicKey, LAMPORTS_PER_SOL } = await import("@solana/web3.js");
+      const conn = new Connection(DEVNET_RPC, "confirmed");
+      const lamports = await conn.getBalance(new PublicKey(embeddedWallet.address));
+      setSolBalance(lamports / LAMPORTS_PER_SOL);
+    } catch {
+      setSolBalance(null);
+    } finally {
+      setCheckingBalance(false);
+    }
+  }, [embeddedWallet?.address]);
+
+  useEffect(() => {
+    checkBalance();
+  }, [checkBalance]);
 
   async function handlePay() {
     if (!embeddedWallet) {
@@ -187,14 +212,47 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
     </div>
   );
 
+  // 잔액 부족 → 내장 지갑 주소 QR 표시
+  const insufficientUI = embeddedWallet ? (
+    <div className="flex flex-col items-center gap-3 py-2">
+      <p className="text-xs text-amber-400 text-center">
+        내장 지갑 SOL 부족 ({solBalance?.toFixed(4) ?? "?"} / {requiredSol} SOL 필요)
+      </p>
+      <p className="text-xs text-white/50 text-center">
+        아래 주소로 SOL을 보내면 바로 결제할 수 있어요
+      </p>
+      <div className="bg-white p-3 rounded-xl">
+        <QRCodeSVG value={embeddedWallet.address} size={140} />
+      </div>
+      <p className="font-mono text-[10px] text-white/40 break-all text-center px-2">
+        {embeddedWallet.address}
+      </p>
+      <button
+        onClick={checkBalance}
+        disabled={checkingBalance}
+        className="flex items-center gap-1.5 text-xs text-[#9945FF] hover:text-[#7b35d9] transition-colors"
+      >
+        <span className="material-symbols-outlined text-[14px]">refresh</span>
+        {checkingBalance ? "확인 중..." : "잔액 새로고침"}
+      </button>
+    </div>
+  ) : null;
+
   const buttonUI = ready && !authenticated ? (
     <button
       onClick={login}
       className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
     >
-      <span className="material-symbols-outlined text-[18px]">login</span>
-      이메일로 로그인 후 결제
+      <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+      내장 지갑 연결하기
     </button>
+  ) : checkingBalance ? (
+    <div className="flex items-center justify-center gap-2 text-xs text-white/40 py-2">
+      <span className="w-3 h-3 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+      잔액 확인 중...
+    </div>
+  ) : solBalance !== null && solBalance < requiredSol ? (
+    insufficientUI
   ) : (
     <button
       onClick={handlePay}
@@ -206,7 +264,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
       ) : (
         <>
           <span className="material-symbols-outlined text-[18px]">bolt</span>
-          {embeddedWallet ? "임베디드 지갑으로 결제" : "지갑 없음"}
+          내장 지갑으로 결제 ({solBalance?.toFixed(4)} SOL)
         </>
       )}
     </button>
