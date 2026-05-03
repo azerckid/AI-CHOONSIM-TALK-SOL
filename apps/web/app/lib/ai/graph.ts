@@ -147,10 +147,10 @@ function sanitizeTools(tools: unknown[]): unknown[] {
  * 노드 2: AI 응답 생성 (Agent Kit 연결)
  */
 const callModelNode = async (state: typeof ChatStateAnnotation.State) => {
-    // Solana 도구: agent-kit.server.ts에서 가져옴 (userId 기반 동적 생성)
+    // Solana 도구를 직접 bindTools() — sanitizeTools()로 spread하면 LangChain 인스턴스가 깨져 Gemini 400 오류 발생
     const solanaTools = state.userId ? getChoonsimSolanaTools(state.userId) : [];
-    const allTools = sanitizeTools([saveTravelPlanTool, ...solanaTools]) as typeof solanaTools;
-    const modelWithTools = model.bindTools(allTools);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const modelWithTools = solanaTools.length > 0 ? model.bindTools(solanaTools as any) : model;
 
     const messages: BaseMessage[] = [
         new SystemMessage(state.systemInstruction),
