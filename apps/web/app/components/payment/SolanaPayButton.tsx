@@ -26,6 +26,7 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
     } | null>(null);
 
     const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const pollingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const initiatePayment = async () => {
         setLoading(true);
@@ -53,8 +54,11 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
         }
     };
 
+    const POLLING_TIMEOUT_MS = 5 * 60 * 1000; // 5분
+
     const startPolling = (reference: string, paymentId: string) => {
         if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+        if (pollingTimeoutRef.current) clearTimeout(pollingTimeoutRef.current);
 
         pollingIntervalRef.current = setInterval(async () => {
             try {
@@ -74,13 +78,24 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
             } catch (error) {
                 console.error("Polling error:", error);
             }
-        }, 3000); // 3초마다 확인
+        }, 3000);
+
+        // 5분 후 타임아웃
+        pollingTimeoutRef.current = setTimeout(() => {
+            stopPolling();
+            setStatus("ERROR");
+            toast.error("입금 확인 시간이 초과되었습니다. Phantom이 Devnet으로 설정되어 있는지 확인 후 다시 시도해 주세요.");
+        }, POLLING_TIMEOUT_MS);
     };
 
     const stopPolling = () => {
         if (pollingIntervalRef.current) {
             clearInterval(pollingIntervalRef.current);
             pollingIntervalRef.current = null;
+        }
+        if (pollingTimeoutRef.current) {
+            clearTimeout(pollingTimeoutRef.current);
+            pollingTimeoutRef.current = null;
         }
     };
 
@@ -118,6 +133,9 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
                     <p className="text-slate-400 text-xs max-w-[240px]">
                         지갑 앱(Phantom 등)으로 QR 코드를 스캔하여 결제해 주세요.
                     </p>
+                    <div className="flex items-center justify-center gap-1.5 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2 mt-2">
+                        <span className="text-amber-400 text-xs">⚠️ Phantom 설정 → Devnet 으로 변경 필요</span>
+                    </div>
                 </div>
 
                 <a
