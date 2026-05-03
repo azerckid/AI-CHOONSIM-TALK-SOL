@@ -11,7 +11,7 @@ const navItems: NavItem[] = [
   { path: "/", icon: "home", label: "Home" },
   { path: "/chats", icon: "chat_bubble", label: "Chat" },
   { path: "/fandom", icon: "favorite", label: "Fandom" },
-  { path: "/shop", icon: "storefront", label: "Store" },
+  { path: "/shop", icon: "shopping_bag", label: "Store" },
   { path: "/profile", icon: "person", label: "Profile" },
 ];
 
