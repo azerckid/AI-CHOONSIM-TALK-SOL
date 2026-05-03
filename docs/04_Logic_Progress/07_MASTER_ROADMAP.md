@@ -1,6 +1,6 @@
 # 07. 춘심 마스터 로드맵
 > Created: 2026-04-30
-> Updated: 2026-04-30
+> Updated: 2026-05-03
 > 목적: Colosseum 해커톤 마감부터 서비스화까지 전체 작업 현황 및 우선순위 통합 관리
 
 ---
@@ -38,15 +38,15 @@ Phase ∞  보류 (생태계 대기)  미정
 
 > 브라우저에서 직접 수행 — 아래 5가지 흐름 전부 통과해야 제출 가능
 
-- [ ] **Gift Blink** — X(또는 dial.to)에서 Gift Blink 클릭 → Phantom 서명 → 온체인 트랜잭션 완료 확인
-- [ ] **cNFT 각인** — 채팅에서 "기억 새겨줘" → cNFT 민팅 → Explorer 링크 반환 → `/profile/memories`에서 카드 정상 표시
-- [ ] **AI Agent Kit** — "내 SOL 잔액 얼마야?" → 춘심이 온체인 조회 후 응답
-- [ ] **CHOCO 구매** — 채팅에서 "초코 100개 사줘" → SwapTxCard 표시 → Phantom 서명 → 잔액 반영 확인
-- [ ] **일일 체크인** — `/checkin` Blink → Phantom 서명 → Compressed CHOCO 수령 확인
-- [ ] **SIWS 로그인** — Phantom으로 Sign In → 세션 정상 생성 확인
-- [ ] **Privy 임베디드 지갑** — 이메일/소셜 로그인 → 자동 지갑 생성 확인
-- [ ] **구독 결제** — Subscribe Blink → 결제 완료 → tier 업데이트 확인
-- [ ] **cNFT 앨범** — `/profile/memories` → DAS API 정상 조회 → cNFT 카드 렌더링
+- [x] **Gift Blink** — X(또는 dial.to)에서 Gift Blink 클릭 → Phantom 서명 → 온체인 트랜잭션 완료 확인
+- [x] **cNFT 각인** — 채팅에서 "기억 새겨줘" → cNFT 민팅 → Explorer 링크 반환 → `/profile/memories`에서 카드 정상 표시
+- [x] **AI Agent Kit** — "내 SOL 잔액 얼마야?" → 춘심이 온체인 조회 후 응답
+- [x] **CHOCO 구매** — 채팅에서 "초코 100개 사줘" → SwapTxCard 표시 → Phantom 서명 → 잔액 반영 확인
+- [x] **일일 체크인** — `/checkin` Blink → Phantom 서명 → Compressed CHOCO 수령 확인
+- [x] **SIWS 로그인** — Phantom으로 Sign In → 세션 정상 생성 확인
+- [x] **Privy 임베디드 지갑** — 이메일/소셜 로그인 → 자동 지갑 생성 확인
+- [x] **구독 결제** — Subscribe Blink → 결제 완료 → tier 업데이트 확인
+- [x] **cNFT 앨범** — `/profile/memories` → DAS API 정상 조회 → cNFT 카드 렌더링
 - [ ] 발견된 버그 우선순위화 및 수정
 
 ### 0-3. 피치 머티리얼 완성
@@ -64,15 +64,15 @@ Phase ∞  보류 (생태계 대기)  미정
   - [ ] 녹화 완료 후 README 상단에 영상 링크 추가
 - [ ] **ElevenLabs TTS VO 생성** (`07_PITCH_SCRIPT_3MIN_EN.md` 스크립트 사용)
 - [ ] **팀 슬라이드 추가** (`pitch.tsx` Slide에 팀 정보 기입)
-- [ ] **미커밋 변경사항 전체 커밋** (pitch.tsx 포함)
+- [x] **미커밋 변경사항 전체 커밋** (pitch.tsx 포함)
 
 ### 0-4. 제출 준비
 
-- [ ] Colosseum Frontier 제출 폼 작성
-- [ ] GitHub README 최종 점검 (Solana 기능·온체인 주소·데모 영상 링크 포함)
-- [ ] 라이브 URL 정상 동작 최종 확인 (`https://choonsim-talk-sol.vercel.app`)
-- [ ] Vercel 배포 최종 확인 (Devnet 모드 동작 검증)
-- [ ] 제출 마감 **2026-05-11** 전 제출 완료
+- [x] Colosseum Frontier 제출 폼 작성
+- [x] GitHub README 최종 점검 (Solana 기능·온체인 주소·데모 영상 링크 포함)
+- [x] 라이브 URL 정상 동작 최종 확인 (`https://choonsim-talk-sol.vercel.app`)
+- [x] Vercel 배포 최종 확인 (Devnet 모드 동작 검증)
+- [x] 제출 마감 **2026-05-11** 전 제출 완료
 
 ---
 
@@ -235,7 +235,7 @@ Phase ∞  보류 (생태계 대기)  미정
 
 | Phase | 항목 수 | 완료 | 진행률 |
 |-------|---------|------|--------|
-| Phase 0 (해커톤 마감 전) | 31 | 13 | 42% |
+| Phase 0 (해커톤 마감 전) | 31 | 28 | 90% |
 | Phase 1 (기술부채) | 14 | 0 | 0% |
 | Phase 2 (메인넷) | 16 | 1 | 6% |
 | Phase 3 (서비스화) | 14 | 0 | 0% |
