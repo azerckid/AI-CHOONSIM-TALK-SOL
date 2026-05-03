@@ -11,6 +11,7 @@ const navItems: NavItem[] = [
   { path: "/", icon: "home", label: "Home" },
   { path: "/chats", icon: "chat_bubble", label: "Chat" },
   { path: "/fandom", icon: "favorite", label: "Fandom" },
+  { path: "/shop", icon: "storefront", label: "Store" },
   { path: "/profile", icon: "person", label: "Profile" },
 ];
 
@@ -40,7 +41,12 @@ export function BottomNavigation() {
     if (itemPath === "/profile" && currentPath === "/profile") {
       return true;
     }
-    
+
+    // Store 메뉴: /shop 또는 /buy-choco, /pricing
+    if (itemPath === "/shop" && (currentPath === "/shop" || currentPath.startsWith("/buy-choco") || currentPath === "/pricing")) {
+      return true;
+    }
+
     return false;
   };
 
@@ -59,7 +65,7 @@ export function BottomNavigation() {
               key={item.path}
               to={item.path}
               onClick={triggerHaptic}
-              className="flex flex-col items-center gap-1 w-12 group transition-all active:scale-90"
+              className="flex flex-col items-center gap-1 w-10 group transition-all active:scale-90"
             >
               <span
                 className={cn(
