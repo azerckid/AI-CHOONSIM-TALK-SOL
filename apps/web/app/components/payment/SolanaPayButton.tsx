@@ -148,8 +148,9 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
 
                 <button
                     onClick={() => setStatus("IDLE")}
-                    className="text-slate-500 text-xs hover:text-slate-400 transition-colors"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/20 text-white/70 text-sm font-bold hover:bg-white/10 hover:text-white transition-all active:scale-95"
                 >
+                    <span className="material-symbols-outlined text-[16px]">close</span>
                     취소하고 다시 시작
                 </button>
             </div>
