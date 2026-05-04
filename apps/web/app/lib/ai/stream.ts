@@ -192,12 +192,24 @@ async function executeNaturalLanguageCommand(
         /capture.*moment/i,
     ];
 
+    const solBalancePatterns = [
+        /sol.*잔액/,
+        /잔액.*sol/,
+        /sol.*얼마/,
+        /얼마.*sol/,
+        /sol.*balance/i,
+        /balance.*sol/i,
+        /내.*sol/,
+        /my.*sol/i,
+    ];
+
     const isBuy = isChocoMention && isBuyIntent;
     const isBalance = isChocoMention && balancePatterns.some((p) => p.test(m));
+    const isSolBalance = solBalancePatterns.some((p) => p.test(m));
     const isEngrave = engravePatterns.some((p) => p.test(m));
     const isCheckin = /체크인|출석|check.?in|daily checkin/i.test(m);
 
-    if (!isBuy && !isBalance && !isEngrave && !isCheckin) return null;
+    if (!isBuy && !isBalance && !isSolBalance && !isEngrave && !isCheckin) return null;
 
     let tools: Array<{ name: string; invoke(input: unknown): Promise<unknown> }> = [];
     try {
@@ -222,6 +234,19 @@ async function executeNaturalLanguageCommand(
     }
     if (isBalance) {
         try { return await run("checkChocoBalance", {}); } catch { return null; }
+    }
+    if (isSolBalance) {
+        try {
+            const { db } = await import("../db.server");
+            const { user: userSchema } = await import("../../db/schema");
+            const { eq } = await import("drizzle-orm");
+            const user = await db.query.user.findFirst({
+                where: eq(userSchema.id, userId),
+                columns: { solanaWallet: true },
+            });
+            if (!user?.solanaWallet) return "아직 연결된 Solana 지갑이 없어. 프로필에서 지갑을 연결해줘! 💕";
+            return await run("getSolBalance", { walletAddress: user.solanaWallet });
+        } catch { return null; }
     }
     if (isEngrave) {
         const titleMatch = message.match(/(?:기억|추억|nft|기록|memory|moment|engrave|mint).*?(?:[줘게]|\s)\s*(.+)?$/i);
