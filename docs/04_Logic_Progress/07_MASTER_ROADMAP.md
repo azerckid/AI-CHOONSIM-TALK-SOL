@@ -1,6 +1,6 @@
 # 07. 춘심 마스터 로드맵
 > Created: 2026-04-30
-> Updated: 2026-05-03 (2차)
+> Updated: 2026-05-04 (3차)
 > 목적: Colosseum 해커톤 마감부터 서비스화까지 전체 작업 현황 및 우선순위 통합 관리
 
 ---
@@ -66,6 +66,19 @@ Phase ∞  보류 (생태계 대기)  미정
 - [ ] **팀 슬라이드 추가** (`pitch.tsx` Slide에 팀 정보 기입)
 - [x] **미커밋 변경사항 전체 커밋** (pitch.tsx 포함)
 
+### 0-5. 결제 UX / 내부 지갑 개선 (2026-05-04 완료)
+
+- [x] **BottomNavigation Store 탭 추가** — 4탭 → 5탭 구조 (Home | Chat | Fandom | Store | Profile) 전환, `shopping_bag` 아이콘 사용
+- [x] **Shop 페이지 CHOCO 충전 배너** — 아이템 그리드 상단에 CHOCO 구매 버튼 추가
+- [x] **BuyChocoPayCard 컴포넌트 신규 구현** — `/buy-choco` 전용, Phantom / 내부 지갑 탭 선택 UI (자동 분기 → 사용자가 직접 선택)
+- [x] **SwapTxCard 선택 UI 개선** — 채팅 인라인 결제도 동일한 탭 선택 방식으로 통일
+- [x] **PrivyChocoPayCard 서명 오류 수정** — `useWallets()` 가 임베디드 지갑 미반환 문제 해결, `useStandardWallets()` + `solana:signTransaction` feature 직접 호출로 교체
+- [x] **EmbeddedWalletSection 신규 구현** — 프로필 페이지에 Privy 임베디드 지갑 주소 표시·복사·Export Private Key UI 추가 (Phantom 유무 무관 항상 표시)
+- [x] **신규 지갑 0.5 SOL 자동 에어드랍** — `airdrop.server.ts` 구현, `PATCH /api/user/wallet` 최초 등록 시 자동 지급 (중복 방지 로직 포함)
+- [x] **에어드랍 토스트 중복 표시 수정** — API 응답 `isNew` 필드 기반 조건부 토스트, 재로그인 시 오발동 방지
+- [x] **프로필 SOL 잔액 실시간 표시** — Privy 임베디드 지갑 주소 기준 devnet RPC 실시간 조회
+- [x] **Incognito 모드 지원 확인** — Privy 내부 지갑은 Privy 서버 보관, localStorage 미의존, 브라우저 확장 없이 결제 가능
+
 ### 0-4. 제출 준비
 
 - [x] Colosseum Frontier 제출 폼 작성
@@ -92,7 +105,7 @@ Phase ∞  보류 (생태계 대기)  미정
 
 ### 1-2. 결제 E2E 검증
 
-- [ ] 충전(CHOCO 구매) → 대화 재개 흐름 실결제 E2E 확인
+- [x] 충전(CHOCO 구매) → 대화 재개 흐름 실결제 E2E 확인 (내부 지갑 + Phantom 양쪽 검증 완료 2026-05-04)
 - [ ] 모달 닫기 후 대화 정상 재개 (브라우저 수동 확인)
 - [ ] 402 응답 후 충전 → 원래 대화로 복귀 흐름 검증
 
@@ -235,8 +248,8 @@ Phase ∞  보류 (생태계 대기)  미정
 
 | Phase | 항목 수 | 완료 | 진행률 |
 |-------|---------|------|--------|
-| Phase 0 (해커톤 마감 전) | 31 | 28 | 90% |
-| Phase 1 (기술부채) | 14 | 4 | 29% |
+| Phase 0 (해커톤 마감 전) | 41 | 38 | 93% |
+| Phase 1 (기술부채) | 14 | 5 | 36% |
 | Phase 2 (메인넷) | 16 | 1 | 6% |
 | Phase 3 (서비스화) | 14 | 0 | 0% |
 | Phase ∞ (보류) | 16 | 0 | 보류 |
