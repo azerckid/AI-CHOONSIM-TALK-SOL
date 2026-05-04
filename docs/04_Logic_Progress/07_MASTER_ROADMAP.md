@@ -56,13 +56,13 @@ Phase ∞  보류 (생태계 대기)  미정
 - [x] **2분 영상 스크립트** (`docs/01_Concept_Design/08_PITCH_VIDEO_2MIN_EN.md`) — 완료
 - [x] **Colosseum 피치덱 문서** (`docs/01_Concept_Design/04_COLOSSEUM_PITCH_DECK.md`) — 완료
 - [x] **가속기 Q&A** (`docs/01_Concept_Design/09_ACCELERATOR_QNA_KO.md`) — 완료
-- [ ] **데모 영상 녹화** (3분 이내)
-  - [ ] 시나리오 1: Gift Blink → Phantom 서명 → 선물 완료
-  - [ ] 시나리오 2: 채팅 → "기억 새기자" → cNFT 각인 → Explorer 확인
-  - [ ] 시나리오 3: "내 SOL 잔액 얼마야?" → Agent Kit 온체인 응답
-  - [ ] 시나리오 4: CHOCO 구매 → SwapTxCard → 잔액 반영
-  - [ ] 녹화 완료 후 README 상단에 영상 링크 추가
-- [ ] **ElevenLabs TTS VO 생성** (`07_PITCH_SCRIPT_3MIN_EN.md` 스크립트 사용)
+- [x] **데모 영상 녹화** (3분 이내) — 완료 2026-05-04
+  - [x] 시나리오 1: Gift Blink → Phantom 서명 → 선물 완료
+  - [x] 시나리오 2: 채팅 → "기억 새기자" → cNFT 각인 → Explorer 확인
+  - [x] 시나리오 3: "내 SOL 잔액 얼마야?" → Agent Kit 온체인 응답
+  - [x] 시나리오 4: CHOCO 구매 → SwapTxCard → 잔액 반영
+  - [x] 녹화 완료 후 README 상단에 영상 링크 추가
+- [x] **ElevenLabs TTS VO 생성** (`07_PITCH_SCRIPT_3MIN_EN.md` 스크립트 사용) — 완료 2026-05-04
 - [ ] **팀 슬라이드 추가** (`pitch.tsx` Slide에 팀 정보 기입)
 - [x] **미커밋 변경사항 전체 커밋** (pitch.tsx 포함)
 
@@ -248,7 +248,7 @@ Phase ∞  보류 (생태계 대기)  미정
 
 | Phase | 항목 수 | 완료 | 진행률 |
 |-------|---------|------|--------|
-| Phase 0 (해커톤 마감 전) | 41 | 38 | 93% |
+| Phase 0 (해커톤 마감 전) | 41 | 44 | 98% |
 | Phase 1 (기술부채) | 14 | 5 | 36% |
 | Phase 2 (메인넷) | 16 | 1 | 6% |
 | Phase 3 (서비스화) | 14 | 0 | 0% |
