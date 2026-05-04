@@ -1,9 +1,10 @@
 /**
  * BuyChocoPayCard — /buy-choco 페이지 전용 결제 카드
  *
- * Phantom 감지 여부에 따라 자동 분기:
- *   Phantom 있음 → sign with Phantom (SwapTxCard와 동일 방식)
- *   Phantom 없음 → PrivyChocoPayCard (임베디드 지갑)
+ * 사용자가 결제 방법을 선택:
+ *   Phantom 탭 → sign with Phantom
+ *   내부 지갑 탭 → PrivyChocoPayCard (임베디드 지갑)
+ * Phantom이 없으면 Phantom 탭 비활성화
  */
 import { useState, useEffect } from "react";
 import { useRevalidator } from "react-router";
@@ -30,8 +31,8 @@ const STATUS_LABEL: Record<Status, string> = {
 };
 
 export function BuyChocoPayCard({ choco, onSuccess }: Props) {
-  // Phantom 설치 여부만 확인 (연결 여부와 분리)
   const [hasPhantom, setHasPhantom] = useState(false);
+  const [tab, setTab] = useState<"phantom" | "internal">("internal");
   const [status, setStatus] = useState<Status>("idle");
   const [grantedChoco, setGrantedChoco] = useState(0);
   const revalidator = useRevalidator();
@@ -40,7 +41,10 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
 
   useEffect(() => {
     const phantom = (window as any).phantom?.solana;
-    setHasPhantom(!!phantom?.isPhantom);
+    const detected = !!phantom?.isPhantom;
+    setHasPhantom(detected);
+    // Phantom이 있으면 기본 탭을 Phantom으로
+    if (detected) setTab("phantom");
   }, []);
 
   async function handlePhantomPay() {
@@ -153,15 +157,41 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
 
   return (
     <div className="space-y-3">
-      {/* Phantom 결제 (감지된 경우 우선 표시) */}
-      {hasPhantom && (
-        <div className="p-4 rounded-2xl bg-[#9945FF]/10 border border-[#9945FF]/30 space-y-3">
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-[#9945FF]">account_balance_wallet</span>
-              <span className="font-bold text-white">Pay with Phantom</span>
-            </div>
-            <span className="text-white/40 text-xs">{solAmount} SOL</span>
+      {/* 탭 선택 */}
+      <div className="flex rounded-xl overflow-hidden border border-white/10">
+        <button
+          onClick={() => setTab("phantom")}
+          disabled={!hasPhantom}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold transition-all
+            ${tab === "phantom"
+              ? "bg-[#9945FF] text-white"
+              : hasPhantom
+                ? "bg-white/5 text-white/60 hover:bg-white/10"
+                : "bg-white/5 text-white/20 cursor-not-allowed"
+            }`}
+        >
+          <span className="material-symbols-outlined text-[14px]">account_balance_wallet</span>
+          Phantom
+          {!hasPhantom && <span className="text-[9px] opacity-60">(미설치)</span>}
+        </button>
+        <button
+          onClick={() => setTab("internal")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold transition-all
+            ${tab === "internal"
+              ? "bg-[#9945FF] text-white"
+              : "bg-white/5 text-white/60 hover:bg-white/10"
+            }`}
+        >
+          <span className="material-symbols-outlined text-[14px]">lock</span>
+          내부 지갑
+        </button>
+      </div>
+
+      {/* Phantom 탭 */}
+      {tab === "phantom" && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-sm px-1">
+            <span className="text-white/60 text-xs">{solAmount} SOL (Devnet)</span>
           </div>
 
           {isLoading && (
@@ -173,7 +203,7 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
 
           <button
             onClick={handlePhantomPay}
-            disabled={isLoading}
+            disabled={isLoading || !hasPhantom}
             className="w-full flex items-center justify-center gap-2 bg-[#9945FF] hover:bg-[#7b35d9] disabled:opacity-50 text-white text-sm font-bold py-3 px-4 rounded-xl transition-all active:scale-[0.98]"
           >
             {isLoading ? (
@@ -188,8 +218,8 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
         </div>
       )}
 
-      {/* Phantom 없는 유저에게만 임베디드 지갑 표시 */}
-      {!hasPhantom && <PrivyChocoPayCard choco={choco} />}
+      {/* 내부 지갑 탭 */}
+      {tab === "internal" && <PrivyChocoPayCard choco={choco} />}
     </div>
   );
 }

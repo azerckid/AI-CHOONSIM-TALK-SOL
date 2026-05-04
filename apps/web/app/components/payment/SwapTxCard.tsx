@@ -37,6 +37,7 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [grantedChoco, setGrantedChoco] = useState(0);
   const [hasPhantom, setHasPhantom] = useState(false);
+  const [tab, setTab] = useState<"phantom" | "internal">("internal");
   const revalidator = useRevalidator();
 
   // SOL 금액 계산 (1 CHOCO = 0.00001 SOL)
@@ -46,7 +47,7 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
     const phantom = (window as any).phantom?.solana;
     if (!phantom?.isPhantom) return;
     phantom.connect({ onlyIfTrusted: true })
-      .then(() => setHasPhantom(true))
+      .then(() => { setHasPhantom(true); setTab("phantom"); })
       .catch(() => setHasPhantom(false));
   }, []);
 
@@ -159,10 +160,40 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
         </div>
       )}
 
-      {hasPhantom ? (
+      {/* 탭 선택 */}
+      <div className="flex rounded-xl overflow-hidden border border-white/10">
+        <button
+          onClick={() => setTab("phantom")}
+          disabled={!hasPhantom}
+          className={`flex-1 flex items-center justify-center gap-1 py-2 text-[11px] font-bold transition-all
+            ${tab === "phantom"
+              ? "bg-[#9945FF] text-white"
+              : hasPhantom
+                ? "bg-white/5 text-white/60 hover:bg-white/10"
+                : "bg-white/5 text-white/20 cursor-not-allowed"
+            }`}
+        >
+          <span className="material-symbols-outlined text-[13px]">account_balance_wallet</span>
+          Phantom
+          {!hasPhantom && <span className="text-[9px] opacity-60">(미설치)</span>}
+        </button>
+        <button
+          onClick={() => setTab("internal")}
+          className={`flex-1 flex items-center justify-center gap-1 py-2 text-[11px] font-bold transition-all
+            ${tab === "internal"
+              ? "bg-[#9945FF] text-white"
+              : "bg-white/5 text-white/60 hover:bg-white/10"
+            }`}
+        >
+          <span className="material-symbols-outlined text-[13px]">lock</span>
+          내부 지갑
+        </button>
+      </div>
+
+      {tab === "phantom" ? (
         <button
           onClick={handleSign}
-          disabled={isLoading}
+          disabled={isLoading || !hasPhantom}
           className="w-full flex items-center justify-center gap-2 bg-[#9945FF] hover:bg-[#7b35d9] disabled:opacity-50 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
         >
           {isLoading ? (
