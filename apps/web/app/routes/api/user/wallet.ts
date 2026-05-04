@@ -45,10 +45,12 @@ export async function action({ request }: ActionFunctionArgs) {
     .set({ solanaWallet, updatedAt: new Date() })
     .where(eq(schema.user.id, session.user.id));
 
-  // 신규 지갑 등록 시 테스트 SOL 지급 (fire-and-forget)
-  if (!existing?.solanaWallet) {
-    sendOnboardingSol(solanaWallet);
+  const isNew = !existing?.solanaWallet;
+
+  // 신규 지갑 등록 시 테스트 SOL 지급
+  if (isNew) {
+    await sendOnboardingSol(solanaWallet);
   }
 
-  return Response.json({ success: true, solanaWallet });
+  return Response.json({ success: true, solanaWallet, isNew });
 }
