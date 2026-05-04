@@ -189,7 +189,8 @@ function TrendingIdolCard({ character, index }: { character: SCharacter; index: 
           <div className="flex items-center gap-1 text-xs text-white/80 mb-0.5">
             <span className="material-symbols-outlined text-[12px] text-primary">favorite</span>
             {/* TODO: 실제 팔로워 수를 loader에서 조회하여 표시 */}
-            <span>{Math.floor(Math.random() * 5000 + 5000)}</span>
+            {/* 결정론적인 가짜 팔로워 수 (ID 기반) */}
+            <span>{5000 + (parseInt(character.id.slice(0, 4), 16) % 5000 || index * 100)}</span>
           </div>
         </div>
       </div>
