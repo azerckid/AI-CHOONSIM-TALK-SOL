@@ -27,7 +27,7 @@ export function PrivyWalletProvider({ children }: Props) {
         },
         embeddedWallets: {
           solana: {
-            createOnLogin: "users-without-wallets",
+            createOnLogin: "all-users",
           },
         },
         solana: {

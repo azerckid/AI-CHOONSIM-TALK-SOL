@@ -56,13 +56,15 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
   const { createWallet } = useCreateWallet();
   const [creatingWallet, setCreatingWallet] = useState(false);
 
-  // 로그인 됐는데 지갑이 없으면 자동 생성
+  // 로그인 됐는데 Privy 임베디드 지갑이 없으면 자동 생성
+  // wallets에 Phantom 등 외부 지갑이 있어도 임베디드 지갑은 별도로 생성
+  const hasEmbeddedWallet = wallets.some((w: any) => w.walletClientType === "privy");
   useEffect(() => {
-    if (authenticated && ready && wallets.length === 0 && !creatingWallet) {
+    if (authenticated && ready && !hasEmbeddedWallet && !creatingWallet) {
       setCreatingWallet(true);
       createWallet().catch(() => {}).finally(() => setCreatingWallet(false));
     }
-  }, [authenticated, ready, wallets.length]);
+  }, [authenticated, ready, hasEmbeddedWallet]);
 
   // 헤드리스 로그인 훅
   const { initOAuth } = useLoginWithOAuth();
