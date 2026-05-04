@@ -3,6 +3,7 @@ import { BottomNavigation } from "~/components/layout/BottomNavigation";
 import { WalletAddressForm } from "~/components/solana/WalletAddressForm";
 import { WalletButton } from "~/components/solana/WalletButton";
 import { EmbeddedWalletSection } from "~/components/solana/EmbeddedWalletSection";
+import { usePrivy } from "@privy-io/react-auth";
 
 /** 프로필 내 지갑 버튼 — SSR에서는 null 반환 (useWallet은 Provider 컨텍스트 필요) */
 function WalletButtonInline() {
@@ -14,7 +15,7 @@ function WalletButtonInline() {
 import { db } from "~/lib/db.server";
 import { auth } from "~/lib/auth.server";
 import { solanaConnection } from "~/lib/solana/connection.server";
-import { PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useNavigate, useRevalidator } from "react-router";
 import { signOut } from "~/lib/auth-client";
@@ -198,8 +199,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return Response.json({ user, stats, todayUsage, mainCharacterName, albumTickets: albumInventory?.quantity ?? 0, paypalClientId, tossClientKey, solBalance });
 }
 
+
+
 export default function ProfileScreen() {
-  const { user, stats, todayUsage, mainCharacterName, albumTickets, paypalClientId, tossClientKey, solBalance } = useLoaderData<typeof loader>() as {
+  const { user: dbUser, stats, todayUsage, mainCharacterName, albumTickets, paypalClientId, tossClientKey, solBalance: initialSolBalance } = useLoaderData<typeof loader>() as {
     user: any;
     stats: any;
     todayUsage: { totalTokens: number; promptTokens: number; completionTokens: number; messageCount: number };
@@ -209,6 +212,48 @@ export default function ProfileScreen() {
     tossClientKey?: string;
     solBalance: number | null;
   };
+
+  const { user: privyUser, ready, authenticated } = usePrivy();
+  const [activeSolBalance, setActiveSolBalance] = useState<number | null>(initialSolBalance);
+  
+  useEffect(() => {
+    setActiveSolBalance(initialSolBalance);
+  }, [initialSolBalance]);
+  
+  // 현재 활성화된 지갑 결정 (팬텀이 있으면 팬텀, 없으면 내부 지갑)
+  const embeddedWallet = (privyUser?.linkedAccounts as any[])?.find(
+    (a) => a.chainType === "solana" && a.walletClientType === "privy"
+  ) || null;
+  
+  const hasPhantom = typeof window !== "undefined" && !!(window as any).phantom?.solana?.isPhantom;
+  const activeAddress = (hasPhantom && dbUser?.solanaWallet) ? dbUser.solanaWallet : (embeddedWallet?.address || dbUser?.solanaWallet);
+
+  // 실시간 잔액 업데이트 (특히 내부 지갑용 및 에어드랍 확인용)
+  useEffect(() => {
+    if (activeAddress) {
+      const conn = new Connection("https://api.devnet.solana.com", "confirmed");
+      
+      const fetchBalance = async () => {
+        try {
+          const lamports = await conn.getBalance(new PublicKey(activeAddress));
+          setActiveSolBalance(lamports / 1e9);
+        } catch (e) {}
+      };
+
+      fetchBalance();
+
+      // 에어드랍 지급 시차 대응: 3초마다 5번 더 확인
+      let count = 0;
+      const interval = setInterval(async () => {
+        count++;
+        await fetchBalance();
+        if (count >= 5) clearInterval(interval);
+      }, 3000);
+
+      return () => clearInterval(interval);
+    }
+  }, [activeAddress]);
+
   const navigate = useNavigate();
   const revalidator = useRevalidator();
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
@@ -272,7 +317,7 @@ export default function ProfileScreen() {
               <div
                 className="w-full h-full rounded-full bg-cover bg-center overflow-hidden border-2 border-surface-highlight"
                 style={{
-                  backgroundImage: `url(${user?.avatarUrl || user?.image || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCutVt4neD3mw-fGim_WdODfouQz3b0aaqpPfx1sNTt8N75jfKec3kNioEoZugl2D0eqVP5833PF21_hTqlDz38aVNUICprwHAM45vTdJeUPcA0mj_wzSgkMVSzYiv-RCJhNyAAZ0RlWSJQxzSa8Mi-yYPu-czB9WEbQsDFEjcAQwezmcZqtAbSB5bwyRhTTfr1y2rrxDHIFNN2G2fVmkHcCWo7uvVNjtAehxS8fgGKMbJgQ59q1ClGgD--3EuZR6f_esg0NbdGCao'})`,
+                  backgroundImage: `url(${dbUser?.avatarUrl || dbUser?.image || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCutVt4neD3mw-fGim_WdODfouQz3b0aaqpPfx1sNTt8N75jfKec3kNioEoZugl2D0eqVP5833PF21_hTqlDz38aVNUICprwHAM45vTdJeUPcA0mj_wzSgkMVSzYiv-RCJhNyAAZ0RlWSJQxzSa8Mi-yYPu-czB9WEbQsDFEjcAQwezmcZqtAbSB5bwyRhTTfr1y2rrxDHIFNN2G2fVmkHcCWo7uvVNjtAehxS8fgGKMbJgQ59q1ClGgD--3EuZR6f_esg0NbdGCao'})`,
                 }}
               />
               {/* Edit Badge */}
@@ -283,7 +328,7 @@ export default function ProfileScreen() {
           </div>
           <div className="mt-4 text-center">
             <h2 className="text-2xl font-bold tracking-tight text-white mb-1">
-              {user?.name || "User"}
+              {dbUser?.name || "User"}
             </h2>
             {/* Badges */}
             <div className="flex flex-wrap gap-2 justify-center items-center mt-2">
@@ -424,13 +469,13 @@ export default function ProfileScreen() {
                 <div className="flex items-center gap-2 group/addr">
                   <div className="px-4 py-2.5 bg-black/20 rounded-xl border border-white/5 flex-1 overflow-hidden">
                     <code className="text-white/90 font-mono text-sm tracking-tight truncate block">
-                      {user?.solanaWallet || "지갑을 먼저 등록해주세요"}
+                      {activeAddress || "지갑을 먼저 등록해주세요"}
                     </code>
                   </div>
-                  {user?.solanaWallet && (
+                  {activeAddress && (
                     <button 
                       onClick={() => {
-                        navigator.clipboard.writeText(user.solanaWallet);
+                        navigator.clipboard.writeText(activeAddress);
                         toast.success("Address copied");
                       }}
                       className="size-11 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-primary hover:bg-white/10 transition-all active:scale-90"
@@ -450,7 +495,7 @@ export default function ProfileScreen() {
                   <p className="text-[9px] font-bold text-white/30 uppercase tracking-[0.2em] mb-1">SOL Balance</p>
                   <div className="flex items-baseline gap-1">
                     <span className="text-xl font-black text-white tracking-tighter">
-                      {solBalance !== null ? solBalance.toFixed(3) : "—"}
+                      {activeSolBalance !== null ? activeSolBalance.toFixed(3) : "—"}
                     </span>
                     <span className="text-[10px] font-bold text-white/40">SOL</span>
                   </div>
@@ -459,7 +504,7 @@ export default function ProfileScreen() {
                   <p className="text-[9px] font-bold text-primary/40 uppercase tracking-[0.2em] mb-1">CHOCO Balance</p>
                   <div className="flex items-baseline gap-1 overflow-hidden">
                     <span className="text-xl font-black text-primary tracking-tighter text-glow-choco truncate">
-                      {parseInt(user?.chocoBalance ?? "0").toLocaleString()}
+                      {parseInt(dbUser?.chocoBalance ?? "0").toLocaleString()}
                     </span>
                     <span className="text-[10px] font-bold text-primary/60">🍫</span>
                   </div>
