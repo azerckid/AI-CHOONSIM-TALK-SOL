@@ -86,22 +86,21 @@ export default function BuyChocoPage() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-black">CHOCO 구매</h1>
+          <h1 className="text-xl font-black">Buy CHOCO</h1>
         </div>
 
-        {/* 지갑 없으면 안내 */}
         {!solanaWallet && (
           <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-sm leading-relaxed">
-            <p className="font-bold mb-1">⚠️ 지갑 미등록</p>
+            <p className="font-bold mb-1">⚠️ No Wallet Connected</p>
             <p>
-              임베디드 지갑으로 바로 결제하거나, 프로필 → Wallet에서 지갑을 등록하세요.
+              Pay with your embedded wallet below, or go to Profile → Wallet to connect a Solana wallet.
             </p>
           </div>
         )}
 
-        {/* 수량 선택 */}
+        {/* Amount Selection */}
         <div className="mb-6">
-          <p className="text-white/50 text-xs mb-3 uppercase tracking-widest">수량 선택</p>
+          <p className="text-white/50 text-xs mb-3 uppercase tracking-widest">Select Amount</p>
           <div className="grid grid-cols-2 gap-3">
             {CHOCO_PACKAGES.map((pkg) => (
               <button
@@ -130,16 +129,16 @@ export default function BuyChocoPage() {
         {/* 결제 요약 */}
         <div className="mb-6 p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-white/50">구매 수량</span>
+            <span className="text-white/50">Amount</span>
             <span className="font-bold">{selectedChoco.toLocaleString()} CHOCO</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-white/50">가격 (USD 기준)</span>
+            <span className="text-white/50">Price (USD)</span>
             <span className="font-bold">${usdAmount.toFixed(usdAmount < 1 ? 2 : 1)}</span>
           </div>
           {solanaWallet && (
             <div className="flex justify-between">
-              <span className="text-white/50">수신 지갑</span>
+              <span className="text-white/50">Your Wallet</span>
               <span className="font-mono text-xs text-primary">
                 {solanaWallet.slice(0, 6)}…{solanaWallet.slice(-4)}
               </span>
@@ -153,7 +152,7 @@ export default function BuyChocoPage() {
         {/* 구분선 */}
         <div className="flex items-center gap-3 my-4">
           <div className="flex-1 h-px bg-white/10" />
-          <span className="text-xs text-white/30">또는 QR로</span>
+          <span className="text-xs text-white/30">or via QR</span>
           <div className="flex-1 h-px bg-white/10" />
         </div>
 
@@ -161,12 +160,12 @@ export default function BuyChocoPage() {
         <SolanaPayButton
           amount={usdAmount}
           credits={selectedChoco}
-          description={`${selectedChoco} CHOCO 구매`}
+          description={`Buy ${selectedChoco} CHOCO`}
           onSuccess={() => setDone(true)}
         />
 
         <p className="text-center text-xs text-white/30 mt-4">
-          Devnet 기준 · SOL 시세 자동 반영 · 결제 후 자동 충전
+          Devnet · Auto SOL price · Instant top-up after payment
         </p>
       </div>
     </div>

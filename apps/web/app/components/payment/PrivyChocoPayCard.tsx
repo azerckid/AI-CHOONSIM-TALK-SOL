@@ -95,7 +95,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
 
   async function handlePay() {
     if (!embeddedWallet) {
-      toast.error("Privy 임베디드 지갑이 없어요. 먼저 지갑을 생성해주세요.");
+      toast.error("No embedded wallet found. Please create one first.");
       return;
     }
 
@@ -109,7 +109,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || `서버 오류 (${res.status})`);
+        throw new Error(err.error || `Server error (${res.status})`);
       }
       const { recipient, lamports, paymentId, rpcUrl } = await res.json();
 
@@ -164,7 +164,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
         const { value: statuses } = await connection.getSignatureStatuses([signature]);
         const s = statuses?.[0];
         console.log(`[PrivyPay] poll #${++pollCount} status:`, s?.confirmationStatus ?? "null");
-        if (s?.err) throw new Error("트랜잭션이 온체인에서 실패했어요.");
+        if (s?.err) throw new Error("Transaction failed on-chain.");
         if (s && (s.confirmationStatus === "confirmed" || s.confirmationStatus === "finalized")) break;
         await new Promise((r) => setTimeout(r, 2500));
       }
@@ -189,17 +189,17 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
         setStatus("done");
         revalidator.revalidate();
       } else {
-        throw new Error(verifyData.error || "결제 확인에 실패했어요.");
+        throw new Error(verifyData.error || "Payment verification failed.");
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("User rejected") || msg.includes("cancelled") || msg.includes("rejected")) {
-        toast("결제를 취소했어요.");
+        toast("Payment cancelled.");
         setStatus("idle");
         return;
       }
       console.error("[PrivyChocoPayCard]", err);
-      toast.error(msg || "결제 중 오류가 발생했어요.");
+      toast.error(msg || "Payment failed. Please try again.");
       setStatus("error");
     }
   }
@@ -207,9 +207,9 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
   const isLoading = status !== "idle";
   const statusLabel: Record<Status, string> = {
     idle: "",
-    building: "트랜잭션 생성 중…",
-    signing: "지갑 서명 중…",
-    verifying: "온체인 확인 중…",
+    building: "Building transaction…",
+    signing: "Signing with wallet…",
+    verifying: "Confirming on-chain…",
     done: "",
     error: "",
   };
@@ -217,15 +217,15 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
   const doneUI = (
     <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-500/15 border border-green-500/30 text-green-400 text-sm font-semibold">
       <span className="material-symbols-outlined text-[18px]">check_circle</span>
-      {grantedChoco.toLocaleString()} CHOCO 충전 완료! 💕
+      {grantedChoco.toLocaleString()} CHOCO topped up! 💕
     </div>
   );
 
   const errorUI = (
     <div className="flex flex-col gap-1">
-      <p className="text-xs text-red-400">오류가 발생했어요. 다시 시도해주세요.</p>
+      <p className="text-xs text-red-400">Something went wrong. Please try again.</p>
       <button onClick={() => setStatus("idle")} className="text-xs text-white/50 hover:text-white/80 transition-colors">
-        다시 시도
+        Retry
       </button>
     </div>
   );
@@ -234,10 +234,10 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
   const insufficientUI = embeddedWallet ? (
     <div className="flex flex-col items-center gap-3 py-2">
       <p className="text-xs text-amber-400 text-center">
-        내장 지갑 SOL 부족 ({solBalance?.toFixed(4) ?? "?"} / {requiredSol} SOL 필요)
+        Insufficient SOL ({solBalance?.toFixed(4) ?? "?"} / {requiredSol} SOL needed)
       </p>
       <p className="text-xs text-white/50 text-center">
-        아래 주소로 SOL을 보내면 바로 결제할 수 있어요
+        Send SOL to the address below to top up your embedded wallet
       </p>
       <div className="bg-white p-3 rounded-xl">
         <QRCodeSVG value={embeddedWallet.address} size={140} />
@@ -251,7 +251,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
         className="flex items-center gap-1.5 text-xs text-[#9945FF] hover:text-[#7b35d9] transition-colors"
       >
         <span className="material-symbols-outlined text-[14px]">refresh</span>
-        {checkingBalance ? "확인 중..." : "잔액 새로고침"}
+        {checkingBalance ? "Checking..." : "Refresh Balance"}
       </button>
     </div>
   ) : null;
@@ -264,7 +264,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
       await sendCode({ email: emailInput.trim() });
       setEmailStep("otp");
     } catch (e) {
-      toast.error("이메일 전송 실패. 다시 시도해주세요.");
+      toast.error("Failed to send code. Please try again.");
     } finally {
       setEmailLoading(false);
     }
@@ -276,7 +276,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
     try {
       await loginWithCode({ code: otpInput.trim() });
     } catch (e) {
-      toast.error("코드가 올바르지 않아요. 다시 확인해주세요.");
+      toast.error("Invalid code. Please check and retry.");
     } finally {
       setEmailLoading(false);
     }
@@ -284,14 +284,14 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
 
   const connectUI = (
     <div className="space-y-2">
-      <p className="text-xs text-white/40 text-center mb-3">내장 지갑 연결</p>
+      <p className="text-xs text-white/40 text-center mb-3">Connect Embedded Wallet</p>
       {/* Google */}
       <button
         onClick={() => initOAuth({ provider: "google" })}
         className="w-full flex items-center justify-center gap-2 bg-white/8 hover:bg-white/15 border border-white/10 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
       >
         <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#EA4335" d="M9 3.48c1.69 0 2.83.73 3.48 1.34l2.54-2.48C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.96l2.91 2.26C4.6 5.05 6.62 3.48 9 3.48z"/><path fill="#FBBC05" d="M17.64 9.2c0-.74-.06-1.28-.19-1.84H9v3.34h4.96c-.1.83-.64 2.08-1.84 2.92l2.84 2.2c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M3.88 10.78A5.54 5.54 0 0 1 3.58 9c0-.62.11-1.22.29-1.78L.96 4.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l2.92-2.26z"/><path fill="#4285F4" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.84-2.2c-.76.53-1.78.9-3.12.9-2.38 0-4.4-1.57-5.12-3.74L.97 13.04C2.45 15.98 5.48 18 9 18z"/></svg>
-        Google로 연결
+        Continue with Google
       </button>
       {/* Twitter/X */}
       <button
@@ -299,22 +299,22 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
         className="w-full flex items-center justify-center gap-2 bg-white/8 hover:bg-white/15 border border-white/10 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.91-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-        X(Twitter)로 연결
+        Continue with X (Twitter)
       </button>
-      {/* 구분선 */}
+      {/* Divider */}
       <div className="flex items-center gap-2">
         <div className="flex-1 h-px bg-white/10" />
-        <span className="text-[10px] text-white/30">또는 이메일</span>
+        <span className="text-[10px] text-white/30">or Email</span>
         <div className="flex-1 h-px bg-white/10" />
       </div>
-      {/* 이메일 OTP */}
+      {/* Email OTP */}
       {emailStep === "input" ? (
         <div className="flex gap-2">
           <input
             type="email"
             value={emailInput}
             onChange={(e) => setEmailInput(e.target.value)}
-            placeholder="이메일 입력"
+            placeholder="Enter your email"
             className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#9945FF]/50"
           />
           <button
@@ -327,13 +327,13 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
         </div>
       ) : (
         <div className="space-y-2">
-          <p className="text-xs text-white/50">{emailInput}으로 코드를 전송했어요</p>
+          <p className="text-xs text-white/50">Code sent to {emailInput}</p>
           <div className="flex gap-2">
             <input
               type="text"
               value={otpInput}
               onChange={(e) => setOtpInput(e.target.value)}
-              placeholder="인증 코드 입력"
+              placeholder="Enter code"
               className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#9945FF]/50"
             />
             <button
@@ -341,11 +341,11 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
               disabled={emailLoading || !otpInput.trim()}
               className="px-3 py-2 bg-[#9945FF] hover:bg-[#7b35d9] disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-all"
             >
-              {emailLoading ? "..." : "확인"}
+              {emailLoading ? "..." : "Verify"}
             </button>
           </div>
           <button onClick={() => setEmailStep("input")} className="text-xs text-white/30 hover:text-white/60">
-            이메일 다시 입력
+            Change email
           </button>
         </div>
       )}
@@ -357,12 +357,12 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
   ) : creatingWallet ? (
     <div className="flex items-center justify-center gap-2 text-xs text-white/40 py-2">
       <span className="w-3 h-3 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
-      내장 지갑 생성 중...
+      Creating embedded wallet...
     </div>
   ) : checkingBalance ? (
     <div className="flex items-center justify-center gap-2 text-xs text-white/40 py-2">
       <span className="w-3 h-3 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
-      잔액 확인 중...
+      Checking balance...
     </div>
   ) : solBalance !== null && solBalance < requiredSol ? (
     insufficientUI
@@ -377,7 +377,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
       ) : (
         <>
           <span className="material-symbols-outlined text-[18px]">bolt</span>
-          내장 지갑으로 결제 ({solBalance?.toFixed(4)} SOL)
+          Pay with Embedded Wallet ({solBalance?.toFixed(4)} SOL)
         </>
       )}
     </button>

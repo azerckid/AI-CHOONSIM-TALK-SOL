@@ -21,10 +21,10 @@ const SOL_PER_CHOCO = 0.00001;
 
 const STATUS_LABEL: Record<Status, string> = {
   idle: "",
-  building: "트랜잭션 생성 중…",
-  connecting: "Phantom 연결 중…",
-  signing: "Phantom에서 승인해주세요…",
-  verifying: "온체인 확인 중…",
+  building: "Building transaction…",
+  connecting: "Connecting Phantom…",
+  signing: "Please approve in Phantom…",
+  verifying: "Confirming on-chain…",
   done: "",
   error: "",
 };
@@ -46,7 +46,7 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
   async function handlePhantomPay() {
     const phantom = (window as any).phantom?.solana;
     if (!phantom?.isPhantom) {
-      toast.error("Phantom 지갑이 필요해요! phantom.app에서 설치해주세요.");
+      toast.error("Phantom wallet required! Install it at phantom.app");
       window.open("https://phantom.app", "_blank");
       return;
     }
@@ -117,11 +117,11 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("User rejected") || msg.includes("cancelled") || msg.includes("rejected")) {
-        toast("결제를 취소했어요.");
+        toast("Payment cancelled.");
         setStatus("idle");
         return;
       }
-      toast.error(msg || "결제 중 오류가 발생했어요.");
+      toast.error(msg || "Payment failed. Please try again.");
       setStatus("error");
     }
   }
@@ -130,7 +130,7 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
     return (
       <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-green-500/15 border border-green-500/30 text-green-400 text-sm font-semibold">
         <span className="material-symbols-outlined text-[18px]">check_circle</span>
-        {grantedChoco.toLocaleString()} CHOCO 충전 완료! 💕
+        {grantedChoco.toLocaleString()} CHOCO topped up! 💕
       </div>
     );
   }
@@ -138,12 +138,12 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
   if (status === "error") {
     return (
       <div className="flex flex-col gap-2 py-2">
-        <p className="text-xs text-red-400">오류가 발생했어요. 다시 시도해주세요.</p>
+        <p className="text-xs text-red-400">Something went wrong. Please try again.</p>
         <button
           onClick={() => setStatus("idle")}
           className="text-xs text-white/50 hover:text-white/80 transition-colors"
         >
-          다시 시도
+          Retry
         </button>
       </div>
     );
@@ -159,7 +159,7 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-[#9945FF]">account_balance_wallet</span>
-              <span className="font-bold text-white">Phantom으로 결제</span>
+              <span className="font-bold text-white">Pay with Phantom</span>
             </div>
             <span className="text-white/40 text-xs">{solAmount} SOL</span>
           </div>
@@ -192,7 +192,7 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
       {hasPhantom && (
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px bg-white/10" />
-          <span className="text-xs text-white/30">또는 내장 지갑으로</span>
+          <span className="text-xs text-white/30">or with Embedded Wallet</span>
           <div className="flex-1 h-px bg-white/10" />
         </div>
       )}

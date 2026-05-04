@@ -84,7 +84,7 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
         pollingTimeoutRef.current = setTimeout(() => {
             stopPolling();
             setStatus("ERROR");
-            toast.error("입금 확인 시간이 초과되었습니다. Phantom이 Devnet으로 설정되어 있는지 확인 후 다시 시도해 주세요.");
+            toast.error("Payment confirmation timed out. Make sure Phantom is set to Devnet and try again.");
         }, POLLING_TIMEOUT_MS);
     };
 
@@ -109,8 +109,8 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
                 <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-green-500/30">
                     <CheckCircle className="text-white w-10 h-10" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">결제 완료!</h3>
-                <p className="text-green-200/80">CHOCO 충전이 성공적으로 완료되었습니다.</p>
+                <h3 className="text-xl font-bold text-white mb-2">Payment Complete!</h3>
+                <p className="text-green-200/80">CHOCO has been successfully topped up.</p>
             </div>
         );
     }
@@ -125,16 +125,16 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
                 <div className="text-center space-y-2">
                     <div className="flex items-center justify-center space-x-2 text-blue-400">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span className="text-sm font-medium">입금 확인 중...</span>
+                        <span className="text-sm font-medium">Waiting for payment...</span>
                     </div>
                     <p className="text-white font-bold text-lg">
                         {paymentData.solAmount} SOL
                     </p>
                     <p className="text-slate-400 text-xs max-w-[240px]">
-                        지갑 앱(Phantom 등)으로 QR 코드를 스캔하여 결제해 주세요.
+                        Scan the QR code with Phantom or any Solana wallet app.
                     </p>
                     <div className="flex items-center justify-center gap-1.5 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2 mt-2">
-                        <span className="text-amber-400 text-xs">⚠️ Phantom 설정 → Devnet 으로 변경 필요</span>
+                        <span className="text-amber-400 text-xs">⚠️ Make sure Phantom is set to Devnet</span>
                     </div>
                 </div>
 
@@ -142,7 +142,7 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
                     href={paymentData.url}
                     className="flex items-center space-x-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
                 >
-                    <span>모바일 지갑으로 직접 결제하기</span>
+                    <span>Open in mobile wallet</span>
                     <ExternalLink className="w-3 h-3" />
                 </a>
 
@@ -151,7 +151,7 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
                     className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/20 text-white/70 text-sm font-bold hover:bg-white/10 hover:text-white transition-all active:scale-95"
                 >
                     <span className="material-symbols-outlined text-[16px]">close</span>
-                    취소하고 다시 시작
+                    Cancel & Restart
                 </button>
             </div>
         );
@@ -168,7 +168,7 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
             ) : (
                 <>
                     <QrCode className="w-6 h-6" />
-                    <span>Solana Pay로 결제</span>
+                    <span>Pay with Solana Pay</span>
                 </>
             )}
         </button>
