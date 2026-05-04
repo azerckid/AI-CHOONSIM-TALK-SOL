@@ -188,15 +188,8 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
         </div>
       )}
 
-      {/* Privy 임베디드 지갑 — Phantom 유무와 관계없이 항상 표시 */}
-      {hasPhantom && (
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-white/10" />
-          <span className="text-xs text-white/30">or with Embedded Wallet</span>
-          <div className="flex-1 h-px bg-white/10" />
-        </div>
-      )}
-      <PrivyChocoPayCard choco={choco} />
+      {/* Phantom 없는 유저에게만 임베디드 지갑 표시 */}
+      {!hasPhantom && <PrivyChocoPayCard choco={choco} />}
     </div>
   );
 }

@@ -159,33 +159,26 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
         </div>
       )}
 
-      {hasPhantom && (
-        <>
-          <button
-            onClick={handleSign}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 bg-[#9945FF] hover:bg-[#7b35d9] disabled:opacity-50 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
-          >
-            {isLoading ? (
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
-                Sign with Phantom
-              </>
-            )}
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-[10px] text-white/30">또는</span>
-            <div className="flex-1 h-px bg-white/10" />
-          </div>
-        </>
+      {hasPhantom ? (
+        <button
+          onClick={handleSign}
+          disabled={isLoading}
+          className="w-full flex items-center justify-center gap-2 bg-[#9945FF] hover:bg-[#7b35d9] disabled:opacity-50 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
+        >
+          {isLoading ? (
+            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+              Sign with Phantom
+            </>
+          )}
+        </button>
+      ) : (
+        <PrivyErrorBoundary>
+          <PrivyChocoPayCard choco={choco} compact />
+        </PrivyErrorBoundary>
       )}
-
-      <PrivyErrorBoundary>
-        <PrivyChocoPayCard choco={choco} compact />
-      </PrivyErrorBoundary>
     </div>
   );
 }

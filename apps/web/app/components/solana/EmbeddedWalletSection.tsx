@@ -15,8 +15,9 @@ function EmbeddedWalletSectionInner() {
   const { exportWallet } = useExportWallet();
 
   const embeddedWallet = wallets.find((w: any) => w.walletClientType === "privy") ?? null;
+  const hasPhantom = !!(window as any).phantom?.solana?.isPhantom;
 
-  if (!ready || !authenticated || !embeddedWallet) return null;
+  if (!ready || !authenticated || !embeddedWallet || hasPhantom) return null;
 
   const address = embeddedWallet.address;
   const short = `${address.slice(0, 6)}…${address.slice(-4)}`;
