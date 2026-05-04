@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { BottomNavigation } from "~/components/layout/BottomNavigation";
 import { WalletAddressForm } from "~/components/solana/WalletAddressForm";
 import { WalletButton } from "~/components/solana/WalletButton";
+import { EmbeddedWalletSection } from "~/components/solana/EmbeddedWalletSection";
 
 /** 프로필 내 지갑 버튼 — SSR에서는 null 반환 (useWallet은 Provider 컨텍스트 필요) */
 function WalletButtonInline() {
@@ -439,6 +440,9 @@ export default function ProfileScreen() {
                   )}
                 </div>
               </div>
+
+              {/* Embedded Wallet (Privy) */}
+              <EmbeddedWalletSection />
 
               {/* Balance Grid */}
               <div className="grid grid-cols-2 gap-4">

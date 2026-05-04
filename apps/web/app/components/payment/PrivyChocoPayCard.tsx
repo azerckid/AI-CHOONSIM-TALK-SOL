@@ -62,7 +62,19 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
   useEffect(() => {
     if (authenticated && ready && !hasEmbeddedWallet && !creatingWallet) {
       setCreatingWallet(true);
-      createWallet().catch(() => {}).finally(() => setCreatingWallet(false));
+      createWallet()
+        .then((wallet) => {
+          // 생성된 주소를 DB에 저장 (solanaWallet이 없는 경우)
+          if (wallet?.address) {
+            fetch("/api/user/wallet", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ solanaWallet: wallet.address }),
+            }).catch(() => {});
+          }
+        })
+        .catch(() => {})
+        .finally(() => setCreatingWallet(false));
     }
   }, [authenticated, ready, hasEmbeddedWallet]);
 
