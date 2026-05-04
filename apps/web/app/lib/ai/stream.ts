@@ -201,6 +201,12 @@ async function executeNaturalLanguageCommand(
         /balance.*sol/i,
         /내.*sol/,
         /my.*sol/i,
+        /솔.*잔액/,
+        /잔액.*솔/,
+        /솔.*얼마/,
+        /얼마.*솔/,
+        /내.*솔/,
+        /솔잔액/,
     ];
 
     const isBuy = isChocoMention && isBuyIntent;
