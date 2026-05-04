@@ -130,6 +130,16 @@ Phase ∞  보류 (생태계 대기)  미정
 - [ ] `executeNaturalLanguageCommand()` 패턴 확장 (새 자연어 트리거 추가 검토)
 - [ ] 미사용 `generateAIResponse()` 호출 경로 존재 여부 확인 → 정리 또는 유지 결정
 
+### 1-6. LLM Tool Calling 정식 복구
+
+> 현재 `executeNaturalLanguageCommand()`는 정규식 패턴으로 도구를 수동 호출하는 임시 방식.
+> LLM이 의도를 직접 파악하고 도구를 자동 선택하는 구조로 교체 필요.
+
+- [ ] `callModelNode`에 `sanitizeToolSchema()` 적용한 도구 binding 복구
+- [ ] LangGraph `ToolNode` 추가 및 조건부 엣지 연결 (tool call → tool execute → 재응답)
+- [ ] `executeNaturalLanguageCommand()` 전체 제거 및 stream.ts 로직 단순화
+- [ ] Gemini + Solana Agent Kit 도구 E2E 테스트 (SOL 잔액, CHOCO 잔액, cNFT 각인 등)
+
 ---
 
 ## Phase 2 — 메인넷 출시 (2026 Q3)
