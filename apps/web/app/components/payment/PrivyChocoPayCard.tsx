@@ -11,7 +11,7 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { usePrivy, useLoginWithOAuth, useLoginWithEmail, useCreateWallet } from "@privy-io/react-auth";
-import { useWallets } from "@privy-io/react-auth/solana";
+import { useStandardWallets } from "@privy-io/react-auth/solana";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import bs58 from "bs58";
@@ -38,46 +38,76 @@ function getSolDisplay(choco: number): string {
   return CHOCO_SOL[nearest] ?? (choco * 0.00001).toFixed(6);
 }
 
-const SOLANA_DEVNET_CHAIN = "solana:devnet";
 const SOL_PER_CHOCO = 0.00001; // create-tx.ts와 동일
 const FEE_BUFFER = 0.000005;   // 트랜잭션 수수료 여유분
 const DEVNET_RPC = "https://api.devnet.solana.com";
 
 function PrivyChocoPayCardInner({ choco, compact }: Props) {
-  const { authenticated, ready, login } = usePrivy();
-  const { wallets } = useWallets();
+  const { user, authenticated, ready, login } = usePrivy();
+  const { wallets: standardWallets, ready: walletsReady } = useStandardWallets();
   const revalidator = useRevalidator();
   const [status, setStatus] = useState<Status>("idle");
   const [grantedChoco, setGrantedChoco] = useState(0);
   const [solBalance, setSolBalance] = useState<number | null>(null);
   const [checkingBalance, setCheckingBalance] = useState(false);
 
-  const embeddedWallet = wallets.find((w: any) => w.walletClientType === "privy") ?? wallets[0] ?? null;
+  // linkedAccounts: 주소 확인용 (메타데이터)
+  const embeddedWalletAccount = (user?.linkedAccounts as any[])?.find(
+    (a) => a.chainType === "solana" && a.walletClientType === "privy"
+  ) || null;
+
+  // useSolanaStandardWallets(): Privy 임베디드 지갑 포함 모든 standard 지갑
+  const privyStandardWallet = walletsReady
+    ? ((standardWallets as any[]).find((w) => w.isPrivyWallet) ?? null)
+    : null;
+  const privyAccount = (privyStandardWallet as any)?.accounts?.[0] ?? null;
+
   const { createWallet } = useCreateWallet();
   const [creatingWallet, setCreatingWallet] = useState(false);
+  const [creationAttempted, setCreationAttempted] = useState(false);
 
-  // 로그인 됐는데 Privy 임베디드 지갑이 없으면 자동 생성
-  // wallets에 Phantom 등 외부 지갑이 있어도 임베디드 지갑은 별도로 생성
-  const hasEmbeddedWallet = wallets.some((w: any) => w.walletClientType === "privy");
+  // 지갑 존재 여부 (account 기준으로 판단)
+  const hasEmbeddedWallet = !!embeddedWalletAccount;
   const hasPhantom = typeof window !== "undefined" && !!(window as any).phantom?.solana?.isPhantom;
+
   useEffect(() => {
-    if (authenticated && ready && !hasEmbeddedWallet && !creatingWallet && !hasPhantom) {
-      setCreatingWallet(true);
-      createWallet()
-        .then((wallet) => {
-          // 생성된 주소를 DB에 저장 (solanaWallet이 없는 경우)
-          if (wallet?.address) {
-            fetch("/api/user/wallet", {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ solanaWallet: wallet.address }),
-            }).catch(() => {});
-          }
-        })
-        .catch(() => {})
-        .finally(() => setCreatingWallet(false));
+    // 이미 지갑이 있거나, 생성이 진행 중이거나, 이미 한 번 시도했다면 중단
+    if (!ready || !authenticated || hasEmbeddedWallet || creatingWallet || creationAttempted) return;
+
+    console.log("[PrivyPay] Checking for embedded wallet creation...");
+    setCreatingWallet(true);
+    setCreationAttempted(true); // 시도했음을 즉시 기록
+
+    createWallet()
+      .then((wallet) => {
+        console.log("[PrivyPay] Embedded wallet created successfully:", wallet?.address);
+        if (wallet?.address) syncWalletToDB(wallet.address);
+      })
+      .catch((err) => {
+        // 이미 지갑이 있다는 에러는 사실상 성공이나 다름없음
+        if (err?.message?.includes("already has an embedded wallet")) {
+          console.log("[PrivyPay] Wallet already exists, skipping creation.");
+          const existingAddr = (user?.linkedAccounts?.find((a: any) => a.type === "wallet" && a.walletClientType === "privy") as any)?.address;
+          if (existingAddr) syncWalletToDB(existingAddr);
+        } else {
+          console.error("[PrivyPay] Failed to create embedded wallet:", err);
+        }
+      })
+      .finally(() => setCreatingWallet(false));
+  }, [authenticated, ready, hasEmbeddedWallet, creatingWallet, creationAttempted, user]);
+
+  async function syncWalletToDB(address: string) {
+    try {
+      const res = await fetch("/api/user/wallet", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ solanaWallet: address }),
+      });
+      if (res.ok) console.log("[PrivyPay] Wallet address synced to DB:", address);
+    } catch (err) {
+      console.error("[PrivyPay] DB sync error:", err);
     }
-  }, [authenticated, ready, hasEmbeddedWallet]);
+  }
 
   // 헤드리스 로그인 훅
   const { initOAuth } = useLoginWithOAuth();
@@ -89,30 +119,40 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
 
   const requiredSol = parseFloat((choco * SOL_PER_CHOCO + FEE_BUFFER).toFixed(6));
 
+  const walletAddress = embeddedWalletAccount?.address ?? null;
+
   const checkBalance = useCallback(async () => {
-    if (!embeddedWallet?.address) return;
+    if (!walletAddress) return;
     setCheckingBalance(true);
     try {
       const { Connection, PublicKey, LAMPORTS_PER_SOL } = await import("@solana/web3.js");
       const conn = new Connection(DEVNET_RPC, "confirmed");
-      const lamports = await conn.getBalance(new PublicKey(embeddedWallet.address));
+      const lamports = await conn.getBalance(new PublicKey(walletAddress));
       setSolBalance(lamports / LAMPORTS_PER_SOL);
     } catch {
       setSolBalance(null);
     } finally {
       setCheckingBalance(false);
     }
-  }, [embeddedWallet?.address]);
+  }, [walletAddress]);
 
   useEffect(() => {
     checkBalance();
   }, [checkBalance]);
 
   async function handlePay() {
-    if (!embeddedWallet) {
-      toast.error("No embedded wallet found. Please create one first.");
+    const signFeature = (privyStandardWallet as any)?.features?.["solana:signTransaction"];
+    if (!privyStandardWallet || !privyAccount || !signFeature) {
+      toast.error("Wallet not ready yet. Please wait a moment and try again.");
       return;
     }
+
+    // 주소 정제 함수: solana: 접두사 제거 및 유효성 검사
+    const sanitizeAddress = (addr: string) => {
+      const clean = addr.replace(/^solana:/i, "").trim();
+      if (!clean) throw new Error("Invalid wallet address (empty)");
+      return clean;
+    };
 
     try {
       // 1. 서버에서 트랜잭션 파라미터 가져오기
@@ -140,8 +180,15 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
       const connection = new Connection(rpcUrl, "confirmed");
       const { blockhash } = await connection.getLatestBlockhash();
 
-      const fromPubkey = new PublicKey(embeddedWallet.address);
-      const toPubkey = new PublicKey(recipient);
+      // 주소 정제 적용
+      const fromAddr = sanitizeAddress(walletAddress!);
+      const toAddr = sanitizeAddress(recipient);
+
+      console.log("[PrivyPay] From:", fromAddr);
+      console.log("[PrivyPay] To:", toAddr);
+
+      const fromPubkey = new PublicKey(fromAddr);
+      const toPubkey = new PublicKey(toAddr);
 
       const message = new TransactionMessage({
         payerKey: fromPubkey,
@@ -153,19 +200,19 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
 
       const tx = new VersionedTransaction(message);
 
-      // 3. Privy로 서명만 받고, RPC 제출은 우리가 직접
+      // 3. Privy SolanaStandardWallet feature로 서명
       setStatus("signing");
-      const signResult = await embeddedWallet.signTransaction({
+      const [{ signedTransaction }] = await signFeature.signTransaction({
+        account: privyAccount,
         transaction: tx.serialize(),
-        chain: SOLANA_DEVNET_CHAIN,
+        chain: "solana:devnet",
       });
-      // signedTransaction은 Uint8Array (서명된 직렬화 트랜잭션)
-      const signedTx = VersionedTransaction.deserialize(signResult.signedTransaction);
+      const signedTx = VersionedTransaction.deserialize(signedTransaction);
 
       // 4. 우리 RPC로 직접 전송
       console.log("[PrivyPay] sendRawTransaction start");
       const rawSig = await connection.sendRawTransaction(signedTx.serialize(), {
-        skipPreflight: true,  // preflight 시뮬레이션 skip → public RPC hang 방지
+        skipPreflight: true,
         maxRetries: 3,
       });
       const signature = typeof rawSig === "string" ? rawSig : bs58.encode(rawSig as any);
@@ -246,7 +293,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
   );
 
   // 잔액 부족 → 내장 지갑 주소 QR 표시
-  const insufficientUI = embeddedWallet ? (
+  const insufficientUI = embeddedWalletAccount ? (
     <div className="flex flex-col items-center gap-3 py-2">
       <p className="text-xs text-amber-400 text-center">
         Insufficient SOL ({solBalance?.toFixed(4) ?? "?"} / {requiredSol} SOL needed)
@@ -255,10 +302,10 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
         Send SOL to the address below to top up your embedded wallet
       </p>
       <div className="bg-white p-3 rounded-xl">
-        <QRCodeSVG value={embeddedWallet.address} size={140} />
+        <QRCodeSVG value={walletAddress!} size={140} />
       </div>
       <p className="font-mono text-[10px] text-white/40 break-all text-center px-2">
-        {embeddedWallet.address}
+        {walletAddress}
       </p>
       <button
         onClick={checkBalance}
@@ -305,7 +352,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
         onClick={() => initOAuth({ provider: "google" })}
         className="w-full flex items-center justify-center gap-2 bg-white/8 hover:bg-white/15 border border-white/10 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
       >
-        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#EA4335" d="M9 3.48c1.69 0 2.83.73 3.48 1.34l2.54-2.48C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.96l2.91 2.26C4.6 5.05 6.62 3.48 9 3.48z"/><path fill="#FBBC05" d="M17.64 9.2c0-.74-.06-1.28-.19-1.84H9v3.34h4.96c-.1.83-.64 2.08-1.84 2.92l2.84 2.2c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M3.88 10.78A5.54 5.54 0 0 1 3.58 9c0-.62.11-1.22.29-1.78L.96 4.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l2.92-2.26z"/><path fill="#4285F4" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.84-2.2c-.76.53-1.78.9-3.12.9-2.38 0-4.4-1.57-5.12-3.74L.97 13.04C2.45 15.98 5.48 18 9 18z"/></svg>
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#EA4335" d="M9 3.48c1.69 0 2.83.73 3.48 1.34l2.54-2.48C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.96l2.91 2.26C4.6 5.05 6.62 3.48 9 3.48z" /><path fill="#FBBC05" d="M17.64 9.2c0-.74-.06-1.28-.19-1.84H9v3.34h4.96c-.1.83-.64 2.08-1.84 2.92l2.84 2.2c1.7-1.57 2.68-3.88 2.68-6.62z" /><path fill="#34A853" d="M3.88 10.78A5.54 5.54 0 0 1 3.58 9c0-.62.11-1.22.29-1.78L.96 4.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l2.92-2.26z" /><path fill="#4285F4" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.84-2.2c-.76.53-1.78.9-3.12.9-2.38 0-4.4-1.57-5.12-3.74L.97 13.04C2.45 15.98 5.48 18 9 18z" /></svg>
         Continue with Google
       </button>
       {/* Twitter/X */}
@@ -313,7 +360,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
         onClick={() => initOAuth({ provider: "twitter" })}
         className="w-full flex items-center justify-center gap-2 bg-white/8 hover:bg-white/15 border border-white/10 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.91-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.91-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
         Continue with X (Twitter)
       </button>
       {/* Divider */}
@@ -374,6 +421,11 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
       <span className="w-3 h-3 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
       Creating embedded wallet...
     </div>
+  ) : !walletsReady ? (
+    <div className="flex items-center justify-center gap-2 text-xs text-white/40 py-2">
+      <span className="w-3 h-3 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+      Initializing wallet...
+    </div>
   ) : checkingBalance ? (
     <div className="flex items-center justify-center gap-2 text-xs text-white/40 py-2">
       <span className="w-3 h-3 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
@@ -384,7 +436,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
   ) : (
     <button
       onClick={handlePay}
-      disabled={isLoading || !embeddedWallet}
+      disabled={isLoading}
       className="w-full flex items-center justify-center gap-2 bg-[#9945FF] hover:bg-[#7b35d9] disabled:opacity-50 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
     >
       {isLoading ? (
