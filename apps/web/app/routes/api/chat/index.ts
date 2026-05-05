@@ -391,14 +391,15 @@ export async function action({ request }: ActionFunctionArgs) {
 
                 // 스트림 종료 후 DB 저장 일괄 처리 (클라이언트 응답과 무관하게 백그라운드 실행)
                 const firstMsgSave = pendingMessageSaves[0];
+                const assistantMessageBaseTime = Date.now();
                 await Promise.allSettled([
-                    ...pendingMessageSaves.map(msg =>
+                    ...pendingMessageSaves.map((msg, index) =>
                         db.insert(schema.message).values({
                             id: msg.id,
                             role: "assistant",
                             content: msg.content,
                             conversationId,
-                            createdAt: new Date(),
+                            createdAt: new Date(assistantMessageBaseTime + index),
                             type: "TEXT",
                             mediaUrl: msg.mediaUrl,
                             mediaType: msg.mediaUrl ? "image" : null,
