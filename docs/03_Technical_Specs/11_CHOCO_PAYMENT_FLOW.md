@@ -1,7 +1,7 @@
 # CHOCO Payment Flow — Technical Documentation
 
 > Created: 2026-05-04 00:00
-> Last Updated: 2026-05-05 18:11
+> Last Updated: 2026-05-05 18:48
 > **Category:** Technical Spec — Payment Architecture
 
 ---
@@ -173,8 +173,8 @@ Generation requirements:
 - `create-tx` creates a unique payment `reference` and stores it in `Payment.transactionId`.
 - `create-tx` accepts the expected payer wallet and stores it in `Payment.walletAddress`.
 - Phantom and Privy embedded wallet transactions include the reference public key as a readonly non-signer account on the SOL transfer instruction.
+- Chat-generated `SWAP_TX` transactions use the same reference-account-on-transfer rule.
 - Memo instructions are not used for payment references because the Memo program can require signatures for supplied account keys.
-- Chat-generated `SWAP_TX` transactions still require regression verification against the same reference-account rule.
 - Payment records are marked with `network = devnet`.
 
 Verification requirements:
@@ -198,9 +198,10 @@ Reconciliation behavior:
 Validated on 2026-05-05:
 - Phantom direct payment E2E on `/buy-choco`: `create-tx -> verify-sig 200`.
 - Privy embedded wallet payment E2E on `/buy-choco`: `create-tx -> verify-sig 200`.
+- Chat `SWAP_TX` generation code updated to remove Memo instruction; `npm run typecheck` and `npm run build` passed.
 
 Remaining validation:
-- Chat `SWAP_TX` payment E2E.
+- Chat `SWAP_TX` payment E2E with real wallet signature.
 - Duplicate signature rejection.
 - Missing reference rejection.
 - 402 → top-up → original chat recovery.
