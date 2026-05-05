@@ -10,8 +10,9 @@
  * 4. Send signature to /api/payment/solana/verify-sig
  */
 import { useState, useEffect } from "react";
-import { Link, useRevalidator } from "react-router";
+import { useRevalidator } from "react-router";
 import { toast } from "sonner";
+import { PrivyChocoPayCard } from "./PrivyChocoPayCard";
 
 interface Props {
   paymentId: string;
@@ -239,15 +240,9 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
       ) : (
         <div className="rounded-xl border border-white/10 bg-white/5 p-3 space-y-3">
           <p className="text-xs leading-relaxed text-white/60">
-            Internal wallet payments continue in Shop, where the wallet provider is available.
+            Complete this CHOCO top-up with your internal wallet.
           </p>
-          <Link
-            to={`/buy-choco?choco=${choco}`}
-            className="w-full flex items-center justify-center gap-2 bg-[#9945FF] hover:bg-[#7b35d9] text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
-          >
-            <span className="material-symbols-outlined text-[18px]">storefront</span>
-            Continue in Shop
-          </Link>
+          <PrivyChocoPayCard choco={choco} compact />
         </div>
       )}
     </div>

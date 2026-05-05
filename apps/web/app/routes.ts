@@ -19,6 +19,8 @@ export default [
     route("login", "routes/login.tsx"),
     route("wallet-setup", "routes/wallet-setup.tsx"),
     route("buy-choco", "routes/buy-choco.tsx"),
+    route("chat/:id", "routes/chat/$id.tsx"),
+    route("chats", "routes/chat/index.tsx"),
     route("blinks", "routes/blinks.tsx"),
     route("profile/memories", "routes/profile/memories.tsx"),
     route("profile", "routes/profile/index.tsx"),
@@ -39,10 +41,6 @@ export default [
   route("terms", "routes/terms.tsx"),
   route("privacy", "routes/privacy.tsx"),
   route("help", "routes/help.tsx"),
-
-  // 채팅
-  route("chat/:id", "routes/chat/$id.tsx"),
-  route("chats", "routes/chat/index.tsx"),
 
   // 팬덤
   route("fandom", "routes/fandom.tsx"),
@@ -160,5 +158,4 @@ export default [
   route("admin/*", "routes/admin/$.tsx"),
 
 ] satisfies RouteConfig;
-
 
