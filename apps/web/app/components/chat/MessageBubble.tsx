@@ -89,6 +89,13 @@ export function MessageBubble({
   auraStyle,
 }: MessageBubbleProps) {
   const isUser = sender === "user";
+  const swapMatch = SWAP_TX_MARKER.exec(content);
+  const phantomMatch = PHANTOM_MARKER.exec(content);
+  const hasPaymentMarker = !!swapMatch || !!phantomMatch;
+  const displayContent = content
+    .replace(PHANTOM_MARKER, "")
+    .replace(SWAP_TX_MARKER, "")
+    .trimEnd();
 
   const handleLike = () => {
     if (messageId && onLike) {
@@ -167,17 +174,11 @@ export function MessageBubble({
           </div>
         )}
         <div className="px-5 py-3 bg-white dark:bg-surface-dark rounded-2xl rounded-tl-sm text-slate-800 dark:text-gray-100 shadow-sm text-[15px] leading-relaxed relative whitespace-pre-wrap break-words">
-          <RichContent
-            text={content
-              .replace(PHANTOM_MARKER, "")
-              .replace(SWAP_TX_MARKER, "")
-              .trimEnd()}
-          />
+          {!hasPaymentMarker && <RichContent text={displayContent} />}
           {isStreaming && (
             <span className="inline-block w-1.5 h-4 ml-1 bg-primary animate-pulse align-middle" />
           )}
           {(() => {
-            const swapMatch = SWAP_TX_MARKER.exec(content);
             if (swapMatch) {
               // CHOCO 금액을 메시지 텍스트에서 파싱 (예: "100 CHOCO")
               const chocoMatch = content.match(/(\d[\d,]*)\s+CHOCO/);
@@ -192,7 +193,6 @@ export function MessageBubble({
                 />
               );
             }
-            const phantomMatch = PHANTOM_MARKER.exec(content);
             return phantomMatch ? (
               <ChocoPayCard choco={parseInt(phantomMatch[1], 10)} />
             ) : null;

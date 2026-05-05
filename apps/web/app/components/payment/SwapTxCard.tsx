@@ -1,12 +1,12 @@
 /**
- * SwapTxCard — AI가 미리 빌드한 트랜잭션 인라인 서명 카드
+ * SwapTxCard — AI 채팅 인라인 CHOCO 구매 카드
  *
  * [SWAP_TX:paymentId:base64tx] 마커를 MessageBubble이 감지하면 렌더링.
- * 서버(buyChoco 도구)가 이미 트랜잭션을 완성해뒀으므로 Phantom은 서명만 하면 됨.
+ * 현재 Phantom 결제는 클릭 시점의 실제 Phantom 주소로 새 트랜잭션을 만든다.
  *
  * 1. "Sign with Phantom" 클릭
- * 2. @solana/web3.js Transaction.from(base64) → 역직렬화
- * 3. phantom.signAndSendTransaction(tx) → Phantom 팝업
+ * 2. /api/payment/solana/create-tx에 payer 전달
+ * 3. VersionedTransaction 생성 후 Phantom 서명
  * 4. signature → /api/payment/solana/verify-sig → CHOCO 충전
  */
 import { useState, useEffect } from "react";
@@ -264,7 +264,7 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
         </button>
       ) : (
         <PrivyErrorBoundary>
-          <PrivyChocoPayCard choco={choco} compact />
+          <PrivyChocoPayCard choco={choco} />
         </PrivyErrorBoundary>
       )}
     </div>
