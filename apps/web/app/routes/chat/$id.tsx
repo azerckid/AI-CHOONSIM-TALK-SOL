@@ -17,6 +17,8 @@ import { type LoaderFunctionArgs, type ActionFunctionArgs, redirect } from "reac
 import { z } from "zod";
 import { toast } from "sonner";
 import { ItemStoreModal } from "~/components/payment/ItemStoreModal";
+import { BuyChocoPayCard } from "~/components/payment/BuyChocoPayCard";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -162,6 +164,7 @@ export default function ChatRoom() {
   const [streamingMediaUrl, setStreamingMediaUrl] = useState<string | null>(null);
   const [isAiStreaming, setIsAiStreaming] = useState(false);
   const [isItemStoreOpen, setIsItemStoreOpen] = useState(false);
+  const [isChocoModalOpen, setIsChocoModalOpen] = useState(false);
   const [loadingState, setLoadingState] = useState<LoadingState>("idle");
   const [currentEmotion, setCurrentEmotion] = useState<string>(characterStat?.currentEmotion || "JOY");
   const [emotionExpiresAt, setEmotionExpiresAt] = useState<string | null>(characterStat?.emotionExpiresAt || null);
@@ -206,7 +209,7 @@ export default function ChatRoom() {
     optimisticIntervalRef,
     lastOptimisticDeductionRef,
     abortControllerRef,
-    onInsufficientChoco: () => setIsItemStoreOpen(true),
+    onInsufficientChoco: () => setIsChocoModalOpen(true),
   });
 
   // Sync ref with state for async access
@@ -622,6 +625,24 @@ export default function ChatRoom() {
         paypalClientId={paypalClientId}
         tossClientKey={tossClientKey}
       />
+
+      {/* CHOCO 잔액 부족 (402) 시 CHOCO 충전 모달 */}
+      <Dialog open={isChocoModalOpen} onOpenChange={setIsChocoModalOpen}>
+        <DialogContent className="sm:max-w-[420px] bg-[#1A1018] border-white/10 text-white rounded-[24px] p-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-white/5">
+            <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
+              🍫 CHOCO 충전
+            </DialogTitle>
+            <p className="text-sm text-white/50 mt-1">채팅을 계속하려면 CHOCO가 필요해요.</p>
+          </DialogHeader>
+          <div className="p-6">
+            <BuyChocoPayCard
+              choco={1000}
+              onSuccess={() => setIsChocoModalOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Phase 3-2: 보이스 티켓 사용 확인 모달 */}
       <AlertDialog
