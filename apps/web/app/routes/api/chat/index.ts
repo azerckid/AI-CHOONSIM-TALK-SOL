@@ -405,7 +405,7 @@ export async function action({ request }: ActionFunctionArgs) {
                             role: "assistant",
                             content: msg.content,
                             conversationId,
-                            createdAt: new Date(assistantMessageBaseTime + index),
+                            createdAt: new Date(assistantMessageBaseTime + index * 1000),
                             type: "TEXT",
                             mediaUrl: msg.mediaUrl,
                             mediaType: msg.mediaUrl ? "image" : null,

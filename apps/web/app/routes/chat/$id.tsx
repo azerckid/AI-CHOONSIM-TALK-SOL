@@ -504,9 +504,6 @@ export default function ChatRoom() {
     setTimeout(() => setLoadingState("idle"), 1000);
   };
 
-  const latestUserMessage = [...messages].reverse().find((msg) => msg.role === "user")?.content ?? "";
-  const isWaitingForPayment = /(?:초코|choco|CHOCO).*(?:구매|사|충전|buy|purchase)|(?:구매|사|충전|buy|purchase).*(?:초코|choco|CHOCO)/i.test(latestUserMessage);
-
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white h-screen flex flex-col overflow-hidden max-w-md mx-auto md:max-w-2xl lg:max-w-3xl">
 
@@ -595,23 +592,9 @@ export default function ChatRoom() {
                     isStreaming={true}
                   />
                 ) : (
-                  isWaitingForPayment ? (
-                    <MessageBubble
-                      sender="ai"
-                      senderName={characterName}
-                      content="Preparing your CHOCO purchase. Please wait a moment."
-                      avatarUrl={avatarUrl}
-                      auraClass={EMOTION_MAP[currentEmotion]?.aura}
-                      auraOpacity={auraOpacity}
-                      auraStyle={EMOTION_MAP[currentEmotion]?.style}
-                      timestamp={new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      isStreaming={true}
-                    />
-                  ) : (
-                    <div className="flex justify-start ml-14 -mt-2">
-                      <TypingIndicator />
-                    </div>
-                  )
+                  <div className="flex justify-start ml-14 -mt-2">
+                    <TypingIndicator />
+                  </div>
                 )}
               </>
             )}

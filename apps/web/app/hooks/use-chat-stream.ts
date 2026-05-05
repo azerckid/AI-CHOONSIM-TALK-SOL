@@ -67,6 +67,7 @@ export function useChatStream(opts: UseChatStreamOptions) {
     const typewriterTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const typewriterQueueRef = useRef<TypewriterItem[]>([]);
     const pendingDoneRef = useRef<DonePayload | null>(null);
+    const assistantSequenceRef = useRef(0);
 
     const saveInterruptedMessage = useCallback(async (content: string, mediaUrl: string | null) => {
         try {
@@ -92,6 +93,7 @@ export function useChatStream(opts: UseChatStreamOptions) {
         }
         typewriterQueueRef.current = [];
         pendingDoneRef.current = null;
+        assistantSequenceRef.current = 0;
 
         setIsAiStreaming(true);
         setStreamingContent("");
@@ -275,6 +277,8 @@ export function useChatStream(opts: UseChatStreamOptions) {
                                 const content = currentMessageContent;
                                 const msgId = data.messageId || crypto.randomUUID();
                                 const msgMediaUrl = data.mediaUrl || null;
+                                const msgCreatedAt = new Date(Date.now() + assistantSequenceRef.current * 1000).toISOString();
+                                assistantSequenceRef.current += 1;
 
                                 typewriterQueueRef.current.push({
                                     text: content,
@@ -284,7 +288,7 @@ export function useChatStream(opts: UseChatStreamOptions) {
                                             role: "assistant" as const,
                                             content,
                                             mediaUrl: msgMediaUrl,
-                                            createdAt: new Date().toISOString(),
+                                            createdAt: msgCreatedAt,
                                             isLiked: false,
                                         }]);
                                         setStreamingContent("");
