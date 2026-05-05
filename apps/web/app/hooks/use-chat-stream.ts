@@ -98,6 +98,26 @@ export function useChatStream(opts: UseChatStreamOptions) {
         setStreamingMediaUrl(null);
 
         // ─── 로컬 헬퍼 함수 ───────────────────────────────────────────
+        function handleInsufficientChoco() {
+            setIsAiStreaming(false);
+            setIsOptimisticTyping(false);
+            if (optimisticIntervalRef.current) {
+                clearInterval(optimisticIntervalRef.current);
+                optimisticIntervalRef.current = null;
+            }
+            if (lastOptimisticDeductionRef.current > 0) {
+                setCurrentUserChocoBalance((p) => p + lastOptimisticDeductionRef.current);
+                setLastOptimisticDeduction(0);
+            }
+            if (onInsufficientChoco) {
+                onInsufficientChoco();
+            } else {
+                toast.error("CHOCO 잔액이 부족합니다.", {
+                    action: { label: "CHOCO 충전하기", onClick: () => window.location.href = "/profile/subscription" },
+                });
+            }
+        }
+
         // 모든 타자 큐가 비었고 done 이벤트가 도착했을 때 스트리밍 완전 종료
         function doFinishStreaming() {
             const doneData = pendingDoneRef.current;
@@ -201,7 +221,10 @@ export function useChatStream(opts: UseChatStreamOptions) {
                 }),
             });
 
-            if (response.status === 402) return;
+            if (response.status === 402) {
+                handleInsufficientChoco();
+                return;
+            }
             if (!response.ok) throw new Error("AI 응답 요청 실패");
 
             setIsOptimisticTyping(false);
@@ -226,23 +249,7 @@ export function useChatStream(opts: UseChatStreamOptions) {
 
                             // ── 에러 처리 ──
                             if (data.error && data.code === 402) {
-                                setIsAiStreaming(false);
-                                setIsOptimisticTyping(false);
-                                if (optimisticIntervalRef.current) {
-                                    clearInterval(optimisticIntervalRef.current);
-                                    optimisticIntervalRef.current = null;
-                                }
-                                if (lastOptimisticDeductionRef.current > 0) {
-                                    setCurrentUserChocoBalance((p) => p + lastOptimisticDeductionRef.current);
-                                    setLastOptimisticDeduction(0);
-                                }
-                                if (onInsufficientChoco) {
-                                    onInsufficientChoco();
-                                } else {
-                                    toast.error("CHOCO 잔액이 부족합니다.", {
-                                        action: { label: "CHOCO 충전하기", onClick: () => window.location.href = "/profile/subscription" },
-                                    });
-                                }
+                                handleInsufficientChoco();
                                 return;
                             }
 
