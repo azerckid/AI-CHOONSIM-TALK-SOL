@@ -1,7 +1,7 @@
 # CHOCO Payment Flow — Technical Documentation
 
-> **Created:** 2026-05-04
-> **Updated:** 2026-05-04
+> Created: 2026-05-04 00:00
+> Last Updated: 2026-05-05 17:08
 > **Category:** Technical Spec — Payment Architecture
 
 ---
@@ -159,6 +159,46 @@ User purchases CHOCO via modal
 | `POST /api/payment/solana/verify-sig` | SwapTxCard, BuyChocoPayCard, PrivyChocoPayCard | Verifies signed tx signature → credits CHOCO |
 | `POST /api/payment/solana/create-request` | SolanaPayButton | Creates Solana Pay URL + reference key |
 | `POST /api/payment/solana/verify` | SolanaPayButton | Polls for reference tx on-chain → credits CHOCO |
+
+---
+
+## Devnet Verification Hardening
+
+Status: `Needs Regression`
+
+The signed transaction flow now binds the app payment record to the on-chain transaction more tightly.
+
+Generation requirements:
+- `create-tx` creates a unique payment `reference` and stores it in `Payment.transactionId`.
+- `create-tx` accepts the expected payer wallet and stores it in `Payment.walletAddress`.
+- Phantom, Privy embedded wallet, and chat-generated `SWAP_TX` transactions include the reference public key through a memo instruction.
+- Payment records are marked with `network = devnet`.
+
+Verification requirements:
+- The payment must belong to the logged-in user.
+- The payment must still be `PENDING`.
+- The submitted signature must not already belong to another payment.
+- The transaction must be confirmed and successful on-chain.
+- The receiver wallet must be present in the transaction account keys.
+- The payment reference public key must be present in the transaction account keys.
+- The fee payer must match the stored payment payer when available.
+- The receiver balance delta must meet the expected lamports.
+- The transaction block time must not be older than the payment request, with a small clock tolerance.
+- Verification metadata is written to `Payment.metadata`.
+
+Reconciliation behavior:
+- DB CHOCO crediting is completed once SOL verification succeeds.
+- SPL CHOCO transfer runs after DB crediting.
+- SPL transfer success, failure, or skip state is recorded under `metadata.splTransfer`.
+- SPL transfer failure does not roll back the completed DB payment.
+
+Remaining validation:
+- Phantom direct payment E2E.
+- Privy embedded wallet payment E2E.
+- Chat `SWAP_TX` payment E2E.
+- Duplicate signature rejection.
+- Missing reference rejection.
+- 402 → top-up → original chat recovery.
 
 ---
 

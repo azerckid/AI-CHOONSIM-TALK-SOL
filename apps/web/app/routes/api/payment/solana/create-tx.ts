@@ -11,7 +11,7 @@ import type { ActionFunctionArgs } from "react-router";
 import { auth } from "~/lib/auth.server";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
-import { Keypair } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { z } from "zod";
 import { logger } from "~/lib/logger.server";
 
@@ -20,6 +20,7 @@ const SOL_PER_CHOCO = 0.00001; // 1 CHOCO = 0.00001 SOL → 100 CHOCO = 0.001 SO
 
 const bodySchema = z.object({
   choco: z.number().int().positive(),
+  payer: z.string().optional(),
 });
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -43,7 +44,16 @@ export async function action({ request }: ActionFunctionArgs) {
     return Response.json({ error: "Invalid body: choco must be a positive integer" }, { status: 400 });
   }
 
-  const { choco } = parsed.data;
+  const { choco, payer } = parsed.data;
+  let payerAddress: string | null = null;
+  if (payer) {
+    try {
+      payerAddress = new PublicKey(payer).toBase58();
+    } catch {
+      return Response.json({ error: "Invalid payer wallet address" }, { status: 400 });
+    }
+  }
+
   const solAmount = parseFloat((choco * SOL_PER_CHOCO).toFixed(6));
   const lamports = Math.round(solAmount * 1e9);
 
@@ -61,10 +71,12 @@ export async function action({ request }: ActionFunctionArgs) {
       type: "TOPUP",
       provider: "SOLANA",
       transactionId: reference,
+      walletAddress: payerAddress,
       creditsGranted: choco,
       cryptoCurrency: "SOL",
       cryptoAmount: solAmount,
       exchangeRate: 1 / SOL_PER_CHOCO / 1000,
+      network: "devnet",
       description: `${choco} CHOCO (Phantom inline)`,
       updatedAt: new Date(),
     });
@@ -76,7 +88,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   logger.info({
     category: "PAYMENT",
-    message: `[create-tx] payment created: id=${paymentId}, choco=${choco}, sol=${solAmount}, user=${session.user.id}`,
+    message: `[create-tx] payment created: id=${paymentId}, choco=${choco}, sol=${solAmount}, payer=${payerAddress ?? "unknown"}, user=${session.user.id}`,
   });
 
   return Response.json({

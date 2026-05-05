@@ -56,22 +56,23 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
     }
 
     try {
-      // 1. 서버에서 트랜잭션 파라미터 생성
+      // 1. Phantom 연결
+      setStatus("connecting");
+      await phantom.connect();
+      const payer = phantom.publicKey.toString();
+
+      // 2. 서버에서 트랜잭션 파라미터 생성
       setStatus("building");
       const res = await fetch("/api/payment/solana/create-tx", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ choco }),
+        body: JSON.stringify({ choco, payer }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error((err as any).error || `서버 오류 (${res.status})`);
       }
-      const { recipient, lamports, paymentId, rpcUrl } = await res.json();
-
-      // 2. Phantom 연결
-      setStatus("connecting");
-      await phantom.connect();
+      const { recipient, lamports, paymentId, rpcUrl, reference } = await res.json();
 
       // 3. 트랜잭션 빌드
       const {
@@ -80,18 +81,27 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
         Connection,
         VersionedTransaction,
         TransactionMessage,
+        TransactionInstruction,
       } = await import("@solana/web3.js");
 
       const connection = new Connection(rpcUrl, "confirmed");
       const { blockhash } = await connection.getLatestBlockhash();
-      const fromPubkey = new PublicKey(phantom.publicKey.toString());
+      const fromPubkey = new PublicKey(payer);
       const toPubkey = new PublicKey(recipient);
+      const referencePubkey = new PublicKey(reference);
+      const memoProgramId = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+      const referenceMemo = new TransactionInstruction({
+        keys: [{ pubkey: referencePubkey, isSigner: false, isWritable: false }],
+        programId: memoProgramId,
+        data: Buffer.from(`choonsim:${paymentId}`),
+      });
 
       const message = new TransactionMessage({
         payerKey: fromPubkey,
         recentBlockhash: blockhash,
         instructions: [
           SystemProgram.transfer({ fromPubkey, toPubkey, lamports }),
+          referenceMemo,
         ],
       }).compileToV0Message();
 

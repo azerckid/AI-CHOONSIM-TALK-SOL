@@ -23,6 +23,7 @@ import {
   Connection,
   PublicKey,
   Transaction,
+  TransactionInstruction,
   SystemProgram,
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
@@ -46,6 +47,7 @@ import { DateTime } from "luxon";
 
 const CHOCO_DECIMALS = 6;
 const MINT_COST_CHOCO = 200;
+const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
 const PHANTOM_GUIDE =
   "Hey, this feature requires a Solana wallet!\n\n" +
   "1️⃣ Install Phantom: https://phantom.app\n" +
@@ -417,10 +419,12 @@ export function getChoonsimSolanaTools(userId: string, conversationId?: string) 
           type: "TOPUP",
           provider: "SOLANA",
           transactionId: reference,
+          walletAddress: user.solanaWallet,
           creditsGranted: amount,
           cryptoCurrency: "SOL",
           cryptoAmount: solAmount,
           exchangeRate: 1 / SOL_PER_CHOCO / 1000,
+          network: "devnet",
           description: `${amount} CHOCO (AI Chat)`,
           updatedAt: new Date(),
         });
@@ -431,12 +435,19 @@ export function getChoonsimSolanaTools(userId: string, conversationId?: string) 
 
         const fromPubkey = new PublicKey(user.solanaWallet);
         const toPubkey = new PublicKey(recipient);
+        const referencePubkey = new PublicKey(reference);
+        const referenceMemo = new TransactionInstruction({
+          keys: [{ pubkey: referencePubkey, isSigner: false, isWritable: false }],
+          programId: MEMO_PROGRAM_ID,
+          data: Buffer.from(`choonsim:${paymentId}`),
+        });
 
         const tx = new Transaction({
           recentBlockhash: blockhash,
           feePayer: fromPubkey,
         }).add(
-          SystemProgram.transfer({ fromPubkey, toPubkey, lamports })
+          SystemProgram.transfer({ fromPubkey, toPubkey, lamports }),
+          referenceMemo
         );
 
         // 유저 서명만 필요하므로 requireAllSignatures: false
