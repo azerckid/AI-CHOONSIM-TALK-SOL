@@ -38,6 +38,8 @@ const chatSchema = z.object({
     path: ["message"],
 });
 
+const PAYMENT_MARKER_PATTERN = /\[(?:SWAP_TX|PHANTOM):[^\]]+\]/;
+
 export async function action({ request }: ActionFunctionArgs) {
     const { logger } = await import("~/lib/logger.server");
     const session = await auth.api.getSession({ headers: request.headers });
@@ -288,12 +290,16 @@ export async function action({ request }: ActionFunctionArgs) {
                 const firstPhotoMarker = await extractPhotoMarker(fullContent, characterId);
                 const photoUrl = firstPhotoMarker.photoUrl;
                 const contentWithoutPhotoMarker = firstPhotoMarker.content;
+                const hasPaymentMarker = PAYMENT_MARKER_PATTERN.test(contentWithoutPhotoMarker);
 
                 // 2단계: 전체 응답을 ---로 나누기
-                let messageParts = contentWithoutPhotoMarker.split('---').map(p => p.trim()).filter(p => p.length > 0);
+                // 결제 마커가 있는 응답은 카드 메시지 하나로 유지해야 raw 안내 문구가 별도 말풍선으로 저장되지 않는다.
+                let messageParts = hasPaymentMarker
+                    ? [contentWithoutPhotoMarker.trim()].filter(p => p.length > 0)
+                    : contentWithoutPhotoMarker.split('---').map(p => p.trim()).filter(p => p.length > 0);
 
                 const hasUrl = /https?:\/\//.test(contentWithoutPhotoMarker);
-                if (messageParts.length <= 1 && contentWithoutPhotoMarker.length > 100 && !hasUrl) {
+                if (!hasPaymentMarker && messageParts.length <= 1 && contentWithoutPhotoMarker.length > 100 && !hasUrl) {
                     const chunkSize = 80;
                     messageParts = [];
                     let currentPart = "";

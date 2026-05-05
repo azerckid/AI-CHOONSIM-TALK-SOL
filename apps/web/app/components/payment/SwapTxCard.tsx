@@ -18,6 +18,9 @@ import { Component, type ReactNode } from "react";
 class PrivyErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
   static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error: unknown) {
+    console.error("[SwapTxCard:PrivyErrorBoundary]", error);
+  }
   render() {
     if (this.state.hasError) {
       return (

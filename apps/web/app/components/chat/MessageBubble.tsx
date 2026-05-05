@@ -10,6 +10,7 @@ const PHANTOM_MARKER = /\[PHANTOM:(\d+)\]/;
 const SWAP_TX_MARKER = /\[SWAP_TX:([^:[\]]+):([^\]]+)\]/;
 
 const URL_PATTERN = /(https?:\/\/[^\s]+)/g;
+const RAW_PAYMENT_TEXT_PATTERN = /(?:\d[\d,]*\s+CHOCO\s+purchase\s+ready\s+Wallet:|\d+(?:\.\d+)?\s*SOL\s*[—-]\s*Sign\s+with\s+Phantom)/i;
 
 function isUrl(s: string) {
   return /^https?:\/\/[^\s]+$/.test(s);
@@ -96,6 +97,7 @@ export function MessageBubble({
     .replace(PHANTOM_MARKER, "")
     .replace(SWAP_TX_MARKER, "")
     .trimEnd();
+  const isRawPaymentAssistantText = !isUser && !hasPaymentMarker && RAW_PAYMENT_TEXT_PATTERN.test(content);
 
   const handleLike = () => {
     if (messageId && onLike) {
@@ -139,6 +141,10 @@ export function MessageBubble({
         </div>
       </div>
     );
+  }
+
+  if (isRawPaymentAssistantText) {
+    return null;
   }
 
   return (
