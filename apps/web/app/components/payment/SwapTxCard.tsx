@@ -19,7 +19,13 @@ class PrivyErrorBoundary extends Component<{ children: ReactNode }, { hasError: 
   state = { hasError: false };
   static getDerivedStateFromError() { return { hasError: true }; }
   render() {
-    if (this.state.hasError) return null;
+    if (this.state.hasError) {
+      return (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+          내부 지갑을 불러오지 못했어요. Shop에서 내부 지갑 결제를 시도해주세요.
+        </div>
+      );
+    }
     return this.props.children;
   }
 }
@@ -39,6 +45,8 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
   const [hasPhantom, setHasPhantom] = useState(false);
   const [tab, setTab] = useState<"phantom" | "internal">("internal");
   const revalidator = useRevalidator();
+  void paymentId;
+  void txBase64;
 
   // SOL 금액 계산 (1 CHOCO = 0.00001 SOL)
   const solAmount = (choco * 0.00001).toFixed(6);
@@ -62,23 +70,72 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
     try {
       // 1. Phantom 연결
       setStatus("connecting");
-      await phantom.connect();
+      const connectResult = await phantom.connect();
+      const payer = connectResult.publicKey.toString();
 
-      // 2. 트랜잭션 역직렬화
-      const { Transaction } = await import("@solana/web3.js");
-      const txBytes = Uint8Array.from(atob(txBase64), (c) => c.charCodeAt(0));
-      const tx = Transaction.from(txBytes);
+      // 2. 실제 Phantom 주소 기준으로 결제 요청과 트랜잭션을 새로 만든다.
+      const createRes = await fetch("/api/payment/solana/create-tx", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ choco, payer }),
+      });
+      if (!createRes.ok) {
+        const err = await createRes.json().catch(() => ({}));
+        throw new Error(err.error || `서버 오류 (${createRes.status})`);
+      }
+      const { recipient, lamports, paymentId: phantomPaymentId, rpcUrl, reference } = await createRes.json();
 
-      // 3. Phantom 서명 + 전송
+      // 3. Shop 결제와 동일한 VersionedTransaction 경로 사용
+      const {
+        SystemProgram,
+        PublicKey,
+        Connection,
+        VersionedTransaction,
+        TransactionMessage,
+      } = await import("@solana/web3.js");
+
+      const connection = new Connection(rpcUrl, "confirmed");
+      const latestBlockhash = await connection.getLatestBlockhash();
+      const fromPubkey = new PublicKey(payer);
+      const toPubkey = new PublicKey(recipient);
+      const referencePubkey = new PublicKey(reference);
+      const transferInstruction = SystemProgram.transfer({ fromPubkey, toPubkey, lamports });
+      transferInstruction.keys.push({
+        pubkey: referencePubkey,
+        isSigner: false,
+        isWritable: false,
+      });
+
+      const message = new TransactionMessage({
+        payerKey: fromPubkey,
+        recentBlockhash: latestBlockhash.blockhash,
+        instructions: [transferInstruction],
+      }).compileToV0Message();
+
+      const tx = new VersionedTransaction(message);
+
+      // 4. Phantom 서명 + 전송
       setStatus("signing");
-      const { signature } = await phantom.signAndSendTransaction(tx);
+      const signedTx = await phantom.signTransaction(tx);
+      const signature = await connection.sendRawTransaction(signedTx.serialize(), {
+        skipPreflight: false,
+        preflightCommitment: "confirmed",
+      });
+      await connection.confirmTransaction(
+        {
+          signature,
+          blockhash: latestBlockhash.blockhash,
+          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+        },
+        "confirmed",
+      );
 
-      // 4. 온체인 검증 + CHOCO 지급
+      // 5. 온체인 검증 + CHOCO 지급
       setStatus("verifying");
       const verifyRes = await fetch("/api/payment/solana/verify-sig", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signature, paymentId }),
+        body: JSON.stringify({ signature, paymentId: phantomPaymentId }),
       });
       const verifyData = await verifyRes.json();
 
