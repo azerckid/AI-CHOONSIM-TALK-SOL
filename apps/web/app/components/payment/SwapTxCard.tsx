@@ -10,28 +10,8 @@
  * 4. signature → /api/payment/solana/verify-sig → CHOCO 충전
  */
 import { useState, useEffect } from "react";
-import { useRevalidator } from "react-router";
+import { Link, useRevalidator } from "react-router";
 import { toast } from "sonner";
-import { PrivyChocoPayCard } from "./PrivyChocoPayCard";
-import { Component, type ReactNode } from "react";
-
-class PrivyErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
-  state = { hasError: false };
-  static getDerivedStateFromError() { return { hasError: true }; }
-  componentDidCatch(error: unknown) {
-    console.error("[SwapTxCard:PrivyErrorBoundary]", error);
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
-          내부 지갑을 불러오지 못했어요. Shop에서 내부 지갑 결제를 시도해주세요.
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 interface Props {
   paymentId: string;
@@ -266,9 +246,18 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
           )}
         </button>
       ) : (
-        <PrivyErrorBoundary>
-          <PrivyChocoPayCard choco={choco} />
-        </PrivyErrorBoundary>
+        <div className="rounded-xl border border-white/10 bg-white/5 p-3 space-y-3">
+          <p className="text-xs leading-relaxed text-white/60">
+            내부 지갑 결제는 Shop의 지갑 Provider 안에서 진행됩니다. 선택한 수량으로 이동해 결제를 이어가세요.
+          </p>
+          <Link
+            to={`/buy-choco?choco=${choco}`}
+            className="w-full flex items-center justify-center gap-2 bg-[#9945FF] hover:bg-[#7b35d9] text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
+          >
+            <span className="material-symbols-outlined text-[18px]">storefront</span>
+            Shop에서 내부 지갑으로 결제
+          </Link>
+        </div>
       )}
     </div>
   );
