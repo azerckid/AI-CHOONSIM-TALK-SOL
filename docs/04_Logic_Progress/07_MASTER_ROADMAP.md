@@ -33,7 +33,7 @@ Phase ∞  보류 (생태계 대기)  미정
 | 우선순위 | 항목 | 현재 라벨 | 다음 확인 |
 | :--- | :--- | :--- | :--- |
 | P0 | Solana 결제 검증 강화 | `Needs Regression` | Phantom 직접 결제와 Privy 임베디드 지갑 devnet E2E 완료. chat `SWAP_TX` Memo 제거 및 기존 스트리밍 경로 복귀, 실제 지갑 E2E와 402 복구 흐름 검증 필요 |
-| P0 | 402 이후 충전 복귀 UX | `Needs Regression` | HTTP 402 즉시 반환 시 충전 모달 오픈 코드 수정 및 빌드 통과. 채팅 -> 402 -> CHOCO 충전 -> 원래 대화 복귀 수동 QA 필요 |
+| P0 | 402 이후 충전 복귀 UX | `Needs Regression` | 버그 수정: 402 시 하트 모달(ItemStoreModal) 대신 BuyChocoPayCard Dialog 표시로 변경. 채팅 -> 402 -> CHOCO 충전 -> 모달 닫기 -> 대화 복귀 수동 QA 필요 |
 | P0 | AI 모델 장애 폴백 | `Needs Regression` | Gemini 429/503 발생 시 OpenAI fallback 모델 사용. 실제 장애 상황 재현 및 응답 품질 수동 QA 필요 |
 | P0 | 핵심 사용자 루프 명확화 | `Open Risk` | 첫 비밀 대화 -> 감정적 순간 -> CHOCO 액션 -> 기억 저장 또는 선물 흐름으로 home/chat/guide/shop 점검 |
 | P1 | 로그인 후 모바일 E2E QA | `Needs Regression` | 테스트 계정으로 채팅, 지갑, 결제, 기억 앨범 전체 흐름 검증 |
@@ -90,7 +90,7 @@ Phase ∞  보류 (생태계 대기)  미정
   - [x] 시나리오 4: CHOCO 구매 → SwapTxCard → 잔액 반영
   - [x] 녹화 완료 후 README 상단에 영상 링크 추가
 - [x] **ElevenLabs TTS VO 생성** (`07_PITCH_SCRIPT_3MIN_EN.md` 스크립트 사용) — 완료 2026-05-04
-- [ ] **팀 슬라이드 추가** (`pitch.tsx` Slide에 팀 정보 기입) — `Open Risk`
+- [x] **팀 슬라이드 추가** (`pitch.tsx` Slide 12 — Solo Founder 슬라이드 완료, TOTAL 13으로 업데이트) — `Demo Verified`
 - [x] **미커밋 변경사항 전체 커밋** (pitch.tsx 포함)
 
 ### 0-5. 결제 UX / 내부 지갑 개선 (2026-05-04 완료)

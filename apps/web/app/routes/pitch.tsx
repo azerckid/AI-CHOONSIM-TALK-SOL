@@ -8,7 +8,7 @@ export function meta() {
 }
 
 /* ─── Slide data ──────────────────────────────────────────────── */
-const TOTAL = 12;
+const TOTAL = 13;
 
 export default function PitchDeck() {
   const [current, setCurrent] = useState(0);
@@ -112,7 +112,7 @@ export default function PitchDeck() {
         {/* ── SLIDE 2: PROBLEM ── */}
         <section className={cls(1)}>
           <div className="pitch-inner">
-            <p className="pitch-sn">02 / 12</p>
+            <p className="pitch-sn">02 / 13</p>
             <h2>The Problem</h2>
             <p className="pitch-sub">AI companions today are <em>disposable</em>. Every conversation starts from zero.</p>
             <div className="pitch-cards">
@@ -127,7 +127,7 @@ export default function PitchDeck() {
         {/* ── SLIDE 3: INSIGHT ── */}
         <section className={cls(2)}>
           <div className="pitch-inner">
-            <p className="pitch-sn">03 / 12</p>
+            <p className="pitch-sn">03 / 13</p>
             <h2>The Insight</h2>
             <p className="pitch-sub">
               "Conversation is not information exchange. It's <em>empathy exchange</em>."
@@ -156,7 +156,7 @@ export default function PitchDeck() {
         {/* ── SLIDE 4: STRATEGY ── */}
         <section className={cls(3)}>
           <div className="pitch-inner">
-            <p className="pitch-sn">04 / 12</p>
+            <p className="pitch-sn">04 / 13</p>
             <h2>Square to Sanctuary</h2>
             <p className="pitch-sub">We move the crowd from the <em>Public Square</em> to a <em>Private Sanctuary</em> — via Solana.</p>
             <div className="pitch-flow">
@@ -177,7 +177,7 @@ export default function PitchDeck() {
         {/* ── SLIDE 5: WHAT WE BUILT ── */}
         <section className={cls(4)}>
           <div className="pitch-inner">
-            <p className="pitch-sn">05 / 12</p>
+            <p className="pitch-sn">05 / 13</p>
             <h2>What We've Already Built</h2>
             <p className="pitch-sub">This is not a concept. This is a <em>working product</em>.</p>
             <div className="pitch-cards">
@@ -197,7 +197,7 @@ export default function PitchDeck() {
         {/* ── SLIDE 6: WHY SOLANA I ── */}
         <section className={cls(5)}>
           <div className="pitch-inner">
-            <p className="pitch-sn">06 / 12</p>
+            <p className="pitch-sn">06 / 13</p>
             <h2>Why Solana I: The Primitives</h2>
             <p className="pitch-sub">No other chain has these primitives for <em>invisible onboarding</em>.</p>
             <div className="pitch-cards pitch-cards-3">
@@ -216,7 +216,7 @@ export default function PitchDeck() {
         {/* ── SLIDE 7: WHY SOLANA II ── */}
         <section className={cls(6)}>
           <div className="pitch-inner">
-            <p className="pitch-sn">07 / 12</p>
+            <p className="pitch-sn">07 / 13</p>
             <h2>Why Solana II: Blinks</h2>
             <p className="pitch-sub">Your X feed becomes a <em>Solana transaction layer</em>.</p>
             <div className="pitch-card" style={{ maxWidth: 700, marginBottom: 24 }}>
@@ -239,7 +239,7 @@ export default function PitchDeck() {
         {/* ── SLIDE 8: TECH III ── */}
         <section className={cls(7)}>
           <div className="pitch-inner">
-            <p className="pitch-sn">08 / 12</p>
+            <p className="pitch-sn">08 / 13</p>
             <h2>Tech III: Next-Level Edge</h2>
             <p className="pitch-sub"><em>Jupiter Swap</em>. <em>TEE Privacy</em>. <em>Eliza Persona</em>.</p>
             <div className="pitch-cards pitch-cards-3">
@@ -253,7 +253,7 @@ export default function PitchDeck() {
         {/* ── SLIDE 9: TRACTION ── */}
         <section className={cls(8)}>
           <div className="pitch-inner">
-            <p className="pitch-sn">09 / 12</p>
+            <p className="pitch-sn">09 / 13</p>
             <h2>Traction & Global Proof</h2>
             <p className="pitch-sub"><em>Hardcore early adopters</em> — small cohort, extreme loyalty, <em>exponential growth</em>.</p>
             <div style={{ display: "flex", gap: 40, alignItems: "flex-start", flexWrap: "wrap" }}>
@@ -286,7 +286,7 @@ export default function PitchDeck() {
         {/* ── SLIDE 10: BUSINESS ── */}
         <section className={cls(9)}>
           <div className="pitch-inner">
-            <p className="pitch-sn">10 / 12</p>
+            <p className="pitch-sn">10 / 13</p>
             <h2>Character-Fi: The Business</h2>
             <p className="pitch-sub">From <em>fans</em> to <em>stakeholders</em>. From empathy to <em>yield</em>.</p>
             <div className="pitch-table-wrap">
@@ -307,7 +307,7 @@ export default function PitchDeck() {
         {/* ── SLIDE 11: ROADMAP ── */}
         <section className={cls(10)}>
           <div className="pitch-inner">
-            <p className="pitch-sn">11 / 12</p>
+            <p className="pitch-sn">11 / 13</p>
             <h2>Roadmap</h2>
             <p className="pitch-sub">Choonsim is the proof of concept. <em>The platform is the product.</em></p>
             <div className="pitch-timeline">
@@ -323,8 +323,35 @@ export default function PitchDeck() {
           </div>
         </section>
 
-        {/* ── SLIDE 12: CLOSING ── */}
+        {/* ── SLIDE 12: TEAM ── */}
         <section className={cls(11)}>
+          <div className="pitch-inner">
+            <p className="pitch-sn">12 / 13</p>
+            <h2>The Builder</h2>
+            <p className="pitch-sub">One person. Every layer — from Solana to UI to DevOps — shipped solo.</p>
+            <div style={{ display: "flex", gap: 32, alignItems: "flex-start", flexWrap: "wrap", marginTop: 8 }}>
+              <div style={{ flex: "0 0 auto", width: 100, height: 100, borderRadius: "50%", background: "var(--p-grad)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 42 }}>
+                🧑‍💻
+              </div>
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <p style={{ fontSize: 24, fontWeight: 700, color: "var(--p-text)", marginBottom: 4 }}>@azerckid</p>
+                <p style={{ fontSize: 14, color: "var(--p-pink)", fontWeight: 600, marginBottom: 16, textTransform: "uppercase", letterSpacing: 1 }}>Solo Founder · Full-Stack · Solana</p>
+                <div className="pitch-cards" style={{ gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <Card title="AI × Blockchain" desc="LangGraph + Solana Agent Kit — end-to-end, no external team." />
+                  <Card title="Full-Stack" desc="React Router v7 SSR, Turso, Vercel Edge. Shipped in weeks." />
+                  <Card title="Product Design" desc="UX, copywriting, pitch deck — every pixel self-made." />
+                  <Card title="Why Solo?" desc="Speed. Every decision instant. Every line owned. No drift." pink />
+                </div>
+              </div>
+            </div>
+            <p style={{ fontSize: 14, marginTop: 24, color: "var(--p-sec)", borderLeft: "2px solid var(--p-pink)", paddingLeft: 16 }}>
+              "I built this because I wanted it to exist — and I needed to prove Solana can power emotional products."
+            </p>
+          </div>
+        </section>
+
+        {/* ── SLIDE 13: CLOSING ── */}
+        <section className={cls(12)}>
           <div className="pitch-inner" style={{ textAlign: "center" }}>
             <div className="closing-heart" />
             <p className="pitch-tagline closing-tag" style={{ fontSize: "clamp(24px,3.5vw,42px)" }}>
