@@ -6,7 +6,6 @@ import { auth } from "~/lib/auth.server";
 import { z } from "zod";
 import type { ActionFunctionArgs } from "react-router";
 import { streamAIResponse, extractPhotoMarker, extractEmotionMarker } from "~/lib/ai.server";
-import { streamAIResponseV2 } from "~/lib/ai-v2.server";
 import { HumanMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
 import * as schema from "~/db/schema";
 import { eq, and, sql, desc, gte, count } from "drizzle-orm";
@@ -226,42 +225,21 @@ export async function action({ request }: ActionFunctionArgs) {
                 const subscriptionTier = (currentUser?.subscriptionTier as any) || "FREE";
                 let tokenUsage: { promptTokens: number; completionTokens: number; totalTokens: number } | null = null;
 
-                const useVercelAI = process.env.USE_VERCEL_AI_SDK === "true" && !mediaUrl;
-                const historyForV2 = formattedHistory.map((h) => ({
-                    role: h.role as "user" | "assistant",
-                    content: h.content,
-                    mediaUrl: h.mediaUrl,
-                    isInterrupted: h.isInterrupted,
-                }));
-                const streamSource = useVercelAI
-                    ? streamAIResponseV2(
-                          message,
-                          historyForV2,
-                          personality,
-                          memory,
-                          mediaUrl ?? null,
-                          characterId,
-                          subscriptionTier,
-                          giftContext ? { ...giftContext, countInSession: giftCountInSession } : undefined,
-                          request.signal,
-                          (currentConversation as any)?.character?.name,
-                          (currentConversation as any)?.character?.personaPrompt
-                      )
-                    : streamAIResponse(
-                          message,
-                          formattedHistory,
-                          personality,
-                          memory,
-                          mediaUrl,
-                          session.user.id,
-                          characterId,
-                          subscriptionTier,
-                          giftContext ? { ...giftContext, countInSession: giftCountInSession } : undefined,
-                          request.signal,
-                          (currentConversation as any)?.character?.name,
-                          (currentConversation as any)?.character?.personaPrompt,
-                          conversationId
-                      );
+                const streamSource = streamAIResponse(
+                    message,
+                    formattedHistory,
+                    personality,
+                    memory,
+                    mediaUrl,
+                    session.user.id,
+                    characterId,
+                    subscriptionTier,
+                    giftContext ? { ...giftContext, countInSession: giftCountInSession } : undefined,
+                    request.signal,
+                    (currentConversation as any)?.character?.name,
+                    (currentConversation as any)?.character?.personaPrompt,
+                    conversationId
+                );
 
                 for await (const item of streamSource) {
                     if (isAborted) break;

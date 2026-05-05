@@ -1,6 +1,6 @@
 # 07. 춘심 마스터 로드맵
 > Created: 2026-04-30 00:00
-> Last Updated: 2026-05-05 18:50
+> Last Updated: 2026-05-05 19:05
 > 목적: Colosseum 해커톤 마감부터 서비스화까지 전체 작업 현황 및 우선순위 통합 관리
 
 ---
@@ -32,11 +32,12 @@ Phase ∞  보류 (생태계 대기)  미정
 
 | 우선순위 | 항목 | 현재 라벨 | 다음 확인 |
 | :--- | :--- | :--- | :--- |
-| P0 | Solana 결제 검증 강화 | `Needs Regression` | Phantom 직접 결제와 Privy 임베디드 지갑 devnet E2E 완료. chat `SWAP_TX` Memo 제거 및 빌드 통과, 실제 지갑 E2E와 402 복구 흐름 검증 필요 |
+| P0 | Solana 결제 검증 강화 | `Needs Regression` | Phantom 직접 결제와 Privy 임베디드 지갑 devnet E2E 완료. chat `SWAP_TX` Memo 제거 및 기존 스트리밍 경로 복귀, 실제 지갑 E2E와 402 복구 흐름 검증 필요 |
 | P0 | 402 이후 충전 복귀 UX | `Needs Regression` | HTTP 402 즉시 반환 시 충전 모달 오픈 코드 수정 및 빌드 통과. 채팅 -> 402 -> CHOCO 충전 -> 원래 대화 복귀 수동 QA 필요 |
 | P0 | 핵심 사용자 루프 명확화 | `Open Risk` | 첫 비밀 대화 -> 감정적 순간 -> CHOCO 액션 -> 기억 저장 또는 선물 흐름으로 home/chat/guide/shop 점검 |
 | P1 | 로그인 후 모바일 E2E QA | `Needs Regression` | 테스트 계정으로 채팅, 지갑, 결제, 기억 앨범 전체 흐름 검증 |
 | P1 | LLM Tool Calling 정식 복구 | `Open Risk` | LangGraph `ToolNode` 기반 도구 실행 구조 복구 |
+| P1 | Vercel AI SDK V2 재도입 검토 | `Open Risk` | 결제/잔액/온체인 도구 호출 parity 확보 전까지 채팅 API는 기존 스트리밍 경로 사용 |
 | P2 | Privy/RPC 환경 설정 분리 | `Open Risk` | 하드코딩된 공개 설정을 `VITE_*` 설정 레이어로 이동 |
 | P2 | 서버 지갑 운영 모니터링 | `Open Risk` | 서버 SOL/CHOCO 잔액과 funding 실패 상태를 운영자가 확인 가능하게 정리 |
 
@@ -166,6 +167,7 @@ Phase 1은 기능 추가보다 서비스 신뢰성 보강을 우선한다. 아�
 - [ ] `sanitizeToolSchema()` — Gemini 호환 처리 주석 명확화
 - [ ] `executeNaturalLanguageCommand()` 패턴 확장 (새 자연어 트리거 추가 검토)
 - [ ] 미사용 `generateAIResponse()` 호출 경로 존재 여부 확인 → 정리 또는 유지 결정
+- [x] 채팅 API Vercel AI SDK V2 실험 경로 비활성화 — 결제 도구 호출 parity 확보 전까지 기존 `streamAIResponse` 경로 사용 2026-05-05
 
 ### 1-6. LLM Tool Calling 정식 복구
 
