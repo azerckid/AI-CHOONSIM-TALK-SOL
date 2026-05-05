@@ -35,7 +35,7 @@ Phase ∞  보류 (생태계 대기)  미정
 | P0 | Solana 결제 검증 강화 | `Needs Regression` | Phantom 직접 결제와 Privy 임베디드 지갑 devnet E2E 완료. chat `SWAP_TX` Memo 제거 및 기존 스트리밍 경로 복귀, 실제 지갑 E2E와 402 복구 흐름 검증 필요 |
 | P0 | 402 이후 충전 복귀 UX | `Needs Regression` | 버그 수정: 402 시 하트 모달(ItemStoreModal) 대신 BuyChocoPayCard Dialog 표시로 변경. 채팅 -> 402 -> CHOCO 충전 -> 모달 닫기 -> 대화 복귀 수동 QA 필요 |
 | P0 | AI 모델 장애 폴백 | `Needs Regression` | Gemini 429/503 발생 시 OpenAI fallback 모델 사용. 실제 장애 상황 재현 및 응답 품질 수동 QA 필요 |
-| P0 | 핵심 사용자 루프 명확화 | `Open Risk` | 첫 비밀 대화 -> 감정적 순간 -> CHOCO 액션 -> 기억 저장 또는 선물 흐름으로 home/chat/guide/shop 점검 |
+| P0 | 핵심 사용자 루프 명확화 | `Demo Verified` | "첫 비밀 대화 → 감정적 순간 → CHOCO 액션 → 기억 저장 또는 선물" — 2026-05-06 확정. home/chat/guide/shop 문구 반영은 Phase 1 |
 | P1 | 로그인 후 모바일 E2E QA | `Needs Regression` | 테스트 계정으로 채팅, 지갑, 결제, 기억 앨범 전체 흐름 검증 |
 | P1 | LLM Tool Calling 정식 복구 | `Open Risk` | LangGraph `ToolNode` 기반 도구 실행 구조 복구 |
 | P1 | Vercel AI SDK V2 재도입 검토 | `Open Risk` | 결제/잔액/온체인 도구 호출 parity 확보 전까지 채팅 API는 기존 스트리밍 경로 사용 |
@@ -126,7 +126,7 @@ Phase 1은 기능 추가보다 서비스 신뢰성 보강을 우선한다. 아�
 
 - [x] P0 결제 검증 설계 및 코드 보강 완료 — `reference`, payer, amount, createdAt, duplicate signature, reconciliation 포함. Phantom 직접 결제와 Privy 임베디드 지갑 devnet E2E 통과, chat `SWAP_TX` Memo 제거 및 빌드 통과, 실제 지갑 E2E와 402 복구 흐름은 `Needs Regression`
 - [ ] P0 402 결제 복구 UX 수동 QA 완료 — HTTP 402 즉시 반환 처리 코드 수정 및 빌드 통과 2026-05-05, 모바일 우선 수동 확인 필요
-- [ ] P0 핵심 사용자 루프 문장 확정 — home/chat/guide/shop 반영 기준으로 사용
+- [x] P0 핵심 사용자 루프 문장 확정 — "첫 비밀 대화 → 감정적 순간 → CHOCO 액션 → 기억 저장 또는 선물" (2026-05-06 확정)
 
 ### 1-1. LangGraph 아키텍처 통합
 
