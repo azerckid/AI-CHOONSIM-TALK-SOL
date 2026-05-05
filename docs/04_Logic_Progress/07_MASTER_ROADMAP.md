@@ -1,6 +1,6 @@
 # 07. 춘심 마스터 로드맵
 > Created: 2026-04-30 00:00
-> Last Updated: 2026-05-05 17:17
+> Last Updated: 2026-05-05 18:11
 > 목적: Colosseum 해커톤 마감부터 서비스화까지 전체 작업 현황 및 우선순위 통합 관리
 
 ---
@@ -32,7 +32,7 @@ Phase ∞  보류 (생태계 대기)  미정
 
 | 우선순위 | 항목 | 현재 라벨 | 다음 확인 |
 | :--- | :--- | :--- | :--- |
-| P0 | Solana 결제 검증 강화 | `Needs Regression` | 코드 보강 완료. 실제 Phantom/Privy/chat `SWAP_TX` devnet 서명 E2E 필요 |
+| P0 | Solana 결제 검증 강화 | `Needs Regression` | Phantom 직접 결제와 Privy 임베디드 지갑 devnet E2E 완료. chat `SWAP_TX`와 402 복구 흐름 검증 필요 |
 | P0 | 402 이후 충전 복귀 UX | `Needs Regression` | 채팅 -> 402 -> CHOCO 충전 -> 원래 대화 복귀 -> 메시지 재전송 수동 QA |
 | P0 | 핵심 사용자 루프 명확화 | `Open Risk` | 첫 비밀 대화 -> 감정적 순간 -> CHOCO 액션 -> 기억 저장 또는 선물 흐름으로 home/chat/guide/shop 점검 |
 | P1 | 로그인 후 모바일 E2E QA | `Needs Regression` | 테스트 계정으로 채팅, 지갑, 결제, 기억 앨범 전체 흐름 검증 |
@@ -122,7 +122,7 @@ Phase ∞  보류 (생태계 대기)  미정
 
 Phase 1은 기능 추가보다 서비스 신뢰성 보강을 우선한다. 아래 P0 항목이 정리되기 전에는 Phase 2 mainnet 준비로 넘어가지 않는다.
 
-- [x] P0 결제 검증 설계 및 코드 보강 완료 — `reference`, payer, amount, createdAt, duplicate signature, reconciliation 포함. 실제 지갑 E2E는 `Needs Regression`
+- [x] P0 결제 검증 설계 및 코드 보강 완료 — `reference`, payer, amount, createdAt, duplicate signature, reconciliation 포함. Phantom 직접 결제와 Privy 임베디드 지갑 devnet E2E 통과, chat `SWAP_TX`와 402 복구 흐름은 `Needs Regression`
 - [ ] P0 402 결제 복구 UX 수동 QA 완료 — 모바일 우선
 - [ ] P0 핵심 사용자 루프 문장 확정 — home/chat/guide/shop 반영 기준으로 사용
 
@@ -138,12 +138,13 @@ Phase 1은 기능 추가보다 서비스 신뢰성 보강을 우선한다. 아�
 
 ### 1-2. 결제 E2E 검증
 
-- [x] 충전(CHOCO 구매) → 대화 재개 흐름 실결제 E2E 확인 (내부 지갑 + Phantom 양쪽 검증 완료 2026-05-04) — `Demo Verified`, `Needs Regression`
+- [x] 충전(CHOCO 구매) → 대화 재개 흐름 실결제 E2E 확인 (Shop `/buy-choco` 기준 Phantom 직접 결제 + Privy 임베디드 지갑 devnet 검증 완료 2026-05-05) — `Service Verified`
 - [ ] 모달 닫기 후 대화 정상 재개 (브라우저 수동 확인) — `Needs Regression`
 - [ ] 402 응답 후 충전 → 원래 대화로 복귀 흐름 검증 — `Needs Regression`
-- [x] Solana `verify-sig` 검증 강화 — `reference`, payer, 결제 생성 시각, 중복 signature, reconciliation 상태 확인 — 코드 보강 완료 2026-05-05, `Needs Regression`
+- [x] Solana `verify-sig` 검증 강화 — `reference`, payer, 결제 생성 시각, 중복 signature, reconciliation 상태 확인 — 코드 보강 및 Shop 기준 Phantom/Privy devnet E2E 완료 2026-05-05, `Needs Regression`
 - [x] 비로그인 결제 API 보호 확인 — `/api/payment/solana/create-tx`, `/api/payment/solana/verify-sig` 모두 401 반환 확인 2026-05-05
-- [ ] 실제 지갑 devnet E2E — Phantom 직접 결제, Privy 임베디드 지갑 결제, 채팅 `SWAP_TX` 서명 검증 — `Needs Regression`
+- [x] 실제 지갑 devnet E2E — Shop `/buy-choco` 기준 Phantom 직접 결제와 Privy 임베디드 지갑 결제 모두 `create-tx -> verify-sig 200` 확인 2026-05-05 — `Service Verified`
+- [ ] 채팅 `SWAP_TX` 서명 검증 — Agent Kit 생성 트랜잭션의 reference account 포함 방식 확인 필요 — `Needs Regression`
 
 ### 1-3. Vercel 배포 체크리스트 정리
 

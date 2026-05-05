@@ -177,7 +177,6 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
         Connection,
         VersionedTransaction,
         TransactionMessage,
-        TransactionInstruction,
       } = await import("@solana/web3.js");
 
       const connection = new Connection(rpcUrl, "confirmed");
@@ -192,20 +191,13 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
       const fromPubkey = new PublicKey(fromAddr);
       const toPubkey = new PublicKey(toAddr);
       const referencePubkey = new PublicKey(reference);
-      const memoProgramId = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
-      const referenceMemo = new TransactionInstruction({
-        keys: [{ pubkey: referencePubkey, isSigner: false, isWritable: false }],
-        programId: memoProgramId,
-        data: Buffer.from(`choonsim:${paymentId}`),
-      });
+      const transferInstruction = SystemProgram.transfer({ fromPubkey, toPubkey, lamports });
+      transferInstruction.keys.push({ pubkey: referencePubkey, isSigner: false, isWritable: false });
 
       const message = new TransactionMessage({
         payerKey: fromPubkey,
         recentBlockhash: blockhash,
-        instructions: [
-          SystemProgram.transfer({ fromPubkey, toPubkey, lamports }),
-          referenceMemo,
-        ],
+        instructions: [transferInstruction],
       }).compileToV0Message();
 
       const tx = new VersionedTransaction(message);

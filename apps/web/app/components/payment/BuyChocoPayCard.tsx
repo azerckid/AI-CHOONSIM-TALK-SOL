@@ -35,6 +35,7 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
   const [tab, setTab] = useState<"phantom" | "internal">("internal");
   const [status, setStatus] = useState<Status>("idle");
   const [grantedChoco, setGrantedChoco] = useState(0);
+  const [errorMessage, setErrorMessage] = useState("");
   const revalidator = useRevalidator();
 
   const solAmount = (choco * SOL_PER_CHOCO).toFixed(6);
@@ -56,6 +57,7 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
     }
 
     try {
+      setErrorMessage("");
       // 1. Phantom 연결
       setStatus("connecting");
       await phantom.connect();
@@ -81,35 +83,39 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
         Connection,
         VersionedTransaction,
         TransactionMessage,
-        TransactionInstruction,
       } = await import("@solana/web3.js");
 
       const connection = new Connection(rpcUrl, "confirmed");
-      const { blockhash } = await connection.getLatestBlockhash();
+      const latestBlockhash = await connection.getLatestBlockhash();
       const fromPubkey = new PublicKey(payer);
       const toPubkey = new PublicKey(recipient);
       const referencePubkey = new PublicKey(reference);
-      const memoProgramId = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
-      const referenceMemo = new TransactionInstruction({
-        keys: [{ pubkey: referencePubkey, isSigner: false, isWritable: false }],
-        programId: memoProgramId,
-        data: Buffer.from(`choonsim:${paymentId}`),
-      });
+      const transferInstruction = SystemProgram.transfer({ fromPubkey, toPubkey, lamports });
+      transferInstruction.keys.push({ pubkey: referencePubkey, isSigner: false, isWritable: false });
 
       const message = new TransactionMessage({
         payerKey: fromPubkey,
-        recentBlockhash: blockhash,
-        instructions: [
-          SystemProgram.transfer({ fromPubkey, toPubkey, lamports }),
-          referenceMemo,
-        ],
+        recentBlockhash: latestBlockhash.blockhash,
+        instructions: [transferInstruction],
       }).compileToV0Message();
 
       const tx = new VersionedTransaction(message);
 
       // 4. Phantom 서명 + 전송
       setStatus("signing");
-      const { signature } = await phantom.signAndSendTransaction(tx);
+      const signedTx = await phantom.signTransaction(tx);
+      const signature = await connection.sendRawTransaction(signedTx.serialize(), {
+        skipPreflight: false,
+        preflightCommitment: "confirmed",
+      });
+      await connection.confirmTransaction(
+        {
+          signature,
+          blockhash: latestBlockhash.blockhash,
+          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+        },
+        "confirmed",
+      );
 
       // 5. 온체인 확인 + CHOCO 지급
       setStatus("verifying");
@@ -129,12 +135,14 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
         throw new Error(verifyData.error || "결제 확인에 실패했어요.");
       }
     } catch (err: unknown) {
+      console.error("[Phantom payment failed]", err);
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("User rejected") || msg.includes("cancelled") || msg.includes("rejected")) {
         toast("Payment cancelled.");
         setStatus("idle");
         return;
       }
+      setErrorMessage(msg || "Payment failed. Please try again.");
       toast.error(msg || "Payment failed. Please try again.");
       setStatus("error");
     }
@@ -152,7 +160,7 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
   if (status === "error") {
     return (
       <div className="flex flex-col gap-2 py-2">
-        <p className="text-xs text-red-400">Something went wrong. Please try again.</p>
+        <p className="text-xs text-red-400">{errorMessage || "Something went wrong. Please try again."}</p>
         <button
           onClick={() => setStatus("idle")}
           className="text-xs text-white/50 hover:text-white/80 transition-colors"

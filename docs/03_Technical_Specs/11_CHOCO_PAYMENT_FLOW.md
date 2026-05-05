@@ -1,7 +1,7 @@
 # CHOCO Payment Flow — Technical Documentation
 
 > Created: 2026-05-04 00:00
-> Last Updated: 2026-05-05 17:08
+> Last Updated: 2026-05-05 18:11
 > **Category:** Technical Spec — Payment Architecture
 
 ---
@@ -83,9 +83,10 @@ BuyChocoPayCard renders:
   │  YES → "Pay with Phantom" button (PRIMARY)          │
   │         1. fetch /api/payment/solana/create-tx      │
   │         2. Build VersionedTransaction (client)      │
-  │         3. phantom.signAndSendTransaction()         │
-  │         4. /api/payment/solana/verify-sig           │
-  │         5. CHOCO credited ✅                        │
+  │         3. phantom.signTransaction()                │
+  │         4. sendRawTransaction() via devnet RPC      │
+  │         5. /api/payment/solana/verify-sig           │
+  │         6. CHOCO credited                           │
   └─────────────────────────────────────────────────────┘
 
   ┌─── Embedded Wallet (always shown) ─────────────────┐
@@ -171,7 +172,9 @@ The signed transaction flow now binds the app payment record to the on-chain tra
 Generation requirements:
 - `create-tx` creates a unique payment `reference` and stores it in `Payment.transactionId`.
 - `create-tx` accepts the expected payer wallet and stores it in `Payment.walletAddress`.
-- Phantom, Privy embedded wallet, and chat-generated `SWAP_TX` transactions include the reference public key through a memo instruction.
+- Phantom and Privy embedded wallet transactions include the reference public key as a readonly non-signer account on the SOL transfer instruction.
+- Memo instructions are not used for payment references because the Memo program can require signatures for supplied account keys.
+- Chat-generated `SWAP_TX` transactions still require regression verification against the same reference-account rule.
 - Payment records are marked with `network = devnet`.
 
 Verification requirements:
@@ -192,9 +195,11 @@ Reconciliation behavior:
 - SPL transfer success, failure, or skip state is recorded under `metadata.splTransfer`.
 - SPL transfer failure does not roll back the completed DB payment.
 
+Validated on 2026-05-05:
+- Phantom direct payment E2E on `/buy-choco`: `create-tx -> verify-sig 200`.
+- Privy embedded wallet payment E2E on `/buy-choco`: `create-tx -> verify-sig 200`.
+
 Remaining validation:
-- Phantom direct payment E2E.
-- Privy embedded wallet payment E2E.
 - Chat `SWAP_TX` payment E2E.
 - Duplicate signature rejection.
 - Missing reference rejection.
