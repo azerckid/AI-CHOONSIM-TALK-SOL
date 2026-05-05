@@ -1,6 +1,6 @@
 # 07. 춘심 마스터 로드맵
-> Created: 2026-04-30
-> Updated: 2026-05-04 (3차)
+> Created: 2026-04-30 00:00
+> Last Updated: 2026-05-05 16:55
 > 목적: Colosseum 해커톤 마감부터 서비스화까지 전체 작업 현황 및 우선순위 통합 관리
 
 ---
@@ -17,6 +17,31 @@ Phase ∞  보류 (생태계 대기)  미정
 
 ---
 
+## 상태 라벨 정의
+
+로드맵의 체크박스는 구현 또는 데모 확인 여부를 표시한다. 서비스 출시 준비도는 아래 라벨로 별도 관리한다.
+
+| 라벨 | 의미 | 완료 기준 |
+| :--- | :--- | :--- |
+| `Demo Verified` | 해커톤 제출 또는 데모 영상 기준으로 정상 동작을 확인했다. | 지정된 데모 시나리오에서 한 번 이상 성공했다. |
+| `Service Verified` | 반복 사용, 로그인 후 복구, 운영 예외까지 검증했다. | 테스트 계정 또는 실제 운영 조건에서 회귀 검증을 통과했다. |
+| `Needs Regression` | 구현은 되었거나 데모는 성공했지만, 서비스 기준 재검증이 필요하다. | 모바일, 로그인 후 E2E, 실패 복구, 중복 처리 중 하나 이상이 미검증이다. |
+| `Open Risk` | 구현 또는 정책 결정이 아직 남아 있다. | 코드, 문서, 운영 정책 중 명확한 후속 작업이 존재한다. |
+
+## 현재 우선순위 점검 큐
+
+| 우선순위 | 항목 | 현재 라벨 | 다음 확인 |
+| :--- | :--- | :--- | :--- |
+| P0 | Solana 결제 검증 강화 | `Open Risk` | `reference`, payer, 중복 signature, 결제 생성 시각, DB/SPL reconciliation 검증 설계 |
+| P0 | 402 이후 충전 복귀 UX | `Needs Regression` | 채팅 -> 402 -> CHOCO 충전 -> 원래 대화 복귀 -> 메시지 재전송 수동 QA |
+| P0 | 핵심 사용자 루프 명확화 | `Open Risk` | 첫 비밀 대화 -> 감정적 순간 -> CHOCO 액션 -> 기억 저장 또는 선물 흐름으로 home/chat/guide/shop 점검 |
+| P1 | 로그인 후 모바일 E2E QA | `Needs Regression` | 테스트 계정으로 채팅, 지갑, 결제, 기억 앨범 전체 흐름 검증 |
+| P1 | LLM Tool Calling 정식 복구 | `Open Risk` | LangGraph `ToolNode` 기반 도구 실행 구조 복구 |
+| P2 | Privy/RPC 환경 설정 분리 | `Open Risk` | 하드코딩된 공개 설정을 `VITE_*` 설정 레이어로 이동 |
+| P2 | 서버 지갑 운영 모니터링 | `Open Risk` | 서버 SOL/CHOCO 잔액과 funding 실패 상태를 운영자가 확인 가능하게 정리 |
+
+---
+
 ## Phase 0 — Colosseum 해커톤 마감 전 (~2026-05-11)
 
 > 남은 기간: **11일**. 구현 추가 없이 제출 품질 완성에 집중.
@@ -30,24 +55,24 @@ Phase ∞  보류 (생태계 대기)  미정
 - [x] `ZK_COMPRESSION_RPC_URL` Vercel 등록 — 확인 2026-04-30
 - [x] `HELIUS_RPC_URL` — `memories.ts`에 fallback 로직 존재 (`ZK_COMPRESSION_RPC_URL` → devnet 순서), 별도 등록 불필요
 - [x] `CHOCO_COMPRESSED_MINT_ADDRESS` Vercel 등록 — 확인 2026-04-30
-- [x] `VITE_PRIVY_APP_ID` — `PrivyWalletProvider.tsx:21`에 하드코딩됨, 환경변수 불필요
-- [ ] 데모용 서버 지갑에 SOL 충분히 확보 (Devnet faucet)
-- [ ] 데모용 서버 지갑에 CHOCO 충분히 확보
+- [x] `VITE_PRIVY_APP_ID` — `PrivyWalletProvider.tsx:21`에 하드코딩됨. `Demo Verified`, 서비스 전환 전 env 분리 필요
+- [ ] 데모용 서버 지갑에 SOL 충분히 확보 (Devnet faucet) — `Open Risk`
+- [ ] 데모용 서버 지갑에 CHOCO 충분히 확보 — `Open Risk`
 
 ### 0-2. E2E 데모 테스트 (Colosseum 시나리오 기준)
 
 > 브라우저에서 직접 수행 — 아래 5가지 흐름 전부 통과해야 제출 가능
 
-- [x] **Gift Blink** — X(또는 dial.to)에서 Gift Blink 클릭 → Phantom 서명 → 온체인 트랜잭션 완료 확인
-- [x] **cNFT 각인** — 채팅에서 "기억 새겨줘" → cNFT 민팅 → Explorer 링크 반환 → `/profile/memories`에서 카드 정상 표시
-- [x] **AI Agent Kit** — "내 SOL 잔액 얼마야?" → 춘심이 온체인 조회 후 응답
-- [x] **CHOCO 구매** — 채팅에서 "초코 100개 사줘" → SwapTxCard 표시 → Phantom 서명 → 잔액 반영 확인
-- [x] **일일 체크인** — `/checkin` Blink → Phantom 서명 → Compressed CHOCO 수령 확인
-- [x] **SIWS 로그인** — Phantom으로 Sign In → 세션 정상 생성 확인
-- [x] **Privy 임베디드 지갑** — 이메일/소셜 로그인 → 자동 지갑 생성 확인
-- [x] **구독 결제** — Subscribe Blink → 결제 완료 → tier 업데이트 확인
-- [x] **cNFT 앨범** — `/profile/memories` → DAS API 정상 조회 → cNFT 카드 렌더링
-- [ ] 발견된 버그 우선순위화 및 수정
+- [x] **Gift Blink** — X(또는 dial.to)에서 Gift Blink 클릭 → Phantom 서명 → 온체인 트랜잭션 완료 확인 — `Demo Verified`
+- [x] **cNFT 각인** — 채팅에서 "기억 새겨줘" → cNFT 민팅 → Explorer 링크 반환 → `/profile/memories`에서 카드 정상 표시 — `Demo Verified`
+- [x] **AI Agent Kit** — "내 SOL 잔액 얼마야?" → 춘심이 온체인 조회 후 응답 — `Demo Verified`, `Needs Regression`
+- [x] **CHOCO 구매** — 채팅에서 "초코 100개 사줘" → SwapTxCard 표시 → Phantom 서명 → 잔액 반영 확인 — `Demo Verified`, `Needs Regression`
+- [x] **일일 체크인** — `/checkin` Blink → Phantom 서명 → Compressed CHOCO 수령 확인 — `Demo Verified`
+- [x] **SIWS 로그인** — Phantom으로 Sign In → 세션 정상 생성 확인 — `Demo Verified`
+- [x] **Privy 임베디드 지갑** — 이메일/소셜 로그인 → 자동 지갑 생성 확인 — `Demo Verified`, `Needs Regression`
+- [x] **구독 결제** — Subscribe Blink → 결제 완료 → tier 업데이트 확인 — `Demo Verified`, `Needs Regression`
+- [x] **cNFT 앨범** — `/profile/memories` → DAS API 정상 조회 → cNFT 카드 렌더링 — `Demo Verified`, `Needs Regression`
+- [ ] 발견된 버그 우선순위화 및 수정 — `Open Risk`
 
 ### 0-3. 피치 머티리얼 완성
 
@@ -63,20 +88,20 @@ Phase ∞  보류 (생태계 대기)  미정
   - [x] 시나리오 4: CHOCO 구매 → SwapTxCard → 잔액 반영
   - [x] 녹화 완료 후 README 상단에 영상 링크 추가
 - [x] **ElevenLabs TTS VO 생성** (`07_PITCH_SCRIPT_3MIN_EN.md` 스크립트 사용) — 완료 2026-05-04
-- [ ] **팀 슬라이드 추가** (`pitch.tsx` Slide에 팀 정보 기입)
+- [ ] **팀 슬라이드 추가** (`pitch.tsx` Slide에 팀 정보 기입) — `Open Risk`
 - [x] **미커밋 변경사항 전체 커밋** (pitch.tsx 포함)
 
 ### 0-5. 결제 UX / 내부 지갑 개선 (2026-05-04 완료)
 
-- [x] **BottomNavigation Store 탭 추가** — 4탭 → 5탭 구조 (Home | Chat | Fandom | Store | Profile) 전환, `shopping_bag` 아이콘 사용
-- [x] **Shop 페이지 CHOCO 충전 배너** — 아이템 그리드 상단에 CHOCO 구매 버튼 추가
-- [x] **BuyChocoPayCard 컴포넌트 신규 구현** — `/buy-choco` 전용, Phantom / 내부 지갑 탭 선택 UI (자동 분기 → 사용자가 직접 선택)
-- [x] **SwapTxCard 선택 UI 개선** — 채팅 인라인 결제도 동일한 탭 선택 방식으로 통일
-- [x] **PrivyChocoPayCard 서명 오류 수정** — `useWallets()` 가 임베디드 지갑 미반환 문제 해결, `useStandardWallets()` + `solana:signTransaction` feature 직접 호출로 교체
+- [x] **BottomNavigation Store 탭 추가** — 4탭 → 5탭 구조 (Home | Chat | Fandom | Store | Profile) 전환, `shopping_bag` 아이콘 사용 — `Demo Verified`
+- [x] **Shop 페이지 CHOCO 충전 배너** — 아이템 그리드 상단에 CHOCO 구매 버튼 추가 — `Demo Verified`, `Needs Regression`
+- [x] **BuyChocoPayCard 컴포넌트 신규 구현** — `/buy-choco` 전용, Phantom / 내부 지갑 탭 선택 UI (자동 분기 → 사용자가 직접 선택) — `Demo Verified`, `Needs Regression`
+- [x] **SwapTxCard 선택 UI 개선** — 채팅 인라인 결제도 동일한 탭 선택 방식으로 통일 — `Demo Verified`, `Needs Regression`
+- [x] **PrivyChocoPayCard 서명 오류 수정** — `useWallets()` 가 임베디드 지갑 미반환 문제 해결, `useStandardWallets()` + `solana:signTransaction` feature 직접 호출로 교체 — `Demo Verified`, `Needs Regression`
 - [x] **EmbeddedWalletSection 신규 구현** — 프로필 페이지에 Privy 임베디드 지갑 주소 표시·복사·Export Private Key UI 추가 (Phantom 유무 무관 항상 표시)
-- [x] **신규 지갑 0.5 SOL 자동 에어드랍** — `airdrop.server.ts` 구현, `PATCH /api/user/wallet` 최초 등록 시 자동 지급 (중복 방지 로직 포함)
+- [x] **신규 지갑 0.5 SOL 자동 에어드랍** — `airdrop.server.ts` 구현, `PATCH /api/user/wallet` 최초 등록 시 자동 지급 (중복 방지 로직 포함) — `Demo Verified`, `Open Risk`
 - [x] **에어드랍 토스트 중복 표시 수정** — API 응답 `isNew` 필드 기반 조건부 토스트, 재로그인 시 오발동 방지
-- [x] **프로필 SOL 잔액 실시간 표시** — Privy 임베디드 지갑 주소 기준 devnet RPC 실시간 조회
+- [x] **프로필 SOL 잔액 실시간 표시** — Privy 임베디드 지갑 주소 기준 devnet RPC 실시간 조회 — `Demo Verified`
 - [x] **Incognito 모드 지원 확인** — Privy 내부 지갑은 Privy 서버 보관, localStorage 미의존, 브라우저 확장 없이 결제 가능
 
 ### 0-4. 제출 준비
@@ -93,6 +118,14 @@ Phase ∞  보류 (생태계 대기)  미정
 
 > 해커톤 중 발생한 구조적 문제 해결. 실서비스 전 필수.
 
+### 1-0. Phase 1 진입 기준
+
+Phase 1은 기능 추가보다 서비스 신뢰성 보강을 우선한다. 아래 P0 항목이 정리되기 전에는 Phase 2 mainnet 준비로 넘어가지 않는다.
+
+- [ ] P0 결제 검증 설계 확정 — `reference`, payer, amount, createdAt, duplicate signature, reconciliation 포함
+- [ ] P0 402 결제 복구 UX 수동 QA 완료 — 모바일 우선
+- [ ] P0 핵심 사용자 루프 문장 확정 — home/chat/guide/shop 반영 기준으로 사용
+
 ### 1-1. LangGraph 아키텍처 통합
 
 > 현재 `stream.ts`가 LangGraph를 우회해 모델을 직접 호출 → 메모리(요약)가 스트리밍 경로에서 실제로 작동하지 않음
@@ -105,9 +138,10 @@ Phase ∞  보류 (생태계 대기)  미정
 
 ### 1-2. 결제 E2E 검증
 
-- [x] 충전(CHOCO 구매) → 대화 재개 흐름 실결제 E2E 확인 (내부 지갑 + Phantom 양쪽 검증 완료 2026-05-04)
-- [ ] 모달 닫기 후 대화 정상 재개 (브라우저 수동 확인)
-- [ ] 402 응답 후 충전 → 원래 대화로 복귀 흐름 검증
+- [x] 충전(CHOCO 구매) → 대화 재개 흐름 실결제 E2E 확인 (내부 지갑 + Phantom 양쪽 검증 완료 2026-05-04) — `Demo Verified`, `Needs Regression`
+- [ ] 모달 닫기 후 대화 정상 재개 (브라우저 수동 확인) — `Needs Regression`
+- [ ] 402 응답 후 충전 → 원래 대화로 복귀 흐름 검증 — `Needs Regression`
+- [ ] Solana `verify-sig` 검증 강화 — `reference`, payer, 결제 생성 시각, 중복 signature, reconciliation 상태 확인 — `Open Risk`
 
 ### 1-3. Vercel 배포 체크리스트 정리
 
@@ -256,13 +290,15 @@ Phase ∞  보류 (생태계 대기)  미정
 
 ## 현황 요약 대시보드
 
-| Phase | 항목 수 | 완료 | 진행률 |
-|-------|---------|------|--------|
-| Phase 0 (해커톤 마감 전) | 41 | 44 | 98% |
-| Phase 1 (기술부채) | 14 | 5 | 36% |
-| Phase 2 (메인넷) | 16 | 1 | 6% |
-| Phase 3 (서비스화) | 14 | 0 | 0% |
-| Phase ∞ (보류) | 16 | 0 | 보류 |
+체크리스트의 상위 항목과 하위 항목이 섞이면 완료율이 왜곡될 수 있으므로, 현재 대시보드는 수치형 완료율보다 서비스 준비 상태를 기준으로 관리한다.
+
+| Phase | 대표 상태 | 주요 열린 항목 | 다음 게이트 |
+| :--- | :--- | :--- | :--- |
+| Phase 0 (해커톤 마감 전) | `Demo Verified` 중심 | 서버 SOL/CHOCO 잔액, 팀 슬라이드, 발견 버그 우선순위화 | 제출 자료 최종 확인 |
+| Phase 1 (기술부채) | `Needs Regression` / `Open Risk` | 결제 검증, 402 복구 UX, LangSmith 분석, LLM Tool Calling | `Service Verified` 전환 |
+| Phase 2 (메인넷) | `Open Risk` | CHOCO mainnet, DEX 유동성, Jupiter 연동 | 결제 신뢰성 검증 완료 |
+| Phase 3 (서비스화) | `Open Risk` | 장기 메모리, TTS, 개인화, 모바일 | mainnet 운영 안정화 |
+| Phase ∞ (보류) | 보류 | Eliza, TEE 키 위임 | 생태계 조건 충족 |
 
 > Phase 0 항목은 **2026-05-11 전 전부 완료** 목표.
 
