@@ -6,7 +6,6 @@ import type { Message } from "~/lib/chat/types";
 import { ChatHeader } from "~/components/chat/ChatHeader";
 import { MessageBubble } from "~/components/chat/MessageBubble";
 import { MessageInput } from "~/components/chat/MessageInput";
-import { TypingIndicator } from "~/components/chat/TypingIndicator";
 import { MessageListSkeleton } from "~/components/chat/MessageListSkeleton";
 import { NetworkError } from "~/components/ui/NetworkError";
 import { LoadingSpinner } from "~/components/ui/LoadingSpinner";
@@ -504,6 +503,11 @@ export default function ChatRoom() {
     setTimeout(() => setLoadingState("idle"), 1000);
   };
 
+  const latestUserMessage = [...messages].reverse().find((msg) => msg.role === "user")?.content ?? "";
+  const isWaitingForPayment = /(?:초코|choco|CHOCO).*(?:구매|사|충전|buy|purchase)|(?:구매|사|충전|buy|purchase).*(?:초코|choco|CHOCO)/i.test(latestUserMessage);
+  const pendingAssistantText = isWaitingForPayment
+    ? "초코 결제 준비하고 있어요. 조금만 기다려주세요."
+    : "열심히 알아보고 있어요. 조금만 기다려주세요.";
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white h-screen flex flex-col overflow-hidden max-w-md mx-auto md:max-w-2xl lg:max-w-3xl">
@@ -593,9 +597,17 @@ export default function ChatRoom() {
                     isStreaming={true}
                   />
                 ) : (
-                  <div className="flex justify-start ml-14 -mt-2">
-                    <TypingIndicator />
-                  </div>
+                  <MessageBubble
+                    sender="ai"
+                    senderName={characterName}
+                    content={pendingAssistantText}
+                    avatarUrl={avatarUrl}
+                    auraClass={EMOTION_MAP[currentEmotion]?.aura}
+                    auraOpacity={auraOpacity}
+                    auraStyle={EMOTION_MAP[currentEmotion]?.style}
+                    timestamp={new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    isStreaming={true}
+                  />
                 )}
               </>
             )}
