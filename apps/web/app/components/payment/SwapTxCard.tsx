@@ -1,13 +1,13 @@
 /**
- * SwapTxCard — AI 채팅 인라인 CHOCO 구매 카드
+ * SwapTxCard - inline CHOCO purchase card for chat
  *
- * [SWAP_TX:paymentId:base64tx] 마커를 MessageBubble이 감지하면 렌더링.
- * 현재 Phantom 결제는 클릭 시점의 실제 Phantom 주소로 새 트랜잭션을 만든다.
+ * Rendered when MessageBubble detects a [SWAP_TX:paymentId:base64tx] marker.
+ * Phantom payments build a fresh transaction from the connected Phantom payer.
  *
- * 1. "Sign with Phantom" 클릭
- * 2. /api/payment/solana/create-tx에 payer 전달
- * 3. VersionedTransaction 생성 후 Phantom 서명
- * 4. signature → /api/payment/solana/verify-sig → CHOCO 충전
+ * 1. Click "Sign with Phantom"
+ * 2. Send payer to /api/payment/solana/create-tx
+ * 3. Build a VersionedTransaction and sign with Phantom
+ * 4. Send signature to /api/payment/solana/verify-sig
  */
 import { useState, useEffect } from "react";
 import { Link, useRevalidator } from "react-router";
@@ -16,7 +16,7 @@ import { toast } from "sonner";
 interface Props {
   paymentId: string;
   txBase64: string;
-  /** 채팅 메시지에서 파싱한 CHOCO 금액 (표시용) */
+  /** CHOCO amount parsed from the chat message. */
   choco: number;
 }
 
@@ -31,7 +31,6 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
   void paymentId;
   void txBase64;
 
-  // SOL 금액 계산 (1 CHOCO = 0.00001 SOL)
   const solAmount = (choco * 0.00001).toFixed(6);
 
   useEffect(() => {
@@ -45,18 +44,16 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
   async function handleSign() {
     const phantom = (window as any).phantom?.solana;
     if (!phantom?.isPhantom) {
-      toast.error("Phantom 지갑이 필요해요! phantom.app 에서 설치해주세요.");
+      toast.error("Phantom wallet is required. Install it at phantom.app.");
       window.open("https://phantom.app", "_blank");
       return;
     }
 
     try {
-      // 1. Phantom 연결
       setStatus("connecting");
       const connectResult = await phantom.connect();
       const payer = connectResult.publicKey.toString();
 
-      // 2. 실제 Phantom 주소 기준으로 결제 요청과 트랜잭션을 새로 만든다.
       const createRes = await fetch("/api/payment/solana/create-tx", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -64,11 +61,10 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
       });
       if (!createRes.ok) {
         const err = await createRes.json().catch(() => ({}));
-        throw new Error(err.error || `서버 오류 (${createRes.status})`);
+        throw new Error(err.error || `Server error (${createRes.status})`);
       }
       const { recipient, lamports, paymentId: phantomPaymentId, rpcUrl, reference } = await createRes.json();
 
-      // 3. Shop 결제와 동일한 VersionedTransaction 경로 사용
       const {
         SystemProgram,
         PublicKey,
@@ -97,7 +93,6 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
 
       const tx = new VersionedTransaction(message);
 
-      // 4. Phantom 서명 + 전송
       setStatus("signing");
       const signedTx = await phantom.signTransaction(tx);
       const signature = await connection.sendRawTransaction(signedTx.serialize(), {
@@ -113,7 +108,6 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
         "confirmed",
       );
 
-      // 5. 온체인 검증 + CHOCO 지급
       setStatus("verifying");
       const verifyRes = await fetch("/api/payment/solana/verify-sig", {
         method: "POST",
@@ -127,7 +121,7 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
         setStatus("done");
         revalidator.revalidate();
       } else {
-        throw new Error(verifyData.error || "결제 확인에 실패했어요.");
+        throw new Error(verifyData.error || "Payment verification failed.");
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -136,12 +130,12 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
         msg.includes("cancelled") ||
         msg.includes("rejected")
       ) {
-        toast("결제를 취소했어요.");
+        toast("Payment cancelled.");
         setStatus("idle");
         return;
       }
       console.error("[SwapTxCard]", err);
-      toast.error(msg || "결제 중 오류가 발생했어요.");
+      toast.error(msg || "Payment failed. Please try again.");
       setStatus("error");
     }
   }
@@ -150,7 +144,7 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
     return (
       <div className="mt-3 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-500/15 border border-green-500/30 text-green-400 text-sm font-semibold">
         <span className="material-symbols-outlined text-[18px]">check_circle</span>
-        {grantedChoco.toLocaleString()} CHOCO 충전 완료! 💕
+        {grantedChoco.toLocaleString()} CHOCO topped up
       </div>
     );
   }
@@ -158,12 +152,12 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
   if (status === "error") {
     return (
       <div className="mt-3 flex flex-col gap-2">
-        <p className="text-xs text-red-400">오류가 발생했어요. 다시 시도해주세요.</p>
+        <p className="text-xs text-red-400">Something went wrong. Please try again.</p>
         <button
           onClick={() => setStatus("idle")}
           className="text-xs text-white/50 hover:text-white/80 transition-colors"
         >
-          다시 시도
+          Retry
         </button>
       </div>
     );
@@ -172,25 +166,23 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
   const isLoading = status !== "idle";
   const statusLabel: Record<Status, string> = {
     idle: "",
-    connecting: "지갑 연결 중…",
-    signing: "Phantom에서 승인해주세요…",
-    verifying: "온체인 확인 중…",
+    connecting: "Connecting wallet...",
+    signing: "Approve in Phantom...",
+    verifying: "Confirming on-chain...",
     done: "",
     error: "",
   };
 
   return (
     <div className="mt-3 p-3 rounded-xl bg-[#9945FF]/10 border border-[#9945FF]/30 space-y-2.5">
-      {/* 금액 요약 */}
       <div className="flex items-center justify-between text-sm">
         <span className="font-bold text-white">{choco.toLocaleString()} CHOCO</span>
         <span className="text-white/50 text-xs">{solAmount} SOL (Devnet)</span>
       </div>
 
-      {/* AI 빌드 완료 배지 */}
       <div className="flex items-center gap-1.5 text-[10px] text-[#14F195]/70 font-medium">
         <span className="material-symbols-outlined text-[12px]">auto_fix_high</span>
-        트랜잭션 준비 완료 — 서명만 하면 돼요
+        Transaction ready - sign to continue
       </div>
 
       {isLoading && (
@@ -200,7 +192,6 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
         </div>
       )}
 
-      {/* 탭 선택 */}
       <div className="flex rounded-xl overflow-hidden border border-white/10">
         <button
           onClick={() => setTab("phantom")}
@@ -215,7 +206,7 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
         >
           <span className="material-symbols-outlined text-[13px]">account_balance_wallet</span>
           Phantom
-          {!hasPhantom && <span className="text-[9px] opacity-60">(미설치)</span>}
+          {!hasPhantom && <span className="text-[9px] opacity-60">(Not installed)</span>}
         </button>
         <button
           onClick={() => setTab("internal")}
@@ -226,7 +217,7 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
             }`}
         >
           <span className="material-symbols-outlined text-[13px]">lock</span>
-          내부 지갑
+          Internal Wallet
         </button>
       </div>
 
@@ -248,14 +239,14 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
       ) : (
         <div className="rounded-xl border border-white/10 bg-white/5 p-3 space-y-3">
           <p className="text-xs leading-relaxed text-white/60">
-            내부 지갑 결제는 Shop의 지갑 Provider 안에서 진행됩니다. 선택한 수량으로 이동해 결제를 이어가세요.
+            Internal wallet payments continue in Shop, where the wallet provider is available.
           </p>
           <Link
             to={`/buy-choco?choco=${choco}`}
             className="w-full flex items-center justify-center gap-2 bg-[#9945FF] hover:bg-[#7b35d9] text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all active:scale-[0.98]"
           >
             <span className="material-symbols-outlined text-[18px]">storefront</span>
-            Shop에서 내부 지갑으로 결제
+            Continue in Shop
           </Link>
         </div>
       )}
