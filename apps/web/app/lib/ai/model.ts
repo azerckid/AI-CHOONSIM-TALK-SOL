@@ -2,11 +2,12 @@
  * Google Generative AI 모델 인스턴스 및 공유 유틸리티
  */
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { ChatOpenAI } from "@langchain/openai";
 import { HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import axios from "axios";
 import { logger } from "../logger.server";
 
-export const model = new ChatGoogleGenerativeAI({
+const geminiModel = new ChatGoogleGenerativeAI({
     apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY,
     model: "gemini-2.5-flash",
     maxOutputTokens: 2048,
@@ -31,6 +32,18 @@ export const model = new ChatGoogleGenerativeAI({
         },
     ],
 });
+
+const openAiFallbackModel = process.env.OPENAI_API_KEY
+    ? new ChatOpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+        model: process.env.OPENAI_FALLBACK_MODEL || "gpt-5-mini",
+        maxRetries: 2,
+    })
+    : null;
+
+export const model = openAiFallbackModel
+    ? geminiModel.withFallbacks({ fallbacks: [openAiFallbackModel] })
+    : geminiModel;
 
 /** 이미지 URL을 Base64 데이터 URL로 변환 */
 export async function urlToBase64(url: string): Promise<string> {
