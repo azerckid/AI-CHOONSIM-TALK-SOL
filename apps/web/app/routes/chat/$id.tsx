@@ -36,6 +36,19 @@ import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { eq, and, asc, inArray } from "drizzle-orm";
 
+function parseChocoPurchaseIntent(message: string): number | null {
+  const normalized = message.toLowerCase();
+  const hasChoco = normalized.includes("초코") || normalized.includes("choco");
+  const buyKeywords = ["살게", "살거야", "살래", "사고 싶", "사고싶", "구매", "충전", "buy", "purchase", "get choco", "want choco"];
+  const hasBuyIntent = buyKeywords.some((keyword) => normalized.includes(keyword));
+  if (!hasChoco || !hasBuyIntent) return null;
+
+  const numbers = message.match(/\d+/g)?.map(Number) ?? [];
+  const amount = numbers.length > 0 ? Math.max(...numbers) : 100;
+  if (amount <= 0 || amount > 100_000) return 100;
+  return amount;
+}
+
 const sendSchema = z.object({
   message: z.string().optional(),
   mediaUrl: z.string().url().optional().nullable(),
@@ -179,6 +192,7 @@ export default function ChatRoom() {
   const [isPaywallPurchasing, setIsPaywallPurchasing] = useState(false);
   const [voiceConfirmMessageId, setVoiceConfirmMessageId] = useState<string | null>(null);
   const [isVoiceLoading, setIsVoiceLoading] = useState(false);
+  const [pendingChocoPurchaseAmount, setPendingChocoPurchaseAmount] = useState<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Hearts state
@@ -209,13 +223,23 @@ export default function ChatRoom() {
     optimisticIntervalRef,
     lastOptimisticDeductionRef,
     abortControllerRef,
-    onInsufficientChoco: () => setIsChocoModalOpen(true),
+    onInsufficientChoco: () => {
+      setPendingChocoPurchaseAmount(null);
+      setIsChocoModalOpen(true);
+    },
+    onPaymentMessageReady: () => setPendingChocoPurchaseAmount(null),
   });
 
   // Sync ref with state for async access
   useEffect(() => {
     lastOptimisticDeductionRef.current = lastOptimisticDeduction;
   }, [lastOptimisticDeduction]);
+
+  useEffect(() => {
+    if (!isAiStreaming && !isOptimisticTyping) {
+      setPendingChocoPurchaseAmount(null);
+    }
+  }, [isAiStreaming, isOptimisticTyping]);
 
   // Re-sync states when loader data updates
   useEffect(() => {
@@ -367,6 +391,9 @@ export default function ChatRoom() {
     }
 
     // 1. 사용자 메시지 낙관적 업데이트
+    const chocoPurchaseAmount = mediaUrl ? null : parseChocoPurchaseIntent(content);
+    setPendingChocoPurchaseAmount(chocoPurchaseAmount);
+
     // [Optimistic UI] 메시지 전송 즉시 예상 CHOCO 차감 시작 (1초마다 1씩, 총 5 CHOCO 차감)
     // 실제 소모량이 약 3~4이므로, 넉넉하게 5초간 줄어들게 하여 '사용 중'임을 표현
     const totalEstimatedCost = 5;
@@ -595,8 +622,24 @@ export default function ChatRoom() {
                     isStreaming={true}
                   />
                 ) : (
-                  <div className="flex justify-start ml-14 -mt-2">
-                    <TypingIndicator />
+                  <div className="flex items-end gap-3">
+                    {avatarUrl && (
+                      <div className="w-10 h-10 shrink-0 rounded-full bg-surface-dark overflow-hidden border border-white/10">
+                        <img alt={characterName} className="w-full h-full object-cover" src={avatarUrl} />
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-1 items-start">
+                      <span className="text-xs text-gray-400 ml-1">{characterName}</span>
+                      <div className="px-5 py-3 bg-white dark:bg-surface-dark rounded-2xl rounded-tl-sm shadow-sm">
+                        <TypingIndicator
+                          message={
+                            pendingChocoPurchaseAmount
+                              ? `${pendingChocoPurchaseAmount.toLocaleString()} CHOCO 결제 준비 중...`
+                              : undefined
+                          }
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
               </>

@@ -29,6 +29,7 @@ interface UseChatStreamOptions {
     lastOptimisticDeductionRef: React.MutableRefObject<number>;
     abortControllerRef: React.MutableRefObject<AbortController | null>;
     onInsufficientChoco?: () => void;
+    onPaymentMessageReady?: () => void;
 }
 
 type TypewriterItem = {
@@ -39,6 +40,8 @@ type TypewriterItem = {
 type DonePayload = {
     usage: { promptTokens: number; completionTokens: number; totalTokens: number } | null;
 };
+
+const PAYMENT_MARKER_PATTERN = /\[(?:SWAP_TX|PHANTOM):[^\]]+\]/;
 
 export function useChatStream(opts: UseChatStreamOptions) {
     const {
@@ -59,6 +62,7 @@ export function useChatStream(opts: UseChatStreamOptions) {
         lastOptimisticDeductionRef,
         abortControllerRef,
         onInsufficientChoco,
+        onPaymentMessageReady,
     } = opts;
 
     const revalidator = useRevalidator();
@@ -279,6 +283,22 @@ export function useChatStream(opts: UseChatStreamOptions) {
                                 const msgMediaUrl = data.mediaUrl || null;
                                 const msgCreatedAt = new Date(Date.now() + assistantSequenceRef.current * 1000).toISOString();
                                 assistantSequenceRef.current += 1;
+
+                                if (PAYMENT_MARKER_PATTERN.test(content)) {
+                                    setMessages(prev => [...prev, {
+                                        id: msgId,
+                                        role: "assistant" as const,
+                                        content,
+                                        mediaUrl: msgMediaUrl,
+                                        createdAt: msgCreatedAt,
+                                        isLiked: false,
+                                    }]);
+                                    setStreamingContent("");
+                                    setStreamingMediaUrl(null);
+                                    onPaymentMessageReady?.();
+                                    currentMessageContent = "";
+                                    continue;
+                                }
 
                                 typewriterQueueRef.current.push({
                                     text: content,
