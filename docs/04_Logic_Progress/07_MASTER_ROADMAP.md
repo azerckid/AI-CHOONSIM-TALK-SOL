@@ -1,6 +1,6 @@
 # 07. 춘심 마스터 로드맵
 > Created: 2026-04-30 00:00
-> Last Updated: 2026-05-05 19:54
+> Last Updated: 2026-05-06 08:36
 > 목적: Colosseum 해커톤 마감부터 서비스화까지 전체 작업 현황 및 우선순위 통합 관리
 
 ---
@@ -46,7 +46,7 @@ Phase ∞  보류 (생태계 대기)  미정
 
 ## Phase 0 — Colosseum 해커톤 마감 전 (~2026-05-11)
 
-> 남은 기간: **11일**. 구현 추가 없이 제출 품질 완성에 집중.
+> 남은 기간: **5일**. 구현 추가 없이 제출 품질 완성에 집중.
 
 ### 0-1. Vercel 환경변수 점검
 
@@ -301,7 +301,7 @@ Phase 1은 기능 추가보다 서비스 신뢰성 보강을 우선한다. 아�
 
 | Phase | 대표 상태 | 주요 열린 항목 | 다음 게이트 |
 | :--- | :--- | :--- | :--- |
-| Phase 0 (해커톤 마감 전) | `Demo Verified` 중심 | 서버 SOL/CHOCO 잔액, 팀 슬라이드, 발견 버그 우선순위화 | 제출 자료 최종 확인 |
+| Phase 0 (해커톤 마감 전) | `Demo Verified` 중심 | 서버 SOL/CHOCO 잔액, 발견 버그 우선순위화 | 제출 자료 최종 확인 |
 | Phase 1 (기술부채) | `Needs Regression` / `Open Risk` | 결제 검증, 402 복구 UX, LangSmith 분석, LLM Tool Calling | `Service Verified` 전환 |
 | Phase 2 (메인넷) | `Open Risk` | CHOCO mainnet, DEX 유동성, Jupiter 연동 | 결제 신뢰성 검증 완료 |
 | Phase 3 (서비스화) | `Open Risk` | 장기 메모리, TTS, 개인화, 모바일 | mainnet 운영 안정화 |
