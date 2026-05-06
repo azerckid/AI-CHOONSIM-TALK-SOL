@@ -1,6 +1,6 @@
 # 07. 춘심 마스터 로드맵
 > Created: 2026-04-30 00:00
-> Last Updated: 2026-05-06 08:36
+> Last Updated: 2026-05-06 18:00
 > 목적: Colosseum 해커톤 마감부터 서비스화까지 전체 작업 현황 및 우선순위 통합 관리
 
 ---
@@ -32,7 +32,7 @@ Phase ∞  보류 (생태계 대기)  미정
 
 | 우선순위 | 항목 | 현재 라벨 | 다음 확인 |
 | :--- | :--- | :--- | :--- |
-| P0 | Solana 결제 검증 강화 | `Needs Regression` | Phantom 직접 결제와 Privy 임베디드 지갑 devnet E2E 완료. chat `SWAP_TX` Memo 제거 및 기존 스트리밍 경로 복귀, 실제 지갑 E2E와 402 복구 흐름 검증 필요 |
+| P0 | Solana 결제 검증 강화 | `Needs Regression` | Phantom 직접 결제와 Privy 임베디드 지갑 devnet E2E 완료. chat `SWAP_TX`는 카드 진입 마커로 단순화되어 solanaWallet 미등록 유저도 결제 카드 접근 가능. 실제 지갑 E2E와 402 복구 흐름 검증 필요 |
 | P0 | 402 이후 충전 복귀 UX | `Needs Regression` | 버그 수정: 402 시 하트 모달(ItemStoreModal) 대신 BuyChocoPayCard Dialog 표시로 변경. 채팅 -> 402 -> CHOCO 충전 -> 모달 닫기 -> 대화 복귀 수동 QA 필요 |
 | P0 | AI 모델 장애 폴백 | `Needs Regression` | Gemini 429/503 발생 시 OpenAI fallback 모델 사용. 실제 장애 상황 재현 및 응답 품질 수동 QA 필요 |
 | P0 | 핵심 사용자 루프 명확화 | `Demo Verified` | "첫 비밀 대화 → 감정적 순간 → CHOCO 액션 → 기억 저장 또는 선물" — 2026-05-06 확정. home/chat/guide/shop 문구 반영은 Phase 1 |
@@ -99,6 +99,7 @@ Phase ∞  보류 (생태계 대기)  미정
 - [x] **Shop 페이지 CHOCO 충전 배너** — 아이템 그리드 상단에 CHOCO 구매 버튼 추가 — `Demo Verified`, `Needs Regression`
 - [x] **BuyChocoPayCard 컴포넌트 신규 구현** — `/buy-choco` 전용, Phantom / 내부 지갑 탭 선택 UI (자동 분기 → 사용자가 직접 선택) — `Demo Verified`, `Needs Regression`
 - [x] **SwapTxCard 선택 UI 개선** — 채팅 인라인 결제도 동일한 탭 선택 방식으로 통일 — `Demo Verified`, `Needs Regression`
+- [x] **채팅 자연어 CHOCO 구매 카드 진입 조건 개선** — `buyChoco`가 저장된 `solanaWallet` 없이도 `[SWAP_TX:pending:pending]` 카드 진입 마커를 반환하도록 변경. 실제 결제 생성은 `SwapTxCard -> create-tx` 클릭 시점에 수행. 잔액 5 미만 유저는 기존 402 충전 모달 경로 유지 — `Demo Verified`, `Needs Regression`
 - [x] **PrivyChocoPayCard 서명 오류 수정** — `useWallets()` 가 임베디드 지갑 미반환 문제 해결, `useStandardWallets()` + `solana:signTransaction` feature 직접 호출로 교체 — `Demo Verified`, `Needs Regression`
 - [x] **EmbeddedWalletSection 신규 구현** — 프로필 페이지에 Privy 임베디드 지갑 주소 표시·복사·Export Private Key UI 추가 (Phantom 유무 무관 항상 표시)
 - [x] **신규 지갑 0.5 SOL 자동 에어드랍** — `airdrop.server.ts` 구현, `PATCH /api/user/wallet` 최초 등록 시 자동 지급 (중복 방지 로직 포함) — `Demo Verified`, `Open Risk`
@@ -124,7 +125,7 @@ Phase ∞  보류 (생태계 대기)  미정
 
 Phase 1은 기능 추가보다 서비스 신뢰성 보강을 우선한다. 아래 P0 항목이 정리되기 전에는 Phase 2 mainnet 준비로 넘어가지 않는다.
 
-- [x] P0 결제 검증 설계 및 코드 보강 완료 — `reference`, payer, amount, createdAt, duplicate signature, reconciliation 포함. Phantom 직접 결제와 Privy 임베디드 지갑 devnet E2E 통과, chat `SWAP_TX` Memo 제거 및 빌드 통과, 실제 지갑 E2E와 402 복구 흐름은 `Needs Regression`
+- [x] P0 결제 검증 설계 및 코드 보강 완료 — `reference`, payer, amount, createdAt, duplicate signature, reconciliation 포함. Phantom 직접 결제와 Privy 임베디드 지갑 devnet E2E 통과. chat `SWAP_TX`는 카드 진입 마커로 단순화했고 `npm exec tsc -- --noEmit` 통과, 실제 지갑 E2E와 402 복구 흐름은 `Needs Regression`
 - [ ] P0 402 결제 복구 UX 수동 QA 완료 — HTTP 402 즉시 반환 처리 코드 수정 및 빌드 통과 2026-05-05, 모바일 우선 수동 확인 필요
 - [x] P0 핵심 사용자 루프 문장 확정 — "첫 비밀 대화 → 감정적 순간 → CHOCO 액션 → 기억 저장 또는 선물" (2026-05-06 확정)
 
@@ -146,7 +147,7 @@ Phase 1은 기능 추가보다 서비스 신뢰성 보강을 우선한다. 아�
 - [x] Solana `verify-sig` 검증 강화 — `reference`, payer, 결제 생성 시각, 중복 signature, reconciliation 상태 확인 — 코드 보강 및 Shop 기준 Phantom/Privy devnet E2E 완료 2026-05-05, `Needs Regression`
 - [x] 비로그인 결제 API 보호 확인 — `/api/payment/solana/create-tx`, `/api/payment/solana/verify-sig` 모두 401 반환 확인 2026-05-05
 - [x] 실제 지갑 devnet E2E — Shop `/buy-choco` 기준 Phantom 직접 결제와 Privy 임베디드 지갑 결제 모두 `create-tx -> verify-sig 200` 확인 2026-05-05 — `Service Verified`
-- [ ] 채팅 `SWAP_TX` 서명 검증 — Agent Kit 생성 트랜잭션의 reference account 포함 방식 코드 수정 및 빌드 통과 2026-05-05, 실제 지갑 E2E 확인 필요 — `Needs Regression`
+- [ ] 채팅 `SWAP_TX` 서명 검증 — `buyChoco`는 카드 진입 마커만 반환하고 실제 트랜잭션은 `SwapTxCard -> create-tx`에서 생성. 저장된 지갑이 없는 유저도 카드 접근 가능하도록 수정 및 타입 체크 통과 2026-05-06, 실제 지갑 E2E 확인 필요 — `Needs Regression`
 
 ### 1-3. Vercel 배포 체크리스트 정리
 

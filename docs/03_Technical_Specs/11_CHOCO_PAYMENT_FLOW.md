@@ -1,7 +1,7 @@
 # CHOCO Payment Flow — Technical Documentation
 
 > Created: 2026-05-04 00:00
-> Last Updated: 2026-05-05 18:48
+> Last Updated: 2026-05-06 18:00
 > **Category:** Technical Spec — Payment Architecture
 
 ---
@@ -46,21 +46,30 @@ executeNaturalLanguageCommand() in stream.ts
   → Calls buyChoco tool (agent-kit.server.ts)
            ↓
 buyChoco tool (server-side)
-  → Calls /api/payment/solana/create-tx
-  → Returns [SWAP_TX:paymentId:base64tx] marker
+  → Returns [SWAP_TX:pending:pending] marker
+  → Does not require a saved solanaWallet
            ↓
 MessageBubble detects [SWAP_TX:...] marker
   → Renders SwapTxCard component
            ↓
 SwapTxCard (client-side)
-  ├── Phantom detected?
-  │     YES → "Sign with Phantom" button
-  │            → phantom.signAndSendTransaction(tx)
-  │            → /api/payment/solana/verify-sig
-  │            → CHOCO credited
-  └── No Phantom → PrivyChocoPayCard (compact mode)
-                    → Privy embedded wallet
+  ├── Phantom tab
+  │     → /api/payment/solana/create-tx with connected payer
+  │     → phantom.signTransaction(tx)
+  │     → sendRawTransaction via devnet RPC
+  │     → /api/payment/solana/verify-sig
+  │     → CHOCO credited
+  └── Internal Wallet tab
+        → PrivyChocoPayCard (compact mode)
+        → /api/payment/solana/create-tx with embedded wallet payer
+        → Privy signTransaction
+        → /api/payment/solana/verify-sig
+        → CHOCO credited
 ```
+
+Notes:
+- The in-chat natural-language purchase card is now a UI-entry marker. Actual payment records and references are created only after the user chooses Phantom or Internal Wallet.
+- If the user's CHOCO balance is below `MIN_REQUIRED_CHOCO`, `api/chat/index.ts` returns HTTP 402 before natural-language command execution. The user is then routed to the 402 top-up dialog, which also uses `BuyChocoPayCard` and supports both Phantom and Internal Wallet.
 
 **Files:**
 - `app/lib/ai/stream.ts` — `executeNaturalLanguageCommand()`
@@ -136,8 +145,8 @@ use-chat-stream.ts detects 402
   → Calls onInsufficientChoco()
            ↓
 chat/$id.tsx
-  → setIsItemStoreOpen(true)
-  → ItemStoreModal opens
+  → setIsChocoModalOpen(true)
+  → BuyChocoPayCard Dialog opens
            ↓
 User purchases CHOCO via modal
   → revalidator.revalidate()
@@ -148,7 +157,7 @@ User purchases CHOCO via modal
 **Files:**
 - `app/routes/api/chat/index.ts` — 402 response
 - `app/hooks/use-chat-stream.ts` — 402 detection + callback
-- `app/routes/chat/$id.tsx` — `onInsufficientChoco` → modal open
+- `app/routes/chat/$id.tsx` — `onInsufficientChoco` → BuyChocoPayCard dialog open
 
 ---
 
@@ -173,7 +182,7 @@ Generation requirements:
 - `create-tx` creates a unique payment `reference` and stores it in `Payment.transactionId`.
 - `create-tx` accepts the expected payer wallet and stores it in `Payment.walletAddress`.
 - Phantom and Privy embedded wallet transactions include the reference public key as a readonly non-signer account on the SOL transfer instruction.
-- Chat-generated `SWAP_TX` transactions use the same reference-account-on-transfer rule.
+- Chat `SWAP_TX` cards generate the actual signed transaction at click time through `create-tx`, using the same reference-account-on-transfer rule as `/buy-choco`.
 - Memo instructions are not used for payment references because the Memo program can require signatures for supplied account keys.
 - Payment records are marked with `network = devnet`.
 
@@ -200,8 +209,13 @@ Validated on 2026-05-05:
 - Privy embedded wallet payment E2E on `/buy-choco`: `create-tx -> verify-sig 200`.
 - Chat `SWAP_TX` generation code updated to remove Memo instruction; `npm run typecheck` and `npm run build` passed.
 
+Validated on 2026-05-06:
+- In-chat `buyChoco` no longer blocks users without a saved `solanaWallet`.
+- `buyChoco` returns a card-entry marker (`[SWAP_TX:pending:pending]`) and defers real payment creation to `SwapTxCard`.
+- `npm exec tsc -- --noEmit` passed.
+
 Remaining validation:
-- Chat `SWAP_TX` payment E2E with real wallet signature.
+- Chat `SWAP_TX` payment E2E with the current card-entry marker and real wallet signature.
 - Duplicate signature rejection.
 - Missing reference rejection.
 - 402 → top-up → original chat recovery.

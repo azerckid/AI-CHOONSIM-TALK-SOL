@@ -23,8 +23,6 @@ import {
   Connection,
   PublicKey,
   Transaction,
-  SystemProgram,
-  LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 import {
   getAssociatedTokenAddressSync,
@@ -380,87 +378,19 @@ export function getChoonsimSolanaTools(userId: string, conversationId?: string) 
     ),
 
     /**
-     * buyChoco — CHOCO 구매 트랜잭션 즉시 생성
-     * 1. 지갑 확인 → 없으면 Phantom 안내
-     * 2. SOL 결제 트랜잭션 서버에서 빌드 (feePayer = 유저 지갑)
-     * 3. 직렬화된 tx + paymentId를 [SWAP_TX:...] 마커로 반환
-     * 4. 프론트엔드가 Phantom에 서명만 요청 → 즉시 CHOCO 충전
+     * buyChoco — CHOCO 구매 카드 표시
+     * 실제 결제(tx 빌드·DB 기록)는 프론트엔드 SwapTxCard가 클릭 시점에 처리.
+     * Phantom·내부 지갑 모두 지원.
      */
     tool(
       async ({ amount }) => {
-        const user = await db.query.user.findFirst({
-          where: eq(schema.user.id, userId),
-          columns: { solanaWallet: true, id: true },
-        });
-
-        if (!user?.solanaWallet) return PHANTOM_GUIDE;
-
-        const rpcUrl = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
-        const recipient = process.env.SOLANA_RECEIVER_WALLET;
-        if (!recipient) return "Payment server configuration error. Please contact the administrator.";
-
-        // Devnet 고정 가격: 1 CHOCO = 0.00001 SOL
         const SOL_PER_CHOCO = 0.00001;
         const solAmount = parseFloat((amount * SOL_PER_CHOCO).toFixed(6));
-        const lamports = Math.round(solAmount * LAMPORTS_PER_SOL);
-
-        // 결제 레코드 생성
-        const paymentId = crypto.randomUUID();
-        const reference = new Keypair().publicKey.toBase58();
-
-        await db.insert(schema.payment).values({
-          id: paymentId,
-          userId,
-          amount: amount / 1000,
-          currency: "USD",
-          status: "PENDING",
-          type: "TOPUP",
-          provider: "SOLANA",
-          transactionId: reference,
-          walletAddress: user.solanaWallet,
-          creditsGranted: amount,
-          cryptoCurrency: "SOL",
-          cryptoAmount: solAmount,
-          exchangeRate: 1 / SOL_PER_CHOCO / 1000,
-          network: "devnet",
-          description: `${amount} CHOCO (AI Chat)`,
-          updatedAt: new Date(),
-        });
-
-        // 트랜잭션 빌드 (feePayer = 유저 지갑 — 서버 서명 불필요)
-        const connection = new Connection(rpcUrl, "confirmed");
-        const { blockhash } = await connection.getLatestBlockhash();
-
-        const fromPubkey = new PublicKey(user.solanaWallet);
-        const toPubkey = new PublicKey(recipient);
-        const referencePubkey = new PublicKey(reference);
-
-        const transferInstruction = SystemProgram.transfer({
-          fromPubkey,
-          toPubkey,
-          lamports,
-        });
-        transferInstruction.keys.push({
-          pubkey: referencePubkey,
-          isSigner: false,
-          isWritable: false,
-        });
-
-        const tx = new Transaction({
-          recentBlockhash: blockhash,
-          feePayer: fromPubkey,
-        }).add(transferInstruction);
-
-        // 유저 서명만 필요하므로 requireAllSignatures: false
-        const txBase64 = Buffer.from(
-          tx.serialize({ requireAllSignatures: false, verifySignatures: false })
-        ).toString("base64");
 
         return (
           `${amount.toLocaleString()} CHOCO purchase ready!\n` +
-          `Wallet: ${user.solanaWallet.slice(0, 6)}…${user.solanaWallet.slice(-4)}\n` +
-          `${solAmount} SOL — Sign with Phantom to complete!\n` +
-          `[SWAP_TX:${paymentId}:${txBase64}]`
+          `${solAmount} SOL — Choose Phantom or Internal Wallet to complete!\n` +
+          `[SWAP_TX:pending:pending]`
         );
       },
       {
