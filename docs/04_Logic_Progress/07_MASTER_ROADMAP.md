@@ -1,6 +1,6 @@
 # 07. 춘심 마스터 로드맵
 > Created: 2026-04-30 00:00
-> Last Updated: 2026-05-06 18:00
+> Last Updated: 2026-05-08 12:34
 > 목적: Colosseum 해커톤 마감부터 서비스화까지 전체 작업 현황 및 우선순위 통합 관리
 
 ---
@@ -37,7 +37,7 @@ Phase ∞  보류 (생태계 대기)  미정
 | P0 | AI 모델 장애 폴백 | `Needs Regression` | Gemini 429/503 발생 시 OpenAI fallback 모델 사용. 실제 장애 상황 재현 및 응답 품질 수동 QA 필요 |
 | P0 | 핵심 사용자 루프 명확화 | `Demo Verified` | "첫 비밀 대화 → 감정적 순간 → CHOCO 액션 → 기억 저장 또는 선물" — 2026-05-06 확정. home/chat/guide/shop 문구 반영은 Phase 1 |
 | P1 | 로그인 후 모바일 E2E QA | `Needs Regression` | 테스트 계정으로 채팅, 지갑, 결제, 기억 앨범 전체 흐름 검증 |
-| P1 | LLM Tool Calling 정식 복구 | `Open Risk` | LangGraph `ToolNode` 기반 도구 실행 구조 복구 |
+| P1 | LLM Tool Calling 정식 복구 | `Needs Regression` | LangGraph `ToolNode` 기반 도구 실행 구조 복구 완료. Gemini + Solana Agent Kit 실제 대화 E2E 필요 |
 | P1 | Vercel AI SDK V2 재도입 검토 | `Open Risk` | 결제/잔액/온체인 도구 호출 parity 확보 전까지 채팅 API는 기존 스트리밍 경로 사용 |
 | P2 | Privy/RPC 환경 설정 분리 | `Open Risk` | 하드코딩된 공개 설정을 `VITE_*` 설정 레이어로 이동 |
 | P2 | 서버 지갑 운영 모니터링 | `Open Risk` | 서버 SOL/CHOCO 잔액과 funding 실패 상태를 운영자가 확인 가능하게 정리 |
@@ -125,7 +125,7 @@ Phase ∞  보류 (생태계 대기)  미정
 
 Phase 1은 기능 추가보다 서비스 신뢰성 보강을 우선한다. 아래 P0 항목이 정리되기 전에는 Phase 2 mainnet 준비로 넘어가지 않는다.
 
-- [x] P0 결제 검증 설계 및 코드 보강 완료 — `reference`, payer, amount, createdAt, duplicate signature, reconciliation 포함. Phantom 직접 결제와 Privy 임베디드 지갑 devnet E2E 통과. chat `SWAP_TX`는 카드 진입 마커로 단순화했고 `npm exec tsc -- --noEmit` 통과, 실제 지갑 E2E와 402 복구 흐름은 `Needs Regression`
+- [x] P0 결제 검증 설계 및 코드 보강 완료 — `reference`, payer, amount, createdAt, duplicate signature, reconciliation 포함. Phantom 직접 결제와 Privy 임베디드 지갑 devnet E2E 통과. chat `SWAP_TX`는 카드 진입 마커로 단순화했고 `npm exec tsc -- --noEmit` 통과, 실제 지갑 E2E와 402 복구 흐름은 `Needs Regression`. Blinks Actions는 2026-05-08 `gift` Token-2022 호환, `subscribe.verify` payer/treasury/amount/replay 검증, `checkin.verify` failed tx/memo/missionId 검증을 보강했으며 수동 devnet 회귀 확인 필요
 - [ ] P0 402 결제 복구 UX 수동 QA 완료 — HTTP 402 즉시 반환 처리 코드 수정 및 빌드 통과 2026-05-05, 모바일 우선 수동 확인 필요
 - [x] P0 핵심 사용자 루프 문장 확정 — "첫 비밀 대화 → 감정적 순간 → CHOCO 액션 → 기억 저장 또는 선물" (2026-05-06 확정)
 
@@ -153,10 +153,10 @@ Phase 1은 기능 추가보다 서비스 신뢰성 보강을 우선한다. 아�
 
 > `02_VERCEL_DEPLOYMENT_404_CHECKLIST.md` 항목 — 현재 미체크 상태
 
-- [ ] Vercel Root Directory = `apps/web` 설정 확인 및 체크박스 업데이트
-- [ ] Build Command = `npm run build` 확인
-- [ ] Output Directory = 비움 확인
-- [ ] 체크리스트 문서 체크박스 업데이트 (완료 항목 ✅ 처리)
+- [ ] Vercel Root Directory = `apps/web` 설정 확인 및 체크박스 업데이트 — 대시보드 확인 필요
+- [x] Build Command = `npm run build` 확인 — `apps/web/vercel.json`에서 확인 2026-05-08
+- [ ] Output Directory = 비움 확인 — 대시보드 확인 필요
+- [ ] 체크리스트 문서 체크박스 업데이트 (완료 항목 ✅ 처리) — 로컬 설정 확인분 반영, 대시보드 항목 미완료
 
 ### 1-4. LangSmith 활용 버그 추적
 
@@ -177,9 +177,9 @@ Phase 1은 기능 추가보다 서비스 신뢰성 보강을 우선한다. 아�
 > 현재 `executeNaturalLanguageCommand()`는 정규식 패턴으로 도구를 수동 호출하는 임시 방식.
 > LLM이 의도를 직접 파악하고 도구를 자동 선택하는 구조로 교체 필요.
 
-- [ ] `callModelNode`에 `sanitizeToolSchema()` 적용한 도구 binding 복구
-- [ ] LangGraph `ToolNode` 추가 및 조건부 엣지 연결 (tool call → tool execute → 재응답)
-- [ ] `executeNaturalLanguageCommand()` 전체 제거 및 stream.ts 로직 단순화
+- [x] `callModelNode`에 `sanitizeToolSchema()` 적용한 도구 binding 복구 — 완료 2026-05-08, `npx tsc --noEmit` 통과
+- [x] LangGraph `ToolNode` 추가 및 조건부 엣지 연결 (tool call → tool execute → 재응답) — 완료 2026-05-08
+- [x] `executeNaturalLanguageCommand()` 전체 제거 및 stream.ts 로직 단순화 — 슬래시 커맨드 fallback은 유지
 - [ ] Gemini + Solana Agent Kit 도구 E2E 테스트 (SOL 잔액, CHOCO 잔액, cNFT 각인 등)
 
 ---

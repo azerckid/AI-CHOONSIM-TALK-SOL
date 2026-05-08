@@ -45,6 +45,18 @@ export const model = openAiFallbackModel
     ? geminiModel.withFallbacks({ fallbacks: [openAiFallbackModel] })
     : geminiModel;
 
+export function bindModelTools(tools: unknown[]) {
+    const primaryWithTools = geminiModel.bindTools(tools as never[]);
+
+    if (!openAiFallbackModel) {
+        return primaryWithTools;
+    }
+
+    return primaryWithTools.withFallbacks({
+        fallbacks: [openAiFallbackModel.bindTools(tools as never[])],
+    });
+}
+
 /** 이미지 URL을 Base64 데이터 URL로 변환 */
 export async function urlToBase64(url: string): Promise<string> {
     try {

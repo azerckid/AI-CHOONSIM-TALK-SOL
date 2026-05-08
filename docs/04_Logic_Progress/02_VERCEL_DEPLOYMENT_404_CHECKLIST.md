@@ -1,7 +1,7 @@
 # Vercel 배포 404 NOT_FOUND 점검 체크리스트
 
-> Created: 2026-03-03  
-> Last Updated: 2026-03-03
+> Created: 2026-03-03 00:00
+> Last Updated: 2026-05-08 12:34
 
 **증상**: 로컬에서는 정상인데 Vercel 배포 URL 루트(`https://chat-bot-choonsim.vercel.app`) 접속 시 `404: NOT_FOUND` 발생.
 
@@ -34,10 +34,10 @@
 
 ## 2. 체크리스트
 
-- [ ] Root Directory = `apps/web`
-- [ ] Build Command = `npm run build` (또는 명시적으로 `npx react-router build`)
-- [ ] Output Directory = 비움 (preset 사용)
-- [ ] 위 변경 후 **Redeploy** (Deployments → … → Redeploy)
+- [ ] Root Directory = `apps/web` — Vercel 대시보드에서 직접 확인 필요
+- [x] Build Command = `npm run build` — `apps/web/vercel.json`에서 확인 2026-05-08
+- [ ] Output Directory = 비움 (preset 사용) — Vercel 대시보드에서 직접 확인 필요
+- [ ] 위 변경 후 **Redeploy** (Deployments → … → Redeploy) — 대시보드 설정 확인 후 진행
 
 ---
 

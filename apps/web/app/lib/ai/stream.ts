@@ -54,15 +54,6 @@ export async function* streamAIResponse(
         }
     }
 
-    // ── 자연어 CHOCO 의도 감지 (Gemini 재작성 우회) ──────────────────────────
-    if (userId) {
-        const nlResult = await executeNaturalLanguageCommand(userMessage, userId, conversationId);
-        if (nlResult !== null) {
-            yield { type: "content" as const, content: nlResult };
-            return;
-        }
-    }
-
     // ── 메시지 히스토리 변환 ──────────────────────────────────────────────────
     const toBaseMessage = async (msg: HistoryMessage): Promise<BaseMessage> => {
         let content = msg.content || (msg.mediaUrl ? "Please check this photo." : " ");
@@ -99,6 +90,7 @@ export async function* streamAIResponse(
                 summary: currentSummary,
                 mediaUrl,
                 userId,
+                conversationId: conversationId || null,
                 characterId,
                 characterName: characterName || null,
                 personaPrompt: personaPrompt || null,
@@ -151,119 +143,6 @@ export async function* streamAIResponse(
         logger.error({ category: "SYSTEM", message: "Stream Error:", stackTrace: (error as Error).stack });
         yield { type: "content" as const, content: "Oh... my head is spinning all of a sudden... I'm sorry, can you call me again in a bit?" };
     }
-}
-
-// ── 자연어 CHOCO 의도 감지 ────────────────────────────────────────────────────
-async function executeNaturalLanguageCommand(
-    message: string,
-    userId: string,
-    conversationId?: string
-): Promise<string | null> {
-    const m = message.toLowerCase();
-
-    const buyKeywords = ["살게", "살거야", "살래", "사고 싶", "사고싶", "구매", "충전", "buy", "purchase", "get choco", "want choco"];
-    const chocoKeywords = ["초코", "choco"];
-    const isChocoMention = chocoKeywords.some((k) => m.includes(k));
-    const isBuyIntent = buyKeywords.some((k) => m.includes(k));
-
-    const balancePatterns = [
-        /초코.*얼마/,
-        /잔액.*확인/,
-        /잔액이.*얼마/,
-        /choco.*balance/i,
-        /balance.*choco/i,
-        /how.*much.*choco/i,
-        /check.*balance/i,
-        /내.*초코.*있/,
-    ];
-
-    const engravePatterns = [
-        /기억.*새겨/,
-        /추억.*남겨/,
-        /nft.*만들/,
-        /온체인.*기록/,
-        /기록.*남겨/,
-        /save.*memory/i,
-        /engrave.*moment/i,
-        /engrave.*memory/i,
-        /make.*nft/i,
-        /mint.*nft/i,
-        /record.*moment/i,
-        /capture.*moment/i,
-    ];
-
-    const solBalancePatterns = [
-        /sol.*잔액/,
-        /잔액.*sol/,
-        /sol.*얼마/,
-        /얼마.*sol/,
-        /sol.*balance/i,
-        /balance.*sol/i,
-        /내.*sol/,
-        /my.*sol/i,
-        /솔.*잔액/,
-        /잔액.*솔/,
-        /솔.*얼마/,
-        /얼마.*솔/,
-        /내.*솔/,
-        /솔잔액/,
-    ];
-
-    const isBuy = isChocoMention && isBuyIntent;
-    const isBalance = isChocoMention && balancePatterns.some((p) => p.test(m));
-    const isSolBalance = solBalancePatterns.some((p) => p.test(m));
-    const isEngrave = engravePatterns.some((p) => p.test(m));
-    const isCheckin = /체크인|출석|check.?in|daily checkin/i.test(m);
-
-    if (!isBuy && !isBalance && !isSolBalance && !isEngrave && !isCheckin) return null;
-
-    let tools: Array<{ name: string; invoke(input: unknown): Promise<unknown> }> = [];
-    try {
-        const { getChoonsimSolanaTools } = await import("../solana/agent-kit.server");
-        tools = getChoonsimSolanaTools(userId, conversationId) as typeof tools;
-    } catch (e) {
-        logger.error({ category: "SYSTEM", message: `[NL] Failed to load Solana tools: ${e}` });
-        return null;
-    }
-
-    const run = async (name: string, input: unknown): Promise<string | null> => {
-        const tool = tools.find((t) => t.name === name);
-        if (!tool) return null;
-        return String(await tool.invoke(input));
-    };
-
-    if (isBuy) {
-        const numbers = message.match(/\d+/g)?.map(Number) ?? [];
-        const amount = numbers.length > 0 ? Math.max(...numbers) : 100;
-        const safeAmount = amount > 0 && amount <= 100000 ? amount : 100;
-        try { return await run("buyChoco", { amount: safeAmount }); } catch { return null; }
-    }
-    if (isBalance) {
-        try { return await run("checkChocoBalance", {}); } catch { return null; }
-    }
-    if (isSolBalance) {
-        try {
-            const { db } = await import("../db.server");
-            const { user: userSchema } = await import("../../db/schema");
-            const { eq } = await import("drizzle-orm");
-            const user = await db.query.user.findFirst({
-                where: eq(userSchema.id, userId),
-                columns: { solanaWallet: true },
-            });
-            if (!user?.solanaWallet) return "아직 연결된 Solana 지갑이 없어. 프로필에서 지갑을 연결해줘! 💕";
-            return await run("getSolBalance", { walletAddress: user.solanaWallet });
-        } catch { return null; }
-    }
-    if (isEngrave) {
-        const titleMatch = message.match(/(?:기억|추억|nft|기록|memory|moment|engrave|mint).*?(?:[줘게]|\s)\s*(.+)?$/i);
-        const title = titleMatch?.[1]?.trim() || undefined;
-        try { return await run("engraveMemory", { memoryTitle: title }); } catch { return null; }
-    }
-    if (isCheckin) {
-        try { return await run("getCheckinBlink", {}); } catch { return null; }
-    }
-
-    return null;
 }
 
 // ── 슬래시 커맨드 실행 ────────────────────────────────────────────────────────

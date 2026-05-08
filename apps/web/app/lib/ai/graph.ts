@@ -3,6 +3,7 @@
  */
 import { HumanMessage, SystemMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
 import { StateGraph, END, Annotation, START } from "@langchain/langgraph";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { db } from "../db.server";
 import * as schema from "../../db/schema";
 import { eq } from "drizzle-orm";
@@ -14,7 +15,8 @@ import {
     buildStreamSystemInstruction,
     type SubscriptionTier,
 } from "./prompts";
-import { model, urlToBase64 } from "./model";
+import { bindModelTools, model, urlToBase64 } from "./model";
+import { getChoonsimSolanaTools } from "../solana/agent-kit.server";
 
 // 그래프 상태 정의
 const ChatStateAnnotation = Annotation.Root({
@@ -39,6 +41,10 @@ const ChatStateAnnotation = Annotation.Root({
         default: () => null,
     }),
     userId: Annotation<string | null>({
+        reducer: (x, y) => y ?? x,
+        default: () => null,
+    }),
+    conversationId: Annotation<string | null>({
         reducer: (x, y) => y ?? x,
         default: () => null,
     }),
@@ -118,8 +124,16 @@ const saveTravelPlanTool = {
 };
 
 
-// Gemini는 JSON Schema의 exclusiveMinimum을 지원하지 않으므로 제거
+// Gemini는 JSON Schema의 exclusiveMinimum/exclusiveMaximum을 지원하지 않으므로
+// JSON schema 형태로 들어온 도구 정의에서만 해당 키를 제거한다.
 function sanitizeToolSchema(obj: unknown): unknown {
+    if (
+        obj !== null &&
+        typeof obj === "object" &&
+        "safeParse" in (obj as Record<string, unknown>)
+    ) {
+        return obj;
+    }
     if (Array.isArray(obj)) return obj.map(sanitizeToolSchema);
     if (obj !== null && typeof obj === "object") {
         const result: Record<string, unknown> = {};
@@ -133,10 +147,12 @@ function sanitizeToolSchema(obj: unknown): unknown {
     return obj;
 }
 
-function sanitizeTools(tools: unknown[]): unknown[] {
+function sanitizeTools<T>(tools: T[]): T[] {
     return tools.map((tool) => {
         if (tool !== null && typeof tool === "object" && "schema" in (tool as object)) {
-            return { ...(tool as object), schema: sanitizeToolSchema((tool as Record<string, unknown>).schema) };
+            const clonedTool = Object.assign(Object.create(Object.getPrototypeOf(tool)), tool);
+            clonedTool.schema = sanitizeToolSchema((tool as Record<string, unknown>).schema);
+            return clonedTool;
         }
         return tool;
     });
@@ -144,8 +160,7 @@ function sanitizeTools(tools: unknown[]): unknown[] {
 
 /**
  * 노드 2: AI 응답 생성
- * Solana 도구는 stream.ts의 executeNaturalLanguageCommand에서 그래프 진입 전 처리됨.
- * callModelNode는 순수 대화 응답만 담당 — tool binding 없이 model.invoke() 직접 호출.
+ * Solana 도구는 LangGraph ToolNode 경로로 실행된다.
  */
 const callModelNode = async (state: typeof ChatStateAnnotation.State) => {
     const messages: BaseMessage[] = [
@@ -153,13 +168,37 @@ const callModelNode = async (state: typeof ChatStateAnnotation.State) => {
         ...state.messages,
     ];
 
-    const response = await model.invoke(messages);
+    const tools = state.userId
+        ? sanitizeTools(getChoonsimSolanaTools(state.userId, state.conversationId ?? undefined))
+        : [];
+    const chatModel = tools.length > 0 ? bindModelTools(tools) : model;
+    const response = await chatModel.invoke(messages);
 
     if (typeof response.content === "string") {
         response.content = removeEmojis(response.content);
     }
 
     return { messages: [response] };
+};
+
+const executeToolsNode = async (state: typeof ChatStateAnnotation.State) => {
+    if (!state.userId) return {};
+
+    const tools = sanitizeTools(
+        getChoonsimSolanaTools(state.userId, state.conversationId ?? undefined)
+    );
+    const toolNode = new ToolNode(tools);
+
+    return await toolNode.invoke({ messages: state.messages });
+};
+
+const shouldContinueAfterModel = (state: typeof ChatStateAnnotation.State) => {
+    const lastMessage = state.messages[state.messages.length - 1];
+    if (AIMessage.isInstance(lastMessage) && lastMessage.tool_calls?.length) {
+        return "tools";
+    }
+
+    return "summarize";
 };
 
 /**
@@ -184,10 +223,12 @@ ${state.messages.map(m => `${m._getType()}: ${m.content}`).join("\n")}
 const _chatGraph = new StateGraph(ChatStateAnnotation)
     .addNode("analyze", analyzePersonaNode)
     .addNode("callModel", callModelNode)
+    .addNode("tools", executeToolsNode)
     .addNode("summarize", summarizeNode)
     .addEdge(START, "analyze")
     .addEdge("analyze", "callModel")
-    .addEdge("callModel", "summarize")
+    .addConditionalEdges("callModel", shouldContinueAfterModel, ["tools", "summarize"])
+    .addEdge("tools", "callModel")
     .addEdge("summarize", END)
     .compile();
 
