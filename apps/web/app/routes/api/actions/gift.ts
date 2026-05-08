@@ -14,12 +14,12 @@ import {
   PublicKey,
   SystemProgram,
   Transaction,
-  LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 import {
   createTransferCheckedInstruction,
   getAssociatedTokenAddressSync,
   createAssociatedTokenAccountInstruction,
+  TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
 import { solanaConnection, ACTIONS_CORS_HEADERS } from "~/lib/solana/connection.server";
 import { db } from "~/lib/db.server";
@@ -134,8 +134,8 @@ export async function action({ request }: ActionFunctionArgs) {
     const senderPubkey = new PublicKey(senderAddress);
     const recipientPubkey = new PublicKey(toAddress);
 
-    const senderAta = getAssociatedTokenAddressSync(mintPubkey, senderPubkey);
-    const recipientAta = getAssociatedTokenAddressSync(mintPubkey, recipientPubkey);
+    const senderAta = getAssociatedTokenAddressSync(mintPubkey, senderPubkey, false, TOKEN_2022_PROGRAM_ID);
+    const recipientAta = getAssociatedTokenAddressSync(mintPubkey, recipientPubkey, false, TOKEN_2022_PROGRAM_ID);
 
     const tx = new Transaction();
     const { blockhash, lastValidBlockHeight } = await solanaConnection.getLatestBlockhash();
@@ -150,7 +150,8 @@ export async function action({ request }: ActionFunctionArgs) {
           senderPubkey,
           recipientAta,
           recipientPubkey,
-          mintPubkey
+          mintPubkey,
+          TOKEN_2022_PROGRAM_ID
         )
       );
     }
@@ -162,7 +163,9 @@ export async function action({ request }: ActionFunctionArgs) {
         recipientAta,
         senderPubkey,
         amount * Math.pow(10, CHOCO_DECIMALS),
-        CHOCO_DECIMALS
+        CHOCO_DECIMALS,
+        [],
+        TOKEN_2022_PROGRAM_ID
       )
     );
 

@@ -7,7 +7,7 @@ import type { ActionFunctionArgs } from "react-router";
 import { auth } from "~/lib/auth.server";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { solanaConnection } from "~/lib/solana/connection.server";
 import { mintCompressedChoco } from "~/lib/solana/zk-compression.server";
 import { PublicKey } from "@solana/web3.js";
@@ -60,11 +60,14 @@ export async function action({ request }: ActionFunctionArgs) {
     const todayEpoch = Math.floor(new Date().setHours(0, 0, 0, 0) / 1000);
 
     const existing = await db.query.userMission.findFirst({
-      where: eq(schema.userMission.userId, userId),
-      columns: { id: true, lastUpdated: true, status: true, missionId: true },
+      where: and(
+        eq(schema.userMission.userId, userId),
+        eq(schema.userMission.missionId, MISSION_ID)
+      ),
+      columns: { id: true, lastUpdated: true, status: true },
     });
 
-    const existingCheckin = existing && existing.missionId === MISSION_ID;
+    const existingCheckin = !!existing;
     const lastUpdatedEpoch = existingCheckin
       ? Math.floor(
           (existing.lastUpdated instanceof Date
@@ -90,6 +93,13 @@ export async function action({ request }: ActionFunctionArgs) {
       return Response.json(
         { error: "트랜잭션을 찾을 수 없습니다. 잠시 후 다시 시도하세요." },
         { status: 404 }
+      );
+    }
+
+    if (tx.meta?.err) {
+      return Response.json(
+        { error: "트랜잭션이 실패했습니다." },
+        { status: 400 }
       );
     }
 
@@ -119,6 +129,18 @@ export async function action({ request }: ActionFunctionArgs) {
     if (!accountKeys.includes(MEMO_PROGRAM_ID)) {
       return Response.json(
         { error: "유효하지 않은 체크인 트랜잭션입니다." },
+        { status: 400 }
+      );
+    }
+
+    // Memo 내용 검증 — CHOONSIM_CHECKIN:<wallet>: 형식이어야 함
+    const expectedMemoPrefix = `CHOONSIM_CHECKIN:${user.solanaWallet}:`;
+    const hasMemoContent = (tx.meta?.logMessages ?? []).some(
+      (log) => log.startsWith(`Program log: ${expectedMemoPrefix}`)
+    );
+    if (!hasMemoContent) {
+      return Response.json(
+        { error: "체크인 메모 내용이 올바르지 않습니다." },
         { status: 400 }
       );
     }
