@@ -1,4 +1,5 @@
 # 07. 춘심 마스터 로드맵
+
 > Created: 2026-04-30 00:00
 > Last Updated: 2026-05-09 00:00
 > 목적: Colosseum 해커톤 마감부터 서비스화까지 전체 작업 현황 및 우선순위 통합 관리
@@ -21,26 +22,26 @@ Phase ∞  보류 (생태계 대기)  미정
 
 로드맵의 체크박스는 구현 또는 데모 확인 여부를 표시한다. 서비스 출시 준비도는 아래 라벨로 별도 관리한다.
 
-| 라벨 | 의미 | 완료 기준 |
-| :--- | :--- | :--- |
-| `Demo Verified` | 해커톤 제출 또는 데모 영상 기준으로 정상 동작을 확인했다. | 지정된 데모 시나리오에서 한 번 이상 성공했다. |
-| `Service Verified` | 반복 사용, 로그인 후 복구, 운영 예외까지 검증했다. | 테스트 계정 또는 실제 운영 조건에서 회귀 검증을 통과했다. |
+| 라벨               | 의미                                                              | 완료 기준                                                              |
+| :----------------- | :---------------------------------------------------------------- | :--------------------------------------------------------------------- |
+| `Demo Verified`    | 해커톤 제출 또는 데모 영상 기준으로 정상 동작을 확인했다.         | 지정된 데모 시나리오에서 한 번 이상 성공했다.                          |
+| `Service Verified` | 반복 사용, 로그인 후 복구, 운영 예외까지 검증했다.                | 테스트 계정 또는 실제 운영 조건에서 회귀 검증을 통과했다.              |
 | `Needs Regression` | 구현은 되었거나 데모는 성공했지만, 서비스 기준 재검증이 필요하다. | 모바일, 로그인 후 E2E, 실패 복구, 중복 처리 중 하나 이상이 미검증이다. |
-| `Open Risk` | 구현 또는 정책 결정이 아직 남아 있다. | 코드, 문서, 운영 정책 중 명확한 후속 작업이 존재한다. |
+| `Open Risk`        | 구현 또는 정책 결정이 아직 남아 있다.                             | 코드, 문서, 운영 정책 중 명확한 후속 작업이 존재한다.                  |
 
 ## 현재 우선순위 점검 큐
 
-| 우선순위 | 항목 | 현재 라벨 | 다음 확인 |
-| :--- | :--- | :--- | :--- |
-| P0 | Solana 결제 검증 강화 | `Needs Regression` | Phantom 직접 결제와 Privy 임베디드 지갑 devnet E2E 완료. chat `SWAP_TX`는 카드 진입 마커로 단순화되어 solanaWallet 미등록 유저도 결제 카드 접근 가능. 실제 지갑 E2E와 402 복구 흐름 검증 필요 |
-| P0 | 402 이후 충전 복귀 UX | `Needs Regression` | 버그 수정: 402 시 하트 모달(ItemStoreModal) 대신 BuyChocoPayCard Dialog 표시로 변경. 채팅 -> 402 -> CHOCO 충전 -> 모달 닫기 -> 대화 복귀 수동 QA 필요 |
-| P0 | AI 모델 장애 폴백 | `Needs Regression` | Gemini 429/503 발생 시 OpenAI fallback 모델 사용. 실제 장애 상황 재현 및 응답 품질 수동 QA 필요 |
-| P0 | 핵심 사용자 루프 명확화 | `Demo Verified` | "첫 비밀 대화 → 감정적 순간 → CHOCO 액션 → 기억 저장 또는 선물" — 2026-05-06 확정. home/chat/guide/shop 문구 반영은 Phase 1 |
-| P1 | 로그인 후 모바일 E2E QA | `Needs Regression` | 테스트 계정으로 채팅, 지갑, 결제, 기억 앨범 전체 흐름 검증 |
-| P1 | LLM Tool Calling 정식 복구 | `Needs Regression` | LangGraph `ToolNode` 기반 도구 실행 구조 복구 완료. Gemini + Solana Agent Kit 실제 대화 E2E 필요 |
-| P1 | Vercel AI SDK V2 재도입 검토 | `Open Risk` | 결제/잔액/온체인 도구 호출 parity 확보 전까지 채팅 API는 기존 스트리밍 경로 사용 |
-| P2 | Privy/RPC 환경 설정 분리 | `Open Risk` | 하드코딩된 공개 설정을 `VITE_*` 설정 레이어로 이동 |
-| P2 | 서버 지갑 운영 모니터링 | `Open Risk` | 서버 SOL/CHOCO 잔액과 funding 실패 상태를 운영자가 확인 가능하게 정리 |
+| 우선순위 | 항목                         | 현재 라벨          | 다음 확인                                                                                                                                                                                     |
+| :------- | :--------------------------- | :----------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0       | Solana 결제 검증 강화        | `Needs Regression` | Phantom 직접 결제와 Privy 임베디드 지갑 devnet E2E 완료. chat `SWAP_TX`는 카드 진입 마커로 단순화되어 solanaWallet 미등록 유저도 결제 카드 접근 가능. 실제 지갑 E2E와 402 복구 흐름 검증 필요 |
+| P0       | 402 이후 충전 복귀 UX        | `Needs Regression` | 버그 수정: 402 시 하트 모달(ItemStoreModal) 대신 BuyChocoPayCard Dialog 표시로 변경. 채팅 -> 402 -> CHOCO 충전 -> 모달 닫기 -> 대화 복귀 수동 QA 필요                                         |
+| P0       | AI 모델 장애 폴백            | `Needs Regression` | Gemini 429/503 발생 시 OpenAI fallback 모델 사용. 실제 장애 상황 재현 및 응답 품질 수동 QA 필요                                                                                               |
+| P0       | 핵심 사용자 루프 명확화      | `Demo Verified`    | "첫 비밀 대화 → 감정적 순간 → CHOCO 액션 → 기억 저장 또는 선물" — 2026-05-06 확정. home/chat/guide/shop 문구 반영은 Phase 1                                                                   |
+| P1       | 로그인 후 모바일 E2E QA      | `Needs Regression` | 테스트 계정으로 채팅, 지갑, 결제, 기억 앨범 전체 흐름 검증                                                                                                                                    |
+| P1       | LLM Tool Calling 정식 복구   | `Needs Regression` | LangGraph `ToolNode` 기반 도구 실행 구조 복구 완료. Gemini + Solana Agent Kit 실제 대화 E2E 필요                                                                                              |
+| P1       | Vercel AI SDK V2 재도입 검토 | `Open Risk`        | 결제/잔액/온체인 도구 호출 parity 확보 전까지 채팅 API는 기존 스트리밍 경로 사용                                                                                                              |
+| P2       | Privy/RPC 환경 설정 분리     | `Open Risk`        | 하드코딩된 공개 설정을 `VITE_*` 설정 레이어로 이동                                                                                                                                            |
+| P2       | 서버 지갑 운영 모니터링      | `Open Risk`        | 서버 SOL/CHOCO 잔액과 funding 실패 상태를 운영자가 확인 가능하게 정리                                                                                                                         |
 
 ---
 
@@ -206,6 +207,7 @@ Phase 1은 기능 추가보다 서비스 신뢰성 보강을 우선한다. 아�
 - [ ] Pay.sh MCP 서버 Claude Code 개발 환경 연동 확인
 
 **예상 효과**:
+
 - 에이전트가 실시간 온체인 데이터로 응답 품질 향상
 - 외부 API 키 관리 없이 per-call 결제로 운영 복잡도 감소
 - 대화 흐름 안에서 결제까지 완결되는 UX 구현 기반
@@ -328,13 +330,13 @@ Phase 1은 기능 추가보다 서비스 신뢰성 보강을 우선한다. 아�
 
 체크리스트의 상위 항목과 하위 항목이 섞이면 완료율이 왜곡될 수 있으므로, 현재 대시보드는 수치형 완료율보다 서비스 준비 상태를 기준으로 관리한다.
 
-| Phase | 대표 상태 | 주요 열린 항목 | 다음 게이트 |
-| :--- | :--- | :--- | :--- |
-| Phase 0 (해커톤 마감 전) | `Demo Verified` 중심 | 서버 SOL/CHOCO 잔액, 발견 버그 우선순위화 | 제출 자료 최종 확인 |
-| Phase 1 (기술부채) | `Needs Regression` / `Open Risk` | 결제 검증, 402 복구 UX, LangSmith 분석, LLM Tool Calling, **Pay.sh 에이전트 API 결제** | `Service Verified` 전환 |
-| Phase 2 (메인넷) | `Open Risk` | CHOCO mainnet, DEX 유동성, Jupiter 연동 | 결제 신뢰성 검증 완료 |
-| Phase 3 (서비스화) | `Open Risk` | 장기 메모리, TTS, 개인화, 모바일 | mainnet 운영 안정화 |
-| Phase ∞ (보류) | 보류 | Eliza, TEE 키 위임 | 생태계 조건 충족 |
+| Phase                    | 대표 상태                        | 주요 열린 항목                                                                         | 다음 게이트             |
+| :----------------------- | :------------------------------- | :------------------------------------------------------------------------------------- | :---------------------- |
+| Phase 0 (해커톤 마감 전) | `Demo Verified` 중심             | 서버 SOL/CHOCO 잔액, 발견 버그 우선순위화                                              | 제출 자료 최종 확인     |
+| Phase 1 (기술부채)       | `Needs Regression` / `Open Risk` | 결제 검증, 402 복구 UX, LangSmith 분석, LLM Tool Calling, **Pay.sh 에이전트 API 결제** | `Service Verified` 전환 |
+| Phase 2 (메인넷)         | `Open Risk`                      | CHOCO mainnet, DEX 유동성, Jupiter 연동                                                | 결제 신뢰성 검증 완료   |
+| Phase 3 (서비스화)       | `Open Risk`                      | 장기 메모리, TTS, 개인화, 모바일                                                       | mainnet 운영 안정화     |
+| Phase ∞ (보류)           | 보류                             | Eliza, TEE 키 위임                                                                     | 생태계 조건 충족        |
 
 > Phase 0 항목은 **2026-05-11 전 전부 완료** 목표.
 
