@@ -13,21 +13,20 @@ export function usePrivyWalletSync() {
 
   useEffect(() => {
     if (!ready || !authenticated) return;
-    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(SESSION_KEY)) return;
+    if (sessionStorage.getItem(SESSION_KEY)) return;
 
     const embedded = (user?.linkedAccounts as Array<{ chainType: string; walletClientType: string; address: string }> | undefined)
       ?.find((a) => a.chainType === "solana" && a.walletClientType === "privy");
 
     if (!embedded?.address) return;
 
+    sessionStorage.setItem(SESSION_KEY, "1");
     fetch("/api/user/privy-wallet", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ privyWallet: embedded.address }),
-    })
-      .then(() => sessionStorage.setItem(SESSION_KEY, "1"))
-      .catch(() => {
-        // 저장 실패 시 무시 — 다음 방문 시 재시도
-      });
+    }).catch(() => {
+      sessionStorage.removeItem(SESSION_KEY);
+    });
   }, [ready, authenticated, user]);
 }

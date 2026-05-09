@@ -1,7 +1,7 @@
 /**
  * PATCH /api/user/privy-wallet
  * Privy 임베디드 지갑 주소를 DB에 저장합니다.
- * 클라이언트에서 Privy ready 시 1회 호출 (이미 저장된 경우 스킵).
+ * 클라이언트(usePrivyWalletSync)에서 sessionStorage 플래그로 1회만 호출됩니다.
  */
 import type { ActionFunctionArgs } from "react-router";
 import { auth } from "~/lib/auth.server";

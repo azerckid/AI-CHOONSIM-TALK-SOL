@@ -7,7 +7,7 @@
  */
 
 const COINGECKO_API = "https://api.coingecko.com/api/v3";
-const CACHE_TTL_MS = 60_000; // 1분 캐시 (CoinGecko 무료 tier rate limit 대응)
+const CACHE_TTL_MS = 60_000;
 
 export interface TokenPrice {
   usd: number;

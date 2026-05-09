@@ -42,6 +42,7 @@ import { model } from "~/lib/ai/model";
 import { HumanMessage } from "@langchain/core/messages";
 import { DateTime } from "luxon";
 import { getSolPrice } from "~/lib/paysh.server";
+import { solanaConnection } from "~/lib/solana/connection.server";
 
 const CHOCO_DECIMALS = 6;
 const MINT_COST_CHOCO = 200;
@@ -161,6 +162,18 @@ export async function transferChocoSPL(
 
 // ── LangGraph 도구 목록 ─────────────────────────────────────────────────────
 
+async function walletBalanceLine(label: string, address: string): Promise<string[]> {
+  try {
+    const lamports = await solanaConnection.getBalance(new PublicKey(address));
+    return [
+      `${label}: ${address.slice(0, 6)}...${address.slice(-4)}`,
+      `  SOL: ${(lamports / 1e9).toFixed(4)} SOL`,
+    ];
+  } catch {
+    return [`${label}: ${address.slice(0, 6)}...${address.slice(-4)} (balance unavailable)`];
+  }
+}
+
 /** 춘심 Agent 전용 Solana 도구 (LangGraph callModelNode용) */
 export function getChoonsimSolanaTools(userId: string, conversationId?: string) {
   return [
@@ -255,31 +268,14 @@ export function getChoonsimSolanaTools(userId: string, conversationId?: string) 
           return "No wallet registered yet. Connect Phantom or activate your Internal Wallet first!";
         }
 
-        const connection = new Connection(
-          process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com",
-          "confirmed"
-        );
+        const queries: Promise<string[]>[] = [];
+        if (phantom) queries.push(walletBalanceLine("Phantom", phantom));
+        if (privy && privy !== phantom) queries.push(walletBalanceLine("Internal Wallet", privy));
 
-        const lines: string[] = [`Your wallets (Devnet):\n`];
-
-        if (phantom) {
-          try {
-            const lamports = await connection.getBalance(new PublicKey(phantom));
-            lines.push(`Phantom: ${phantom.slice(0, 6)}...${phantom.slice(-4)}`);
-            lines.push(`  SOL: ${(lamports / 1e9).toFixed(4)} SOL`);
-          } catch {
-            lines.push(`Phantom: ${phantom.slice(0, 6)}...${phantom.slice(-4)} (balance unavailable)`);
-          }
-        }
-
-        if (privy && privy !== phantom) {
-          try {
-            const lamports = await connection.getBalance(new PublicKey(privy));
-            lines.push(`Internal Wallet: ${privy.slice(0, 6)}...${privy.slice(-4)}`);
-            lines.push(`  SOL: ${(lamports / 1e9).toFixed(4)} SOL`);
-          } catch {
-            lines.push(`Internal Wallet: ${privy.slice(0, 6)}...${privy.slice(-4)} (balance unavailable)`);
-          }
+        const results = await Promise.allSettled(queries);
+        const lines: string[] = ["Your wallets (Devnet):\n"];
+        for (const r of results) {
+          if (r.status === "fulfilled") lines.push(...r.value);
         }
 
         lines.push(`\nCHOCO Balance: ${choco.toLocaleString()} CHOCO`);
