@@ -38,6 +38,7 @@ build_debug.log
 
 .agent
 .claude
+.codex
 
 # Turbo
 .turbo
