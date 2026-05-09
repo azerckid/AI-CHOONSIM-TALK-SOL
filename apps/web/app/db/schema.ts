@@ -38,6 +38,8 @@ export const user = sqliteTable("User", {
     lastFreePresendAt: integer("lastFreePresendAt", { mode: "timestamp" }),
     /** Solana Phantom 지갑 주소 (Base58). cNFT 민팅 및 SPL CHOCO 전송에 사용. */
     solanaWallet: text("solanaWallet"),
+    /** Privy 임베디드 지갑 주소 (Base58). 소셜 로그인 유저 자동 생성 지갑. */
+    privyWallet: text("privyWallet"),
 });
 
 export const account = sqliteTable("account", {

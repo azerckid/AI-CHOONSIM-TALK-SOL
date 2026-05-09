@@ -41,6 +41,7 @@ import { getRandomIllustration, buildIllustrationWithOverlay } from "~/lib/cloud
 import { model } from "~/lib/ai/model";
 import { HumanMessage } from "@langchain/core/messages";
 import { DateTime } from "luxon";
+import { getSolPrice } from "~/lib/paysh.server";
 
 const CHOCO_DECIMALS = 6;
 const MINT_COST_CHOCO = 200;
@@ -236,6 +237,85 @@ export function getChoonsimSolanaTools(userId: string, conversationId?: string) 
         schema: z.object({
           amount: z.number().int().positive().describe("Amount of CHOCO to gift"),
         }),
+      }
+    ),
+
+    tool(
+      async () => {
+        const user = await db.query.user.findFirst({
+          where: eq(schema.user.id, userId),
+          columns: { solanaWallet: true, privyWallet: true, chocoBalance: true },
+        });
+
+        const phantom = user?.solanaWallet;
+        const privy = user?.privyWallet;
+        const choco = parseFloat(user?.chocoBalance ?? "0");
+
+        if (!phantom && !privy) {
+          return "No wallet registered yet. Connect Phantom or activate your Internal Wallet first!";
+        }
+
+        const connection = new Connection(
+          process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com",
+          "confirmed"
+        );
+
+        const lines: string[] = [`Your wallets (Devnet):\n`];
+
+        if (phantom) {
+          try {
+            const lamports = await connection.getBalance(new PublicKey(phantom));
+            lines.push(`Phantom: ${phantom.slice(0, 6)}...${phantom.slice(-4)}`);
+            lines.push(`  SOL: ${(lamports / 1e9).toFixed(4)} SOL`);
+          } catch {
+            lines.push(`Phantom: ${phantom.slice(0, 6)}...${phantom.slice(-4)} (balance unavailable)`);
+          }
+        }
+
+        if (privy && privy !== phantom) {
+          try {
+            const lamports = await connection.getBalance(new PublicKey(privy));
+            lines.push(`Internal Wallet: ${privy.slice(0, 6)}...${privy.slice(-4)}`);
+            lines.push(`  SOL: ${(lamports / 1e9).toFixed(4)} SOL`);
+          } catch {
+            lines.push(`Internal Wallet: ${privy.slice(0, 6)}...${privy.slice(-4)} (balance unavailable)`);
+          }
+        }
+
+        lines.push(`\nCHOCO Balance: ${choco.toLocaleString()} CHOCO`);
+        return lines.join("\n");
+      },
+      {
+        name: "getWalletAssets",
+        description:
+          "Show the user's Phantom and/or Privy internal wallet addresses with SOL balances and CHOCO balance. " +
+          "Use when the user asks 'what's in my wallet', 'show my assets', 'how much SOL do I have', etc.",
+        schema: z.object({}),
+      }
+    ),
+
+    tool(
+      async () => {
+        try {
+          const price = await getSolPrice();
+          const change = price.usd_24h_change ?? 0;
+          const sign = change >= 0 ? "+" : "";
+          return (
+            `Current SOL price:\n` +
+            `USD: $${price.usd.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n` +
+            `KRW: ₩${price.krw.toLocaleString("ko-KR")}\n` +
+            `24h: ${sign}${change.toFixed(2)}%`
+          );
+        } catch {
+          return "Unable to fetch SOL price right now. Please try again in a moment!";
+        }
+      },
+      {
+        name: "getSolanaPrice",
+        description:
+          "Get the current real-time SOL price in USD and KRW. " +
+          "Use when the user asks about SOL price, market price, or how much SOL is worth.",
+        schema: z.object({}),
       }
     ),
 

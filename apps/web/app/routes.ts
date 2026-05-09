@@ -81,6 +81,7 @@ export default [
   route("api/upload", "routes/api/upload.ts"),
   route("api/test-cron", "routes/api/test-cron.ts"),
   route("api/user/wallet", "routes/api/user/wallet.ts"),
+  route("api/user/privy-wallet", "routes/api/user/privy-wallet.ts"),
   route("api/account/delete", "routes/api/account/delete.ts"),
   route("api/push-subscription", "routes/api/push-subscription.ts"),
   route("api/stats/usage", "routes/api/stats/usage.ts"),

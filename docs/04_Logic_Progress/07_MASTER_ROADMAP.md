@@ -1,6 +1,6 @@
 # 07. 춘심 마스터 로드맵
 > Created: 2026-04-30 00:00
-> Last Updated: 2026-05-08 12:34
+> Last Updated: 2026-05-09 00:00
 > 목적: Colosseum 해커톤 마감부터 서비스화까지 전체 작업 현황 및 우선순위 통합 관리
 
 ---
@@ -182,6 +182,34 @@ Phase 1은 기능 추가보다 서비스 신뢰성 보강을 우선한다. 아�
 - [x] `executeNaturalLanguageCommand()` 전체 제거 및 stream.ts 로직 단순화 — 슬래시 커맨드 fallback은 유지
 - [ ] Gemini + Solana Agent Kit 도구 E2E 테스트 (SOL 잔액, CHOCO 잔액, cNFT 각인 등)
 
+### 1-7. Pay.sh AI 에이전트 API 결제 연동
+
+> Solana Foundation이 2026-05-07 런칭한 **Pay.sh** (Google Cloud 협력)를 춘심 LangGraph 에이전트에 통합.
+> 에이전트가 USDC 스테이블코인으로 외부 API를 per-request 결제하며 실시간 데이터를 제공.
+> 전제 조건: 1-6 LLM Tool Calling 정식 복구 완료.
+
+**배경**: Pay.sh는 AI 에이전트가 회원가입 없이 Solana 스테이블코인으로 72개+ API 프로바이더(Quicknode, Gemini, MoonPay, Agentcash 등)를 per-call 결제하는 플랫폼. Claude Code용 MCP 서버도 제공.
+
+**구현 범위 (단계별)**:
+
+- [ ] **1단계 — 실시간 SOL/토큰 가격 조회** `Open Risk`
+  - LangGraph tool call 노드에 `paysh_price` 도구 추가
+  - Pay.sh CLI를 래핑해 가격 API per-call USDC 결제 후 응답 반환
+  - 사용자 질문: "SOL 지금 얼마야?" → 춘심이 실시간 가격으로 답변
+- [ ] **2단계 — 사용자 지갑 자산 조회** `Open Risk`
+  - Pay.sh + Quicknode DAS API 연동
+  - "내 지갑에 뭐 있어?" → 에이전트가 NFT·토큰 목록 조회 후 응답
+- [ ] **3단계 — 대화 내 온오프램프 (MoonPay)** `Open Risk`
+  - Pay.sh + MoonPay API로 카드 → USDC → CHOCO 변환을 에이전트가 직접 처리
+  - 현재 PayPal/Toss/Coinbase 수동 결제 흐름 보완
+- [ ] 서버 지갑 Pay.sh 결제용 USDC 잔액 확보 및 모니터링 항목 추가 (1-2 운영 모니터링과 연계)
+- [ ] Pay.sh MCP 서버 Claude Code 개발 환경 연동 확인
+
+**예상 효과**:
+- 에이전트가 실시간 온체인 데이터로 응답 품질 향상
+- 외부 API 키 관리 없이 per-call 결제로 운영 복잡도 감소
+- 대화 흐름 안에서 결제까지 완결되는 UX 구현 기반
+
 ---
 
 ## Phase 2 — 메인넷 출시 (2026 Q3)
@@ -303,7 +331,7 @@ Phase 1은 기능 추가보다 서비스 신뢰성 보강을 우선한다. 아�
 | Phase | 대표 상태 | 주요 열린 항목 | 다음 게이트 |
 | :--- | :--- | :--- | :--- |
 | Phase 0 (해커톤 마감 전) | `Demo Verified` 중심 | 서버 SOL/CHOCO 잔액, 발견 버그 우선순위화 | 제출 자료 최종 확인 |
-| Phase 1 (기술부채) | `Needs Regression` / `Open Risk` | 결제 검증, 402 복구 UX, LangSmith 분석, LLM Tool Calling | `Service Verified` 전환 |
+| Phase 1 (기술부채) | `Needs Regression` / `Open Risk` | 결제 검증, 402 복구 UX, LangSmith 분석, LLM Tool Calling, **Pay.sh 에이전트 API 결제** | `Service Verified` 전환 |
 | Phase 2 (메인넷) | `Open Risk` | CHOCO mainnet, DEX 유동성, Jupiter 연동 | 결제 신뢰성 검증 완료 |
 | Phase 3 (서비스화) | `Open Risk` | 장기 메모리, TTS, 개인화, 모바일 | mainnet 운영 안정화 |
 | Phase ∞ (보류) | 보류 | Eliza, TEE 키 위임 | 생태계 조건 충족 |
