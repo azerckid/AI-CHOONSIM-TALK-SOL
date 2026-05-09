@@ -8,11 +8,16 @@ import { PrivyWalletProvider } from "~/components/solana/PrivyWalletProvider";
 import { SolanaWalletProvider } from "~/components/solana/SolanaWalletProvider";
 import { usePrivyWalletSync } from "~/hooks/usePrivyWalletSync";
 
-export default function WalletLayout() {
+function WalletSyncBridge() {
   usePrivyWalletSync();
+  return null;
+}
+
+export default function WalletLayout() {
   return (
     <PrivyWalletProvider>
       <SolanaWalletProvider>
+        <WalletSyncBridge />
         <Outlet />
       </SolanaWalletProvider>
     </PrivyWalletProvider>
