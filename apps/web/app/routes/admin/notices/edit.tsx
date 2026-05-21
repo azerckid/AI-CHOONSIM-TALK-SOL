@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { AdminLayout } from "~/components/admin/AdminLayout";
 import { requireAdmin } from "~/lib/auth.server";
 import { cn } from "~/lib/utils";
+import { validateImageUploadFile } from "~/lib/upload-policy";
 import { deleteImage } from "~/lib/cloudinary.server";
 import { z } from "zod";
 
@@ -79,6 +80,13 @@ export default function EditNotice() {
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        const validation = validateImageUploadFile(file);
+        if (!validation.ok) {
+            alert(validation.message);
+            e.currentTarget.value = "";
+            return;
+        }
 
         // Preview
         const reader = new FileReader();

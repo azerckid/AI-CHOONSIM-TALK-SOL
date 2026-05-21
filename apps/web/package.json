@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "npm run test:authz && npm run test:identity && npm run test:context && npm run test:context-memory",
+    "test": "npm run test:authz && npm run test:identity && npm run test:upload && npm run test:context && npm run test:context-memory",
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
@@ -15,7 +15,8 @@
     "mock:grant": "tsx scripts/ops/grant-mock-users-choco.ts",
     "characters:set-service": "node scripts/ops/set-character-service.mjs",
     "test:authz": "vitest run app/lib/chat/__tests__/ownership.server.test.ts",
-    "test:identity": "vitest run app/lib/context/__tests__/identity.test.ts"
+    "test:identity": "vitest run app/lib/context/__tests__/identity.test.ts",
+    "test:upload": "vitest run app/lib/__tests__/upload-policy.test.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.23",

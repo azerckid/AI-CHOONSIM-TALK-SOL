@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { cn } from "~/lib/utils";
 import { GiftSelector } from "./GiftSelector";
 import type { SItem, SUserInventory } from "~/lib/types/routes";
+import { validateImageUploadFile } from "~/lib/upload-policy";
 
 const SLASH_COMMANDS = [
   { command: "/choco", args: "[수량]", desc: "CHOCO 구매" },
@@ -62,6 +63,13 @@ export function MessageInput({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const validation = validateImageUploadFile(file);
+    if (!validation.ok) {
+      alert(validation.message);
+      e.currentTarget.value = "";
+      return;
+    }
+
     // 1. Show preview
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -84,8 +92,7 @@ export function MessageInput({
       const data = await response.json();
       setUploadedUrl(data.url);
     } catch (err) {
-      console.error("Upload error:", err);
-      alert("Image upload failed.");
+      alert(err instanceof Error ? err.message : "Image upload failed.");
       setPreviewUrl(null);
     } finally {
       setIsUploading(false);

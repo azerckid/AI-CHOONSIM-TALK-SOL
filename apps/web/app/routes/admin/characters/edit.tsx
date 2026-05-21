@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { AdminLayout } from "~/components/admin/AdminLayout";
 import { requireAdmin } from "~/lib/auth.server";
 import { cn } from "~/lib/utils";
+import { validateImageUploadFile } from "~/lib/upload-policy";
 import { z } from "zod";
 import { toast } from "sonner";
 
@@ -394,6 +395,12 @@ export default function EditCharacter() {
                                                             onChange={async (e) => {
                                                                 const file = e.target.files?.[0];
                                                                 if (!file) return;
+                                                                const validation = validateImageUploadFile(file);
+                                                                if (!validation.ok) {
+                                                                    toast.error(validation.message);
+                                                                    e.currentTarget.value = "";
+                                                                    return;
+                                                                }
 
                                                                 const toastId = toast.loading(`Uploading ${section.label}...`);
                                                                 try {

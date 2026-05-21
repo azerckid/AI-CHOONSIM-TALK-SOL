@@ -11,6 +11,8 @@ export async function uploadImage(file: string) {
     try {
         const result = await cloudinary.uploader.upload(file, {
             folder: "choonsim-chat",
+            resource_type: "image",
+            allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
         });
         return result.secure_url;
     } catch (error) {

@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 import { deleteImage } from "~/lib/cloudinary.server";
 import { z } from "zod";
 import { toast } from "sonner";
+import { validateImageUploadFile } from "~/lib/upload-policy";
 
 const profileSchema = z.object({
   name: z.string().min(1, "닉네임을 입력해주세요").max(20, "닉네임은 20자 이내로 입력해주세요"),
@@ -96,6 +97,13 @@ export default function ProfileEditScreen() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const validation = validateImageUploadFile(file);
+    if (!validation.ok) {
+      toast.error(validation.message);
+      e.currentTarget.value = "";
+      return;
+    }
 
     // Show local preview immediately
     const reader = new FileReader();
