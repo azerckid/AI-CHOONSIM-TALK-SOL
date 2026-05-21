@@ -137,15 +137,16 @@ export async function action({ request }: ActionFunctionArgs) {
                 try {
                     const user = await db.query.user.findFirst({
                         where: eq(schema.user.id, paymentRecord.userId),
-                        columns: { solanaWallet: true },
+                        columns: { solanaWallet: true, privyWallet: true },
                     });
 
-                    if (user?.solanaWallet) {
-                        const result = await transferChocoSPL(user.solanaWallet, chocoGranted);
+                    const payoutWallet = user?.solanaWallet ?? user?.privyWallet ?? null;
+                    if (payoutWallet) {
+                        const result = await transferChocoSPL(payoutWallet, chocoGranted);
                         chocoTxSignature = result.signature;
-                        logger.info({ category: "PAYMENT", message: `[SolanaPay] CHOCO SPL sent: ${chocoGranted} → ${user.solanaWallet}, tx=${chocoTxSignature}` });
+                        logger.info({ category: "PAYMENT", message: `[SolanaPay] CHOCO SPL sent: ${chocoGranted} → ${payoutWallet}, tx=${chocoTxSignature}` });
                     } else {
-                        logger.info({ category: "PAYMENT", message: `[SolanaPay] No solanaWallet for user ${paymentRecord.userId}, skipping SPL transfer` });
+                        logger.info({ category: "PAYMENT", message: `[SolanaPay] No payout wallet for user ${paymentRecord.userId}, skipping SPL transfer` });
                     }
                 } catch (splErr) {
                     // SPL 전송 실패는 로그만 남기고 결제는 완료 처리

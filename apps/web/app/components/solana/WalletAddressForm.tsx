@@ -2,8 +2,8 @@
  * WalletAddressForm — Phantom 지갑 주소 등록 컴포넌트
  *
  * - currentWallet이 있으면: 주소 표시 + 변경 버튼
- * - currentWallet이 없으면: Connect Wallet 버튼 (자동 저장) + 수동 입력 폼
- * PATCH /api/user/wallet로 저장
+ * - currentWallet이 없으면: Connect Wallet 버튼 (서명 후 자동 저장)
+ * PATCH /api/user/wallet은 SIWS 서명이 필요합니다.
  */
 import { useState } from "react";
 import { toast } from "sonner";
@@ -34,26 +34,8 @@ export function WalletAddressForm({ currentWallet }: Props) {
   async function save() {
     const trimmed = input.trim();
     if (!trimmed) return;
-    setSaving(true);
-    try {
-      const res = await fetch("/api/user/wallet", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ solanaWallet: trimmed }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        toast.error(data.error ?? "Failed to save wallet address");
-        return;
-      }
-      toast.success("Wallet address saved!");
-      // 페이지 새로고침으로 loader 데이터 갱신
-      window.location.reload();
-    } catch {
-      toast.error("Network error. Please try again.");
-    } finally {
-      setSaving(false);
-    }
+    setSaving(false);
+    toast.error("Wallet changes require a Phantom signature. Please use Connect Wallet.");
   }
 
   // 이미 등록된 지갑이 있고 편집 모드가 아닐 때

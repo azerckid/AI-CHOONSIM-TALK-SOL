@@ -144,7 +144,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const user = await db.query.user.findFirst({
     where: eq(schema.user.id, session.user.id),
-    columns: { solanaWallet: true },
+    columns: { solanaWallet: true, privyWallet: true },
   });
   const expectedPayer = payment.walletAddress ?? user?.solanaWallet ?? null;
   if (expectedPayer && payerAddress !== expectedPayer) {
@@ -227,19 +227,20 @@ export async function action({ request }: ActionFunctionArgs) {
   // 5. SPL CHOCO 전송 (지갑 등록된 경우)
   let splTransferMetadata: Record<string, unknown>;
   try {
-    if (user?.solanaWallet) {
-      const splResult = await transferChocoSPL(user.solanaWallet, chocoGranted);
+    const payoutWallet = user?.solanaWallet ?? user?.privyWallet ?? null;
+    if (payoutWallet) {
+      const splResult = await transferChocoSPL(payoutWallet, chocoGranted);
       splTransferMetadata = {
         status: "COMPLETED",
         signature: splResult.signature,
-        walletAddress: user.solanaWallet,
+        walletAddress: payoutWallet,
         completedAt: new Date().toISOString(),
       };
       logger.info({ category: "PAYMENT", message: `[verify-sig] SPL sent: ${splResult.signature}` });
     } else {
       splTransferMetadata = {
         status: "SKIPPED",
-        reason: "USER_SOLANA_WALLET_NOT_REGISTERED",
+        reason: "USER_PAYOUT_WALLET_NOT_REGISTERED",
         completedAt: new Date().toISOString(),
       };
     }

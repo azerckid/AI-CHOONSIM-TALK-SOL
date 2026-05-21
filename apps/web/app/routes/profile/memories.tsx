@@ -3,7 +3,7 @@
  *
  * 사용자 Solana 지갑에 새겨진 춘심과의 기억(cNFT)을 조회합니다.
  * Phantom 연결 시 → Phantom 주소로 조회
- * Phantom 미연결 시 → DB의 solanaWallet(Privy 임베디드 지갑) 주소로 fallback
+ * Phantom 미연결 시 → DB의 privyWallet 또는 solanaWallet 주소로 fallback
  */
 import { useEffect, useState } from "react";
 import { Link, useLoaderData, redirect } from "react-router";
@@ -24,10 +24,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const user = await db.query.user.findFirst({
     where: eq(schema.user.id, session.user.id),
-    columns: { solanaWallet: true },
+    columns: { solanaWallet: true, privyWallet: true },
   });
 
-  return { embeddedWallet: user?.solanaWallet ?? null };
+  return { embeddedWallet: user?.privyWallet ?? user?.solanaWallet ?? null };
 }
 
 export default function MemoriesPage() {

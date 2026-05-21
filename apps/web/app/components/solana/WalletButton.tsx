@@ -7,23 +7,37 @@ import { Button } from "~/components/ui/button";
 import { Wallet, LogOut, Copy, Check } from "lucide-react";
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
+import bs58 from "bs58";
 
 export function WalletButton() {
-  const { publicKey, connected, connecting, connect, disconnect, wallet } =
+  const { publicKey, connected, connecting, connect, disconnect, signMessage } =
     useWallet();
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
 
   // 지갑 연결 시 DB에 자동 저장
   useEffect(() => {
-    if (!connected || !publicKey) return;
+    if (!connected || !publicKey || saved) return;
     const address = publicKey.toBase58();
-    fetch("/api/user/wallet", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ solanaWallet: address }),
-    })
-      .then(async (res) => {
+    const saveWallet = async () => {
+      if (!signMessage) {
+        toast.error("Wallet signature is required to save this address.");
+        return;
+      }
+
+      const nonceRes = await fetch(`/api/auth/siws/nonce?wallet=${address}`);
+      if (!nonceRes.ok) throw new Error("Failed to create wallet signature nonce");
+      const { message } = await nonceRes.json();
+      const messageBytes = new TextEncoder().encode(message);
+      const signatureBytes = await signMessage(messageBytes);
+      const signature = bs58.encode(signatureBytes);
+
+      const res = await fetch("/api/user/wallet", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ solanaWallet: address, signature }),
+      });
+
         if (res.ok) {
           setSaved(true);
           toast.success("Wallet connected and saved!");
@@ -31,11 +45,13 @@ export function WalletButton() {
           const data = await res.json().catch(() => ({}));
           toast.error(data.error ?? "Failed to save wallet address");
         }
-      })
-      .catch(() => {
-        toast.error("Network error. Please try again.");
-      });
-  }, [connected, publicKey]);
+    };
+
+    saveWallet().catch((error) => {
+      const message = error instanceof Error ? error.message : "Network error. Please try again.";
+      toast.error(message);
+    });
+  }, [connected, publicKey, saved, signMessage]);
 
   const shortAddress = publicKey
     ? `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}`

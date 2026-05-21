@@ -31,10 +31,10 @@ export function PrivyEmbeddedWalletButton({ onSaved }: Props) {
   useEffect(() => {
     if (!authenticated || !embeddedWallet || done) return;
 
-    fetch("/api/user/wallet", {
+    fetch("/api/user/privy-wallet", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ solanaWallet: embeddedWallet.address }),
+      body: JSON.stringify({ privyWallet: embeddedWallet.address }),
     }).then(async (res) => {
       if (res.ok) {
         setDone(true);

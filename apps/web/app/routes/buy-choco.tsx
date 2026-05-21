@@ -25,10 +25,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const user = await db.query.user.findFirst({
     where: eq(schema.user.id, session.user.id),
-    columns: { id: true, solanaWallet: true, chocoBalance: true },
+    columns: { id: true, solanaWallet: true, privyWallet: true, chocoBalance: true },
   });
 
-  return { solanaWallet: user?.solanaWallet ?? null };
+  return { solanaWallet: user?.solanaWallet ?? user?.privyWallet ?? null };
 }
 
 const CHOCO_PACKAGES = [

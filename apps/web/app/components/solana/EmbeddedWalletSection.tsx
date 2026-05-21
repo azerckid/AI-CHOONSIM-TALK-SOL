@@ -30,22 +30,21 @@ function EmbeddedWalletSectionInner() {
       const syncWallet = async () => {
         setSyncing(true);
         try {
-          const res = await fetch("/api/user/wallet", {
+          const res = await fetch("/api/user/privy-wallet", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ solanaWallet: embeddedWallet.address }),
+            body: JSON.stringify({ privyWallet: embeddedWallet.address }),
           });
 
           if (res.ok) {
             const data = await res.json();
-            console.log("Internal wallet synced to DB:", embeddedWallet.address);
             if (data.isNew) {
-              toast.success("내부 지갑 등록 완료! 테스트 SOL 0.5개가 지급되었습니다 🎉");
+              toast.success("내부 지갑 등록 완료");
               revalidate();
             }
           }
         } catch (e) {
-          console.error("Wallet sync failed:", e);
+          toast.error("내부 지갑 동기화 실패");
         } finally {
           setSyncing(false);
         }

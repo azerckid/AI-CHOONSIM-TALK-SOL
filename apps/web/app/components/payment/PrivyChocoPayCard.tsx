@@ -98,10 +98,10 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
 
   async function syncWalletToDB(address: string) {
     try {
-      const res = await fetch("/api/user/wallet", {
+      const res = await fetch("/api/user/privy-wallet", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ solanaWallet: address }),
+        body: JSON.stringify({ privyWallet: address }),
       });
       if (res.ok) console.log("[PrivyPay] Wallet address synced to DB:", address);
     } catch (err) {
