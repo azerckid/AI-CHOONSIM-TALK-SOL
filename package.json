@@ -16,6 +16,9 @@
         "fund:agent": "npx tsx scripts/fund-agent-wallet.ts"
     },
     "devDependencies": {
+        "@react-router/dev": "7.15.1",
+        "@react-router/node": "7.15.1",
+        "react-router": "7.15.1",
         "turbo": "^2.4.0"
     },
     "dependencies": {
@@ -23,5 +26,12 @@
         "@solana-program/memo": "^0.11.0",
         "@solana-program/system": "^0.11.0",
         "@solana-program/token": "^0.12.0"
+    },
+    "overrides": {
+        "@react-router/dev": "7.15.1",
+        "@react-router/express": "7.15.1",
+        "@react-router/node": "7.15.1",
+        "@react-router/serve": "7.15.1",
+        "react-router": "7.15.1"
     }
 }
