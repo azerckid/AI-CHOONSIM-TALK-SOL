@@ -35,6 +35,7 @@ type LoadingState = "idle" | "loading" | "network-error";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { eq, and, asc, inArray } from "drizzle-orm";
+import { ownedConversationWhere, forbiddenJson } from "~/lib/chat/ownership.server";
 
 function parseChocoPurchaseIntent(message: string): number | null {
   const normalized = message.toLowerCase();
@@ -63,25 +64,9 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const { id } = params;
   if (!id) throw new Response("Not Found", { status: 404 });
 
-  // 유저 정보 선조회 (지갑 가드)
-  const user = await db.query.user.findFirst({
-    where: eq(schema.user.id, session.user.id),
-    with: {
-      inventory: {
-        with: {
-          item: true
-        }
-      }
-    }
-  });
-
-  const [messages, conversation, heartItem] = await Promise.all([
-    db.query.message.findMany({
-      where: eq(schema.message.conversationId, id),
-      orderBy: [asc(schema.message.createdAt)],
-    }),
+  const [conversation, user, heartItem] = await Promise.all([
     db.query.conversation.findFirst({
-      where: eq(schema.conversation.id, id),
+      where: ownedConversationWhere(id, session.user.id),
       with: {
         character: {
           with: {
@@ -92,17 +77,32 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
         }
       }
     }),
+    db.query.user.findFirst({
+      where: eq(schema.user.id, session.user.id),
+      with: {
+        inventory: {
+          with: {
+            item: true
+          }
+        }
+      }
+    }),
     db.query.item.findFirst({
       where: eq(schema.item.id, "heart"),
     }),
   ]);
 
-  if (!conversation) throw new Response("Conversation Not Found", { status: 404 });
+  if (!conversation) throw new Response("Forbidden", { status: 403 });
 
-  const characterStat = await db.query.characterStat.findFirst({
-    where: eq(schema.characterStat.characterId, conversation.characterId),
-  });
-
+  const [messages, characterStat] = await Promise.all([
+    db.query.message.findMany({
+      where: eq(schema.message.conversationId, id),
+      orderBy: [asc(schema.message.createdAt)],
+    }),
+    db.query.characterStat.findFirst({
+      where: eq(schema.characterStat.characterId, conversation.characterId),
+    }),
+  ]);
   const userLikesInConv = await db.query.messageLike.findMany({
     where: and(
       eq(schema.messageLike.userId, session.user.id),
@@ -129,6 +129,12 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
   const { id } = params;
   if (!id) return new Response("Missing ID", { status: 400 });
+
+  const conversation = await db.query.conversation.findFirst({
+    where: ownedConversationWhere(id, session.user.id),
+    columns: { id: true },
+  });
+  if (!conversation) return forbiddenJson();
 
   const formData = await request.formData();
 

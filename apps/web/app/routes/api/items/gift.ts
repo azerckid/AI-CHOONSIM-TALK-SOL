@@ -5,6 +5,7 @@ import { z } from "zod";
 import * as schema from "~/db/schema";
 import { eq, and, sql, or } from "drizzle-orm";
 import { logger } from "~/lib/logger.server";
+import { forbiddenJson, ownedConversationWhere } from "~/lib/chat/ownership.server";
 
 const giftSchema = z.object({
     characterId: z.string(),
@@ -26,6 +27,15 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     const { characterId, itemId, amount, message, conversationId } = result.data;
+
+    const conversation = await db.query.conversation.findFirst({
+        where: ownedConversationWhere(conversationId, session.user.id),
+        columns: { id: true, characterId: true },
+    });
+    if (!conversation) return forbiddenJson();
+    if (conversation.characterId !== characterId) {
+        return Response.json({ error: "Conversation character mismatch" }, { status: 400 });
+    }
 
     const item = await db.query.item.findFirst({
         where: eq(schema.item.id, itemId),

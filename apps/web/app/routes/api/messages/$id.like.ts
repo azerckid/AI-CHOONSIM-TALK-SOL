@@ -5,6 +5,7 @@ import { z } from "zod";
 import * as schema from "~/db/schema";
 import { eq, and } from "drizzle-orm";
 import { logger } from "~/lib/logger.server";
+import { findOwnedMessage } from "~/lib/chat/ownership.server";
 
 export async function action({ request, params }: ActionFunctionArgs) {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -24,12 +25,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
     const userId = session.user.id;
 
     try {
-        // 메시지 존재 확인
-        const message = await db.query.message.findFirst({
-            where: eq(schema.message.id, messageId),
-        });
-
-        if (!message) {
+        const ownedMessage = await findOwnedMessage(messageId, userId);
+        if (!ownedMessage) {
             return Response.json({ error: "Message not found" }, { status: 404 });
         }
 
@@ -74,4 +71,3 @@ export async function action({ request, params }: ActionFunctionArgs) {
         return Response.json({ error: "Internal server error" }, { status: 500 });
     }
 }
-

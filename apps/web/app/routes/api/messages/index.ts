@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import * as schema from "~/db/schema";
 import { eq, and, sql, or } from "drizzle-orm";
+import { forbiddenJson, isOwnedConversation } from "~/lib/chat/ownership.server";
 
 const messageSchema = z.object({
     content: z.string().min(1),
@@ -23,8 +24,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
         return new Response("Missing conversationId", { status: 400 });
     }
 
+    const parsedConversationId = z.string().uuid().safeParse(conversationId);
+    if (!parsedConversationId.success) {
+        return new Response("Invalid conversationId", { status: 400 });
+    }
+
+    const canAccess = await isOwnedConversation(parsedConversationId.data, session.user.id);
+    if (!canAccess) return forbiddenJson();
+
     const messages = await db.query.message.findMany({
-        where: eq(schema.message.conversationId, conversationId),
+        where: eq(schema.message.conversationId, parsedConversationId.data),
         orderBy: [schema.message.createdAt],
     });
 
@@ -49,6 +58,9 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     const { content, conversationId } = result.data;
+
+    const canAccess = await isOwnedConversation(conversationId, session.user.id);
+    if (!canAccess) return forbiddenJson();
 
     // 1. 사용자 메시지 저장
     const [userMessage] = await db.insert(schema.message).values({
@@ -104,4 +116,3 @@ export async function action({ request }: ActionFunctionArgs) {
 
     return Response.json({ message: userMessage });
 }
-

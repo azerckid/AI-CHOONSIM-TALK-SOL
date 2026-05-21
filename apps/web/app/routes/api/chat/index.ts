@@ -22,6 +22,7 @@ import {
     isSpecialDateToday,
     getLayerBudgets,
 } from "~/lib/context";
+import { forbiddenJson, ownedConversationWhere } from "~/lib/chat/ownership.server";
 
 const chatSchema = z.object({
     message: z.string().optional().default(""),
@@ -58,24 +59,28 @@ export async function action({ request }: ActionFunctionArgs) {
         return Response.json({ error: result.error.flatten() }, { status: 400 });
     }
 
-    const { message, conversationId, mediaUrl, characterId, giftContext } = result.data;
+    const { message, conversationId, mediaUrl, characterId: requestedCharacterId, giftContext } = result.data;
 
-    // 1. 대화 내역, 사용자 정보 및 캐릭터/대화방 정보 통합 조회 (1회 통신으로 최적화)
-    const [history, currentUser, currentConversation] = await Promise.all([
-        db.query.message.findMany({
-            where: eq(schema.message.conversationId, conversationId),
-            orderBy: [desc(schema.message.createdAt)],
-            limit: 10,
-        }),
+    // 1. 사용자 정보 및 소유 대화방 확인
+    const [currentUser, currentConversation] = await Promise.all([
         db.query.user.findFirst({
             where: eq(schema.user.id, session.user.id),
             columns: { id: true, bio: true, subscriptionTier: true, chocoBalance: true },
         }),
         db.query.conversation.findFirst({
-            where: eq(schema.conversation.id, conversationId),
+            where: ownedConversationWhere(conversationId, session.user.id),
             with: { character: true }
         }),
     ]);
+
+    if (!currentConversation) return forbiddenJson();
+    const characterId = currentConversation.characterId || requestedCharacterId;
+
+    const history = await db.query.message.findMany({
+        where: eq(schema.message.conversationId, conversationId),
+        orderBy: [desc(schema.message.createdAt)],
+        limit: 10,
+    });
 
     // CHOCO 잔액 체크
     const currentChocoBalance = currentUser?.chocoBalance ? parseFloat(currentUser.chocoBalance) : 0;

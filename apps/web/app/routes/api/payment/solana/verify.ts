@@ -4,13 +4,19 @@ import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { findReference, validateTransfer } from "@solana/pay";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import BigNumber from "bignumber.js";
 import { logger } from "~/lib/logger.server";
 import { transferChocoSPL } from "~/lib/solana/agent-kit.server";
+import { z } from "zod";
 
 const SOLANA_RPC_ENDPOINT = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
 const connection = new Connection(SOLANA_RPC_ENDPOINT, "confirmed");
+
+const verifySchema = z.object({
+    reference: z.string().min(1),
+    paymentId: z.string().uuid(),
+});
 
 export async function action({ request }: ActionFunctionArgs) {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -23,11 +29,11 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     try {
-        const { reference, paymentId } = await request.json();
-
-        if (!reference || !paymentId) {
+        const parsed = verifySchema.safeParse(await request.json().catch(() => ({})));
+        if (!parsed.success) {
             return Response.json({ error: "Missing reference or paymentId" }, { status: 400 });
         }
+        const { reference, paymentId } = parsed.data;
 
         // 1. DB에서 해당 결제 정보 조회
         const paymentRecord = await db.query.payment.findFirst({
@@ -38,12 +44,28 @@ export async function action({ request }: ActionFunctionArgs) {
             return Response.json({ error: "Payment record not found" }, { status: 404 });
         }
 
+        if (!paymentRecord.transactionId || paymentRecord.transactionId !== reference) {
+            logger.error({
+                category: "PAYMENT",
+                message: `[SolanaPay] Reference mismatch: payment=${paymentId}, expected=${paymentRecord.transactionId}, got=${reference}`,
+            });
+            return Response.json({ error: "Payment reference mismatch" }, { status: 400 });
+        }
+
         if (paymentRecord.status === "COMPLETED") {
             return Response.json({ success: true, message: "Already completed" });
         }
+        if (paymentRecord.status !== "PENDING") {
+            return Response.json({ error: `Payment is not pending: ${paymentRecord.status}` }, { status: 409 });
+        }
 
         // 2. Solana 블록체인에서 해당 Reference를 가진 트랜잭션 찾기
-        const referencePubkey = new PublicKey(reference);
+        let referencePubkey: PublicKey;
+        try {
+            referencePubkey = new PublicKey(reference);
+        } catch {
+            return Response.json({ error: "Invalid payment reference" }, { status: 400 });
+        }
         let signatureInfo;
         try {
             signatureInfo = await findReference(connection, referencePubkey, { finality: "confirmed" });
@@ -57,6 +79,17 @@ export async function action({ request }: ActionFunctionArgs) {
             const recipient = new PublicKey(process.env.SOLANA_RECEIVER_WALLET!);
             const amount = new BigNumber(paymentRecord.cryptoAmount || "0");
 
+            const duplicatePayment = await db.query.payment.findFirst({
+                where: eq(schema.payment.txHash, signatureInfo.signature),
+            });
+            if (duplicatePayment && duplicatePayment.id !== paymentId) {
+                logger.error({
+                    category: "PAYMENT",
+                    message: `[SolanaPay] Duplicate signature attempted: sig=${signatureInfo.signature}, payment=${paymentId}, existing=${duplicatePayment.id}`,
+                });
+                return Response.json({ error: "Transaction signature already used" }, { status: 409 });
+            }
+
             await validateTransfer(connection, signatureInfo.signature, {
                 recipient,
                 amount,
@@ -68,13 +101,21 @@ export async function action({ request }: ActionFunctionArgs) {
 
             await db.transaction(async (tx) => {
                 // 결제 상태 업데이트
-                await tx.update(schema.payment)
+                const [updatedPayment] = await tx.update(schema.payment)
                     .set({
                         status: "COMPLETED",
                         txHash: signatureInfo.signature,
                         updatedAt: new Date(),
                     })
-                    .where(eq(schema.payment.id, paymentId));
+                    .where(and(
+                        eq(schema.payment.id, paymentId),
+                        eq(schema.payment.status, "PENDING")
+                    ))
+                    .returning({ id: schema.payment.id });
+
+                if (!updatedPayment) {
+                    throw new Error("Payment is no longer pending");
+                }
 
                 // 유저 크레딧 충전
                 await tx.update(schema.user)

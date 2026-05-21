@@ -14,6 +14,7 @@
     "mock:grant": "tsx scripts/grant-mock-users-choco.ts",
     "mock:activity": "tsx scripts/run-mock-activity.ts",
     "characters:set-service": "node scripts/set-character-service.mjs",
+    "test:authz": "vitest run app/lib/chat/__tests__/ownership.server.test.ts",
     "test:identity": "vitest run app/lib/context/__tests__/identity.test.ts"
   },
   "dependencies": {

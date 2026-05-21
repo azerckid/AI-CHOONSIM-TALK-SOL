@@ -6,7 +6,28 @@ import { eq, desc } from "drizzle-orm";
 import { logger } from "~/lib/logger.server";
 import { BioSchema } from "~/lib/schemas/bio";
 
+function readCronSecret(request: Request): string | null {
+    const headerSecret = request.headers.get("x-cron-secret");
+    if (headerSecret) return headerSecret;
+
+    const authorization = request.headers.get("authorization");
+    if (!authorization) return null;
+    return authorization.startsWith("Bearer ")
+        ? authorization.slice("Bearer ".length).trim()
+        : authorization;
+}
+
 export async function action({ request }: ActionFunctionArgs) {
+    if (request.method !== "POST") {
+        return Response.json({ error: "Method not allowed" }, { status: 405 });
+    }
+
+    const expectedSecret = process.env.CRON_SECRET;
+    const providedSecret = readCronSecret(request);
+    if (!expectedSecret || providedSecret !== expectedSecret) {
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const userId = formData.get("userId") as string;
 
@@ -79,4 +100,3 @@ export async function action({ request }: ActionFunctionArgs) {
         return Response.json({ error: "Internal server error" }, { status: 500 });
     }
 }
-

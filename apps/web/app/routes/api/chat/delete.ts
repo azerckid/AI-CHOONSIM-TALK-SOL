@@ -8,6 +8,7 @@ import { eq, isNotNull, and } from "drizzle-orm";
 import { deleteUserContext } from "~/lib/context/db";
 import { logger } from "~/lib/logger.server";
 import { BioSchema } from "~/lib/schemas/bio";
+import { forbiddenJson, ownedConversationWhere } from "~/lib/chat/ownership.server";
 
 const deleteSchema = z.object({
     conversationId: z.string().uuid(),
@@ -34,6 +35,12 @@ export async function action({ request }: ActionFunctionArgs) {
     const { conversationId, resetMemory } = result.data;
 
     try {
+        const conversation = await db.query.conversation.findFirst({
+            where: ownedConversationWhere(conversationId, session.user.id),
+            columns: { id: true, characterId: true },
+        });
+        if (!conversation) return forbiddenJson();
+
         // 1. 해당 대화방의 이미지 메시지 찾기
         const messagesWithMedia = await db.query.message.findMany({
             where: and(
@@ -58,10 +65,8 @@ export async function action({ request }: ActionFunctionArgs) {
 
             // 대화방 삭제 (기억 초기화가 아닐 때만)
             if (!resetMemory) {
-                // Fetch characterId before deleting if needed for context reset?
-                // Actually resetMemory logic is separate.
                 await tx.delete(schema.conversation)
-                    .where(eq(schema.conversation.id, conversationId));
+                    .where(ownedConversationWhere(conversationId, session.user.id));
             }
 
             // 기억 초기화 요청이 있는 경우
@@ -86,13 +91,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
             // [Phase 8] 5계층 컨텍스트 삭제 (Legacy bio 삭제와 병행)
             if (resetMemory) {
-                // 대화방 정보로 캐릭터 ID 조회
-                const conversation = await tx.query.conversation.findFirst({
-                    where: eq(schema.conversation.id, conversationId),
-                    columns: { characterId: true }
-                });
-
-                if (conversation?.characterId) {
+                if (conversation.characterId) {
                     // 참고: tx 내부가 아니지만 별도 호출. 실패해도 치명적이지 않음 (로그만 남김)
                     // 하지만 async/await 안에서 호출하므로 순차 실행됨.
                     // tx 밖에서 실행해야 할 수도 있음 (deleteUserContext가 내부적으로 db 호출하므로)
@@ -113,4 +112,3 @@ export async function action({ request }: ActionFunctionArgs) {
         return Response.json({ error: "Failed to delete conversation" }, { status: 500 });
     }
 }
-
