@@ -1,9 +1,7 @@
 import { Connection } from "@solana/web3.js";
+import { getSolanaRpcUrl } from "~/lib/solana/config.server";
 
-export const solanaConnection = new Connection(
-  process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com",
-  "confirmed"
-);
+export const solanaConnection = new Connection(getSolanaRpcUrl(), "confirmed");
 
 /** CORS 헤더 — Solana Actions 스펙 필수 */
 export const ACTIONS_CORS_HEADERS: HeadersInit = {

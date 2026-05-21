@@ -19,6 +19,7 @@ import {
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { count, ne, isNotNull, eq, and, gte } from "drizzle-orm";
+import { getPublicSolanaConfig, getPublicSolanaExplorerSuffix } from "~/lib/solana/public-config";
 
 import { toast } from "sonner";
 
@@ -88,6 +89,7 @@ const ACTION_CARDS: ActionCard[] = [
 
 export default function AdminBlinksPage() {
   const { stats } = useLoaderData<typeof loader>();
+  const { cluster: solanaCluster } = getPublicSolanaConfig();
   const { publicKey, connected, signTransaction } = useWallet();
   const { connection } = useConnection();
   const [states, setStates] = useState<Record<string, ActionState>>({});
@@ -155,7 +157,7 @@ export default function AdminBlinksPage() {
   );
 
   const explorerUrl = (sig: string) =>
-    `https://explorer.solana.com/tx/${sig}?cluster=devnet`;
+    `https://explorer.solana.com/tx/${sig}${getPublicSolanaExplorerSuffix()}`;
 
   const dialUrl = (href: string) =>
     typeof window !== "undefined"
@@ -236,7 +238,7 @@ export default function AdminBlinksPage() {
             <span className="material-symbols-outlined text-sm shrink-0 mt-0.5">warning</span>
             <span>
               The <span className="font-bold">Test</span> buttons below let you verify each action works before posting publicly.
-              Connect your Phantom wallet (Devnet) to run a test transaction.
+              Connect your Phantom wallet ({solanaCluster}) to run a test transaction.
             </span>
           </div>
         </div>

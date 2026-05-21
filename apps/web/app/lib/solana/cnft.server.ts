@@ -17,9 +17,10 @@ import {
 } from "@metaplex-foundation/mpl-bubblegum";
 import type { MetadataArgsArgs } from "@metaplex-foundation/mpl-bubblegum";
 import { uploadNFTMetadata } from "~/lib/cloudinary.server";
+import { getSolanaRpcUrl } from "~/lib/solana/config.server";
 
 function getUmi() {
-  const rpcUrl = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
+  const rpcUrl = getSolanaRpcUrl();
   const agentKeyRaw = process.env.SOLANA_AGENT_PRIVATE_KEY;
 
   if (!agentKeyRaw) throw new Error("SOLANA_AGENT_PRIVATE_KEY is not set");

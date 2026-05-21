@@ -14,11 +14,9 @@ import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { logger } from "~/lib/logger.server";
 import { transferChocoSPL } from "~/lib/solana/agent-kit.server";
 import { z } from "zod";
+import { getSolanaRpcUrl } from "~/lib/solana/config.server";
 
-const connection = new Connection(
-  process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com",
-  "confirmed"
-);
+const connection = new Connection(getSolanaRpcUrl(), "confirmed");
 
 const bodySchema = z.object({
   signature: z.string().min(1),

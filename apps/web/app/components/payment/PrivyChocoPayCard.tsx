@@ -16,6 +16,7 @@ import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import bs58 from "bs58";
 import { QRCodeSVG } from "qrcode.react";
+import { getPublicSolanaConfig } from "~/lib/solana/public-config";
 
 interface Props {
   choco: number;
@@ -40,10 +41,14 @@ function getSolDisplay(choco: number): string {
 
 const SOL_PER_CHOCO = 0.00001; // create-tx.ts와 동일
 const FEE_BUFFER = 0.000005;   // 트랜잭션 수수료 여유분
-const DEVNET_RPC = "https://api.devnet.solana.com";
 
 function PrivyChocoPayCardInner({ choco, compact }: Props) {
-  const { user, authenticated, ready, login } = usePrivy();
+  const {
+    rpcUrl: publicSolanaRpcUrl,
+    chain: publicSolanaChain,
+    cluster: publicSolanaCluster,
+  } = getPublicSolanaConfig();
+  const { user, authenticated, ready } = usePrivy();
   const { wallets: standardWallets, ready: walletsReady } = useStandardWallets();
   const revalidator = useRevalidator();
   const [status, setStatus] = useState<Status>("idle");
@@ -68,29 +73,24 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
 
   // 지갑 존재 여부 (account 기준으로 판단)
   const hasEmbeddedWallet = !!embeddedWalletAccount;
-  const hasPhantom = typeof window !== "undefined" && !!(window as any).phantom?.solana?.isPhantom;
-
   useEffect(() => {
     // 이미 지갑이 있거나, 생성이 진행 중이거나, 이미 한 번 시도했다면 중단
     if (!ready || !authenticated || hasEmbeddedWallet || creatingWallet || creationAttempted) return;
 
-    console.log("[PrivyPay] Checking for embedded wallet creation...");
     setCreatingWallet(true);
     setCreationAttempted(true); // 시도했음을 즉시 기록
 
     createWallet()
       .then((wallet) => {
-        console.log("[PrivyPay] Embedded wallet created successfully:", wallet?.address);
         if (wallet?.address) syncWalletToDB(wallet.address);
       })
       .catch((err) => {
         // 이미 지갑이 있다는 에러는 사실상 성공이나 다름없음
         if (err?.message?.includes("already has an embedded wallet")) {
-          console.log("[PrivyPay] Wallet already exists, skipping creation.");
           const existingAddr = (user?.linkedAccounts?.find((a: any) => a.type === "wallet" && a.walletClientType === "privy") as any)?.address;
           if (existingAddr) syncWalletToDB(existingAddr);
         } else {
-          console.error("[PrivyPay] Failed to create embedded wallet:", err);
+          toast.error("Failed to create embedded wallet. Please try again.");
         }
       })
       .finally(() => setCreatingWallet(false));
@@ -98,14 +98,13 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
 
   async function syncWalletToDB(address: string) {
     try {
-      const res = await fetch("/api/user/privy-wallet", {
+      await fetch("/api/user/privy-wallet", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ privyWallet: address }),
       });
-      if (res.ok) console.log("[PrivyPay] Wallet address synced to DB:", address);
-    } catch (err) {
-      console.error("[PrivyPay] DB sync error:", err);
+    } catch {
+      toast.error("Failed to sync wallet address.");
     }
   }
 
@@ -126,7 +125,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
     setCheckingBalance(true);
     try {
       const { Connection, PublicKey, LAMPORTS_PER_SOL } = await import("@solana/web3.js");
-      const conn = new Connection(DEVNET_RPC, "confirmed");
+      const conn = new Connection(publicSolanaRpcUrl, "confirmed");
       const lamports = await conn.getBalance(new PublicKey(walletAddress));
       setSolBalance(lamports / LAMPORTS_PER_SOL);
     } catch {
@@ -134,7 +133,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
     } finally {
       setCheckingBalance(false);
     }
-  }, [walletAddress]);
+  }, [walletAddress, publicSolanaRpcUrl]);
 
   useEffect(() => {
     checkBalance();
@@ -185,9 +184,6 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
       // 주소 정제 적용
       const toAddr = sanitizeAddress(recipient);
 
-      console.log("[PrivyPay] From:", fromAddr);
-      console.log("[PrivyPay] To:", toAddr);
-
       const fromPubkey = new PublicKey(fromAddr);
       const toPubkey = new PublicKey(toAddr);
       const referencePubkey = new PublicKey(reference);
@@ -207,33 +203,27 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
       const [{ signedTransaction }] = await signFeature.signTransaction({
         account: privyAccount,
         transaction: tx.serialize(),
-        chain: "solana:devnet",
+        chain: publicSolanaChain,
       });
       const signedTx = VersionedTransaction.deserialize(signedTransaction);
 
       // 4. 우리 RPC로 직접 전송
-      console.log("[PrivyPay] sendRawTransaction start");
       const rawSig = await connection.sendRawTransaction(signedTx.serialize(), {
         skipPreflight: true,
         maxRetries: 3,
       });
       const signature = typeof rawSig === "string" ? rawSig : bs58.encode(rawSig as any);
-      console.log("[PrivyPay] signature:", signature);
 
       // 온체인 확인 대기 — 클라이언트 폴링 (최대 60s)
       setStatus("verifying");
       const deadline = Date.now() + 60_000;
-      let pollCount = 0;
       while (Date.now() < deadline) {
         const { value: statuses } = await connection.getSignatureStatuses([signature]);
         const s = statuses?.[0];
-        console.log(`[PrivyPay] poll #${++pollCount} status:`, s?.confirmationStatus ?? "null");
         if (s?.err) throw new Error("Transaction failed on-chain.");
         if (s && (s.confirmationStatus === "confirmed" || s.confirmationStatus === "finalized")) break;
         await new Promise((r) => setTimeout(r, 2500));
       }
-      console.log("[PrivyPay] confirmed, calling verify-sig");
-
       // 5. verify-sig → CHOCO 지급 (PENDING이면 최대 3회 재시도)
       let verifyData: any = null;
       for (let attempt = 0; attempt < 3; attempt++) {
@@ -243,7 +233,6 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
           body: JSON.stringify({ signature, paymentId }),
         });
         verifyData = await verifyRes.json();
-        console.log(`[PrivyPay] verify attempt ${attempt + 1}:`, verifyData.status);
         if (verifyData.status !== "PENDING") break;
         await new Promise((r) => setTimeout(r, 3000));
       }
@@ -262,7 +251,6 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
         setStatus("idle");
         return;
       }
-      console.error("[PrivyChocoPayCard]", err);
       toast.error(msg || "Payment failed. Please try again.");
       setStatus("error");
     }
@@ -472,7 +460,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
     <div className="mt-3 p-3 rounded-xl bg-[#9945FF]/10 border border-[#9945FF]/30 space-y-2.5">
       <div className="flex items-center justify-between text-sm">
         <span className="font-bold text-white">{choco.toLocaleString()} CHOCO</span>
-        <span className="text-white/50 text-xs">{getSolDisplay(choco)} SOL (Devnet)</span>
+        <span className="text-white/50 text-xs">{getSolDisplay(choco)} SOL ({publicSolanaCluster})</span>
       </div>
       {isLoading && (
         <div className="flex items-center gap-2 text-xs text-[#9945FF]">

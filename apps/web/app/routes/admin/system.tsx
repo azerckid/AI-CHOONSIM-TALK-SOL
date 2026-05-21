@@ -9,6 +9,7 @@ import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { count, sum, eq, desc } from "drizzle-orm";
 import { getServiceWalletStats, getEconomyStats } from "~/lib/admin/stats.server";
+import { getSolanaCluster, getSolanaExplorerSuffix } from "~/lib/solana/config.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
     await requireAdmin(request);
@@ -63,12 +64,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
             serviceWallet,
             stats: economy
         },
+        solana: {
+            cluster: getSolanaCluster(),
+            explorerSuffix: getSolanaExplorerSuffix(),
+            chocoTokenMintAddress: process.env.CHOCO_TOKEN_MINT_ADDRESS || "",
+            merkleTreeAddress: process.env.MERKLE_TREE_ADDRESS || ""
+        },
         logs
     };
 }
 
 export default function AdminSystem() {
-    const { usage, health, logs, economy } = useLoaderData<typeof loader>();
+    const { usage, health, logs, economy, solana } = useLoaderData<typeof loader>();
 
     const formatMemory = (bytes: number) => {
         return (bytes / 1024 / 1024).toFixed(2) + " MB";
@@ -398,32 +405,40 @@ export default function AdminSystem() {
                         <div className="bg-[#1A1821] border border-white/5 rounded-[40px] p-8 space-y-6">
                             <h3 className="text-xs font-black text-white/60 uppercase tracking-[0.3em] flex items-center gap-2">
                                 <span className="material-symbols-outlined text-primary text-sm font-bold">lan</span>
-                                On-chain Info (Devnet)
+                                On-chain Info ({solana.cluster})
                             </h3>
                             <div className="space-y-4 text-[11px] font-mono">
                                 <div className="space-y-1">
                                     <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">CHOCO Token</p>
-                                    <a
-                                        href="https://explorer.solana.com/address/E2o1MKpnwh5vELG4FDgiX2NA33L11hXPVfAPD3ai4GWf?cluster=devnet"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center gap-1.5 text-primary/60 hover:text-primary transition-colors break-all"
-                                    >
-                                        E2o1MKpnwh5vELG4FDgiX2NA33L11hXPVfAPD3ai4GWf
-                                        <span className="material-symbols-outlined text-[12px] shrink-0">open_in_new</span>
-                                    </a>
+                                    {solana.chocoTokenMintAddress ? (
+                                        <a
+                                            href={`https://explorer.solana.com/address/${solana.chocoTokenMintAddress}${solana.explorerSuffix}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-1.5 text-primary/60 hover:text-primary transition-colors break-all"
+                                        >
+                                            {solana.chocoTokenMintAddress}
+                                            <span className="material-symbols-outlined text-[12px] shrink-0">open_in_new</span>
+                                        </a>
+                                    ) : (
+                                        <p className="text-white/30">CHOCO_TOKEN_MINT_ADDRESS not configured</p>
+                                    )}
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">Merkle Tree</p>
-                                    <a
-                                        href="https://explorer.solana.com/address/AJxCqbFdWLmQ7xMqBQN3AXja9paZJZ9qrqvwViXVkXGF?cluster=devnet"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center gap-1.5 text-primary/60 hover:text-primary transition-colors break-all"
-                                    >
-                                        AJxCqbFdWLmQ7xMqBQN3AXja9paZJZ9qrqvwViXVkXGF
-                                        <span className="material-symbols-outlined text-[12px] shrink-0">open_in_new</span>
-                                    </a>
+                                    {solana.merkleTreeAddress ? (
+                                        <a
+                                            href={`https://explorer.solana.com/address/${solana.merkleTreeAddress}${solana.explorerSuffix}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-1.5 text-primary/60 hover:text-primary transition-colors break-all"
+                                        >
+                                            {solana.merkleTreeAddress}
+                                            <span className="material-symbols-outlined text-[12px] shrink-0">open_in_new</span>
+                                        </a>
+                                    ) : (
+                                        <p className="text-white/30">MERKLE_TREE_ADDRESS not configured</p>
+                                    )}
                                 </div>
                             </div>
                         </div>

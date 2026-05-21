@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { PrivyChocoPayCard } from "./PrivyChocoPayCard";
+import { getPublicSolanaConfig } from "~/lib/solana/public-config";
 
 interface Props {
   paymentId: string;
@@ -24,6 +25,7 @@ interface Props {
 type Status = "idle" | "connecting" | "signing" | "verifying" | "done" | "error";
 
 export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
+  const { cluster: solanaCluster } = getPublicSolanaConfig();
   const [status, setStatus] = useState<Status>("idle");
   const [grantedChoco, setGrantedChoco] = useState(0);
   const [hasPhantom, setHasPhantom] = useState(false);
@@ -135,7 +137,6 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
         setStatus("idle");
         return;
       }
-      console.error("[SwapTxCard]", err);
       toast.error(msg || "Payment failed. Please try again.");
       setStatus("error");
     }
@@ -178,7 +179,7 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
     <div className="mt-3 p-3 rounded-xl bg-[#9945FF]/10 border border-[#9945FF]/30 space-y-2.5">
       <div className="flex items-center justify-between text-sm">
         <span className="font-bold text-white">{choco.toLocaleString()} CHOCO</span>
-        <span className="text-white/50 text-xs">{solAmount} SOL (Devnet)</span>
+        <span className="text-white/50 text-xs">{solAmount} SOL ({solanaCluster})</span>
       </div>
 
       <div className="flex items-center gap-1.5 text-[10px] text-[#14F195]/70 font-medium">

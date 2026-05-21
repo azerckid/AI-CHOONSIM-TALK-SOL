@@ -69,8 +69,7 @@ export function ItemStoreModal({
                 failUrl: `${window.location.origin}/payment/toss/fail?from=store`,
                 windowTarget: isMobile ? "self" : undefined,
             });
-        } catch (error) {
-            console.error("Toss Payment Error:", error);
+        } catch {
             toast.error("결제 준비 중 오류가 발생했습니다.");
             setIsProcessing(false);
         }
@@ -97,8 +96,7 @@ export function ItemStoreModal({
             } else {
                 toast.error(result.error || "결제 처리 중 오류가 발생했습니다.");
             }
-        } catch (error) {
-            console.error("PayPal Capture Error:", error);
+        } catch {
             toast.error("결제 승인 처리 중 오류가 발생했습니다.");
         } finally {
             setIsProcessing(false);
@@ -242,7 +240,6 @@ export function ItemStoreModal({
                                                         if (result.orderId) return result.orderId;
                                                         throw new Error(result.error || "Failed to create order");
                                                     } catch (error) {
-                                                        console.error("PayPal Create Order Error:", error);
                                                         toast.error("결제 주문 생성에 실패했습니다.");
                                                         throw error;
                                                     }

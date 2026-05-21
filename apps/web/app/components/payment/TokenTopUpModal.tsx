@@ -98,8 +98,7 @@ export function TokenTopUpModal({
                 failUrl: `${window.location.origin}/payment/toss/fail?from=topup`,
                 windowTarget: isMobile ? "self" : undefined,
             });
-        } catch (error) {
-            console.error("Toss Payment Error:", error);
+        } catch {
             toast.error("결제 준비 중 오류가 발생했습니다.");
             setIsProcessing(false);
         }
@@ -217,8 +216,7 @@ export function TokenTopUpModal({
                                             onCancel={() => {
                                                 toast.info("결제가 취소되었습니다.");
                                             }}
-                                            onError={(err) => {
-                                                console.error("PayPal Error:", err);
+                                            onError={() => {
                                                 toast.error("결제 처리 중 오류가 발생했습니다.");
                                             }}
                                         />

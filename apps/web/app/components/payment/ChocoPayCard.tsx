@@ -12,6 +12,7 @@ import { useState, useEffect, Component, type ReactNode } from "react";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { PrivyChocoPayCard } from "./PrivyChocoPayCard";
+import { getPublicSolanaConfig } from "~/lib/solana/public-config";
 
 /** Privy 임베디드 지갑 에러 시 페이지 전체 크래시 방지 */
 class PrivyErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -45,6 +46,7 @@ function getSolDisplay(choco: number): string {
 }
 
 export function ChocoPayCard({ choco }: Props) {
+  const { cluster: solanaCluster } = getPublicSolanaConfig();
   const [status, setStatus] = useState<Status>("idle");
   const [grantedChoco, setGrantedChoco] = useState(0);
   const [hasPhantom, setHasPhantom] = useState(false);
@@ -129,7 +131,6 @@ export function ChocoPayCard({ choco }: Props) {
         setStatus("idle");
         return;
       }
-      console.error("[ChocoPayCard]", err);
       toast.error(msg || "결제 중 오류가 발생했어요.");
       setStatus("error");
     }
@@ -175,7 +176,7 @@ export function ChocoPayCard({ choco }: Props) {
     <div className="mt-3 p-3 rounded-xl bg-[#9945FF]/10 border border-[#9945FF]/30 space-y-2.5">
       <div className="flex items-center justify-between text-sm">
         <span className="font-bold text-white">{choco.toLocaleString()} CHOCO</span>
-        <span className="text-white/50 text-xs">{getSolDisplay(choco)} SOL (Devnet)</span>
+        <span className="text-white/50 text-xs">{getSolDisplay(choco)} SOL ({solanaCluster})</span>
       </div>
 
       {isLoading && (

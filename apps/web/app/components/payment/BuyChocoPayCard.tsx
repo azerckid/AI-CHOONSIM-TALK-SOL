@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { PrivyChocoPayCard } from "./PrivyChocoPayCard";
+import { getPublicSolanaConfig } from "~/lib/solana/public-config";
 
 type Status = "idle" | "building" | "connecting" | "signing" | "verifying" | "done" | "error";
 
@@ -31,6 +32,7 @@ const STATUS_LABEL: Record<Status, string> = {
 };
 
 export function BuyChocoPayCard({ choco, onSuccess }: Props) {
+  const { cluster: solanaCluster } = getPublicSolanaConfig();
   const [hasPhantom, setHasPhantom] = useState(false);
   const [tab, setTab] = useState<"phantom" | "internal">("internal");
   const [status, setStatus] = useState<Status>("idle");
@@ -135,7 +137,6 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
         throw new Error(verifyData.error || "결제 확인에 실패했어요.");
       }
     } catch (err: unknown) {
-      console.error("[Phantom payment failed]", err);
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("User rejected") || msg.includes("cancelled") || msg.includes("rejected")) {
         toast("Payment cancelled.");
@@ -209,7 +210,7 @@ export function BuyChocoPayCard({ choco, onSuccess }: Props) {
       {tab === "phantom" && (
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm px-1">
-            <span className="text-white/60 text-xs">{solAmount} SOL (Devnet)</span>
+            <span className="text-white/60 text-xs">{solAmount} SOL ({solanaCluster})</span>
           </div>
 
           {isLoading && (

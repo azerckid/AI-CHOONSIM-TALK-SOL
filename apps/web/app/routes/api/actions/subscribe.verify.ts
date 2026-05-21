@@ -10,6 +10,7 @@ import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { solanaConnection, ACTIONS_CORS_HEADERS } from "~/lib/solana/connection.server";
+import { getSolanaCluster } from "~/lib/solana/config.server";
 
 const PLAN_CHOCO: Record<string, { choco: number; tier: string; months: number; lamports: number }> = {
   monthly: { choco: 3000, tier: "BASIC", months: 1, lamports: Math.round(0.01 * LAMPORTS_PER_SOL) },
@@ -158,7 +159,7 @@ export async function action({ request }: ActionFunctionArgs) {
         walletAddress: feePayer,
         cryptoCurrency: "SOL",
         cryptoAmount: planInfo.lamports / LAMPORTS_PER_SOL,
-        network: "devnet",
+        network: getSolanaCluster(),
         updatedAt: now,
       });
     });

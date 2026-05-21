@@ -1,6 +1,6 @@
 # 06. Code Review Report
 > Created: 2026-05-21 07:42
-> Last Updated: 2026-05-21 07:42
+> Last Updated: 2026-05-21 19:58
 > Category: QA Validation - 전체 코드 리뷰 결과
 
 ---
@@ -387,7 +387,40 @@
 
 ---
 
-## 8. Related Documents
+## 8. 수정 진행 결과
+
+### 8-1. 완료된 수정
+
+| Finding | 결과 | 적용 내용 |
+|:---|:---:|:---|
+| F-01 ownership | DONE | `conversationId`/`messageId` 소유권 helper를 추가하고 채팅, 메시지, 삭제, 좋아요, 선물, 중단 API에 403 가드를 적용했다. |
+| F-02 Solana verify | DONE | 레거시 `/api/payment/solana/verify`에서 payment reference, PENDING 상태, txHash 중복을 검증하도록 강화했다. |
+| F-03 test-cron | DONE | `/api/test-cron`을 POST 전용 + `CRON_SECRET` 인증 경로로 잠갔다. |
+| F-04 dependency audit | PARTIAL | non-breaking `npm audit fix` 및 핵심 패키지 업그레이드를 적용했다. 잔여 high 8건은 breaking `--force` 변경만 제시된다. |
+| F-05 wallet binding | DONE | Phantom 지갑 저장을 SIWS nonce/signature 검증 기반으로 전환하고, `solanaWallet`/`privyWallet` 중복 차단 및 DB unique index migration을 추가했다. |
+| F-06 local tests | DONE | `npm test`가 실제 authz, identity, upload, context, context-memory 테스트를 실행하도록 복구했다. |
+| F-07 upload API | DONE | 업로드 size/MIME/extension/magic-byte 검증, image-only Cloudinary 제한, 사용자 단위 rate limit을 추가했다. |
+| F-08 SPL reconciliation | DONE | 관리자 결제 화면에 SPL 상태 필터와 FAILED/SKIPPED 재시도 action을 추가하고 결과를 `payment.metadata.splTransfer`에 기록한다. |
+| F-09 env separation | DONE | `VITE_PRIVY_APP_ID`, `VITE_SOLANA_CLUSTER`, `VITE_SOLANA_RPC_URL`, `SOLANA_CLUSTER`, `SOLANA_RPC_URL` 기반 설정 helper를 추가하고 `.env.example`, `turbo.json`, `.nvmrc`를 갱신했다. |
+| F-10 bundle warnings | PARTIAL | Solana 전송 서버 모듈의 관리자 화면 정적 import를 제거했다. 잔여 build 경고는 주로 Privy/WalletConnect 패키지 내부 Rollup 주석 및 React Router empty chunk 계열이다. |
+| F-11 client console logs | DONE | 결제 컴포넌트와 `use-chat-stream`의 클라이언트 `console.*` 디버그 로그를 제거했다. |
+
+### 8-2. 최신 자동 검증
+
+| 항목 | 결과 | 메모 |
+|:---|:---:|:---|
+| `npm --prefix apps/web run typecheck` | PASS | `react-router typegen && tsc` 통과 |
+| `npm test` | PASS | build + authz + identity + upload + context + context-memory 통과 |
+| `npm audit --audit-level=high` | FAIL | 47 vulnerabilities, high 8. 잔여 high는 `bigint-buffer`, `langsmith` 계열이며 `npm audit fix --force`가 breaking 변경을 제시한다. |
+| build warnings | WARN | Privy 내부 PURE annotation 경고, empty chunk 경고, Vitest EMFILE watcher 경고가 남아 있으나 빌드/테스트는 성공했다. |
+
+### 8-3. 잔여 의사결정 필요 항목
+
+- `npm audit fix --force`는 `solana-agent-kit`, `@solana/spl-token`, `@metaplex-foundation/mpl-bubblegum`, `ethers`, `drizzle-kit`의 breaking downgrade/major impact를 포함하므로 자동 적용하지 않았다.
+- `0018_add_wallet_unique_indexes.sql`은 기존 운영 DB에 중복 지갑 주소가 있으면 실패할 수 있다. 운영 적용 전 중복 데이터 점검이 필요하다.
+- Phantom/Privy 실제 지갑 팝업과 devnet 송금 E2E는 로컬 자동 테스트 대신 코드/HTTP 검증으로 대체했다.
+
+## 9. Related Documents
 
 - **Concept_Design**: [Roadmap](../01_Concept_Design/02_ROADMAP.md) - 제품 단계별 방향과 제출 이후 전략 참고
 - **UI_Screens**: [UI Design](../02_UI_Screens/01_UI_DESIGN.md) - 화면 구조와 사용자 경험 검증 기준

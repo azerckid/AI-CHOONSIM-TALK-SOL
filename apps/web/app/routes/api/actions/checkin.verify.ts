@@ -11,6 +11,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { solanaConnection } from "~/lib/solana/connection.server";
 import { mintCompressedChoco } from "~/lib/solana/zk-compression.server";
 import { PublicKey } from "@solana/web3.js";
+import { getSolanaExplorerSuffix } from "~/lib/solana/config.server";
 
 const CHECKIN_CHOCO_REWARD = 50;
 const MISSION_ID = "daily_checkin_solana";
@@ -197,7 +198,7 @@ export async function action({ request }: ActionFunctionArgs) {
       ...(zkSignature && {
         zkCompression: {
           signature: zkSignature,
-          explorer: `https://explorer.solana.com/tx/${zkSignature}?cluster=devnet`,
+          explorer: `https://explorer.solana.com/tx/${zkSignature}${getSolanaExplorerSuffix()}`,
         },
       }),
     });

@@ -80,8 +80,8 @@ export function useChatStream(opts: UseChatStreamOptions) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ conversationId, content, mediaUrl }),
             });
-        } catch (e) {
-            console.error("Failed to save interrupted message:", e);
+        } catch {
+            // The main chat flow can continue even if interruption persistence fails.
         }
     }, [conversationId]);
 
@@ -351,7 +351,6 @@ export function useChatStream(opts: UseChatStreamOptions) {
             if (err instanceof Error && err.name === 'AbortError') {
                 return;
             }
-            console.error("Streaming error:", err);
             toast.error("답변을 가져오는 중 오류가 발생했습니다.");
             setIsAiStreaming(false);
             setIsOptimisticTyping(false);

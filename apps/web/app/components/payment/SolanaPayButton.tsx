@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { CheckCircle, Loader2, QrCode, ExternalLink } from "lucide-react";
+import { getPublicSolanaConfig } from "~/lib/solana/public-config";
 
 interface SolanaPayButtonProps {
     amount: number;
@@ -16,6 +17,7 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
     description,
     onSuccess,
 }) => {
+    const { cluster: solanaCluster } = getPublicSolanaConfig();
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<"IDLE" | "PENDING" | "COMPLETED" | "ERROR">("IDLE");
     const [paymentData, setPaymentData] = useState<{
@@ -46,7 +48,6 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
             startPolling(data.reference, data.paymentId);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            console.error("Solana Pay Error:", error);
             toast.error(errorMessage);
             setStatus("ERROR");
         } finally {
@@ -75,8 +76,8 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
                     toast.success(`${credits} CHOCO가 충전되었습니다!`);
                     if (onSuccess) onSuccess();
                 }
-            } catch (error) {
-                console.error("Polling error:", error);
+            } catch {
+                // Transient network errors are retried by the next poll tick.
             }
         }, 3000);
 
@@ -84,7 +85,7 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
         pollingTimeoutRef.current = setTimeout(() => {
             stopPolling();
             setStatus("ERROR");
-            toast.error("Payment confirmation timed out. Make sure Phantom is set to Devnet and try again.");
+            toast.error(`Payment confirmation timed out. Make sure Phantom is set to ${solanaCluster} and try again.`);
         }, POLLING_TIMEOUT_MS);
     };
 
@@ -134,7 +135,7 @@ export const SolanaPayButton: React.FC<SolanaPayButtonProps> = ({
                         Scan the QR code with Phantom or any Solana wallet app.
                     </p>
                     <div className="flex items-center justify-center gap-1.5 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2 mt-2">
-                        <span className="text-amber-400 text-xs">⚠️ Make sure Phantom is set to Devnet</span>
+                        <span className="text-amber-400 text-xs">Make sure Phantom is set to {solanaCluster}</span>
                     </div>
                 </div>
 

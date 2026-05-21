@@ -43,6 +43,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import { DateTime } from "luxon";
 import { getSolPrice } from "~/lib/paysh.server";
 import { solanaConnection } from "~/lib/solana/connection.server";
+import { getSolanaCluster, getSolanaExplorerSuffix, getSolanaRpcUrl } from "~/lib/solana/config.server";
 
 const CHOCO_DECIMALS = 6;
 const MINT_COST_CHOCO = 200;
@@ -61,7 +62,7 @@ function getAgentKit(): SolanaAgentKit {
   if (_agentKit) return _agentKit;
 
   const agentKeyRaw = process.env.SOLANA_AGENT_PRIVATE_KEY;
-  const rpcUrl = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
+  const rpcUrl = getSolanaRpcUrl();
 
   if (!agentKeyRaw) throw new Error("SOLANA_AGENT_PRIVATE_KEY is not set");
 
@@ -92,7 +93,7 @@ export async function transferChocoSPL(
   toWalletAddress: string,
   amount: number
 ): Promise<{ signature: string }> {
-  const rpcUrl = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
+  const rpcUrl = getSolanaRpcUrl();
   const mintAddress = process.env.CHOCO_TOKEN_MINT_ADDRESS;
   if (!mintAddress) throw new Error("CHOCO_TOKEN_MINT_ADDRESS is not set");
 
@@ -199,13 +200,10 @@ export function getChoonsimSolanaTools(userId: string, conversationId?: string) 
     tool(
       async ({ walletAddress }) => {
         try {
-          const connection = new Connection(
-            process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com",
-            "confirmed"
-          );
+          const connection = new Connection(getSolanaRpcUrl(), "confirmed");
           const pubkey = new PublicKey(walletAddress);
           const balance = await connection.getBalance(pubkey);
-          return `SOL balance of ${walletAddress}: ${(balance / 1e9).toFixed(4)} SOL (Devnet)`;
+          return `SOL balance of ${walletAddress}: ${(balance / 1e9).toFixed(4)} SOL (${getSolanaCluster()})`;
         } catch {
           return "Invalid wallet address.";
         }
@@ -427,7 +425,7 @@ export function getChoonsimSolanaTools(userId: string, conversationId?: string) 
             })
             .where(eq(schema.user.id, userId));
 
-          const explorerUrl = `https://explorer.solana.com/tx/${result.signature}?cluster=devnet`;
+          const explorerUrl = `https://explorer.solana.com/tx/${result.signature}${getSolanaExplorerSuffix()}`;
           return (
             `Memory engraved! 🎖️ ${MINT_COST_CHOCO} CHOCO used.\n"${nftName}"\nNow forever sealed on-chain! 💕` +
             `\n---\n` +

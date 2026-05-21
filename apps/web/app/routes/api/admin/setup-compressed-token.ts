@@ -8,6 +8,7 @@
  */
 import type { ActionFunctionArgs } from "react-router";
 import { setupCompressedChocoMint } from "~/lib/solana/zk-compression.server";
+import { getSolanaExplorerSuffix } from "~/lib/solana/config.server";
 
 export async function action({ request }: ActionFunctionArgs) {
   const secret = request.headers.get("x-cron-secret") || request.headers.get("authorization");
@@ -22,7 +23,7 @@ export async function action({ request }: ActionFunctionArgs) {
       mintAddress,
       signature,
       note: "CHOCO_COMPRESSED_MINT_ADDRESS 환경변수에 mintAddress를 저장하세요.",
-      explorer: `https://explorer.solana.com/tx/${signature}?cluster=devnet`,
+      explorer: `https://explorer.solana.com/tx/${signature}${getSolanaExplorerSuffix()}`,
     });
   } catch (err) {
     console.error("[setup-compressed-token]", err);

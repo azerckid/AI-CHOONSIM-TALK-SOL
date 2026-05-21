@@ -40,6 +40,11 @@ export const user = sqliteTable("User", {
     solanaWallet: text("solanaWallet"),
     /** Privy 임베디드 지갑 주소 (Base58). 소셜 로그인 유저 자동 생성 지갑. */
     privyWallet: text("privyWallet"),
+}, (table) => {
+    return [
+        unique("User_solanaWallet_unique").on(table.solanaWallet),
+        unique("User_privyWallet_unique").on(table.privyWallet),
+    ];
 });
 
 export const account = sqliteTable("account", {

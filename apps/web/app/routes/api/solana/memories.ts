@@ -5,6 +5,7 @@
  * symbol "CHM" (ChoonSim Memory) 필터링.
  */
 import type { LoaderFunctionArgs } from "react-router";
+import { getSolanaExplorerSuffix, getSolanaRpcUrl } from "~/lib/solana/config.server";
 
 export interface MemoryNFT {
   id: string;
@@ -29,7 +30,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const rpcUrl =
     process.env.HELIUS_RPC_URL ||
     process.env.ZK_COMPRESSION_RPC_URL ||
-    "https://api.devnet.solana.com";
+    getSolanaRpcUrl();
 
   try {
     const res = await fetch(rpcUrl, {
@@ -86,7 +87,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
           description: meta.description ?? "",
           image,
           characterId,
-          explorerUrl: `https://explorer.solana.com/address/${asset.id}?cluster=devnet`,
+          explorerUrl: `https://explorer.solana.com/address/${asset.id}${getSolanaExplorerSuffix()}`,
         };
       })
     );

@@ -9,8 +9,9 @@ import BigNumber from "bignumber.js";
 import { logger } from "~/lib/logger.server";
 import { transferChocoSPL } from "~/lib/solana/agent-kit.server";
 import { z } from "zod";
+import { getSolanaRpcUrl } from "~/lib/solana/config.server";
 
-const SOLANA_RPC_ENDPOINT = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
+const SOLANA_RPC_ENDPOINT = getSolanaRpcUrl();
 const connection = new Connection(SOLANA_RPC_ENDPOINT, "confirmed");
 
 const verifySchema = z.object({

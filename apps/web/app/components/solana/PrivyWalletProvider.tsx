@@ -5,6 +5,7 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { createSolanaRpc, createSolanaRpcSubscriptions } from "@solana/kit";
+import { getPrivyAppId, getPublicSolanaConfig } from "~/lib/solana/public-config";
 
 interface Props {
   children: ReactNode;
@@ -16,9 +17,11 @@ export function PrivyWalletProvider({ children }: Props) {
 
   if (!mounted) return <>{children}</>;
 
+  const solanaConfig = getPublicSolanaConfig();
+
   return (
     <PrivyProvider
-      appId="cmna1dkit01d70cju3sygcjvd"
+      appId={getPrivyAppId()}
       config={{
         appearance: {
           theme: "dark",
@@ -32,9 +35,9 @@ export function PrivyWalletProvider({ children }: Props) {
         },
         solana: {
           rpcs: {
-            "solana:devnet": {
-              rpc: createSolanaRpc("https://api.devnet.solana.com"),
-              rpcSubscriptions: createSolanaRpcSubscriptions("wss://api.devnet.solana.com"),
+            [solanaConfig.chain]: {
+              rpc: createSolanaRpc(solanaConfig.rpcUrl),
+              rpcSubscriptions: createSolanaRpcSubscriptions(solanaConfig.rpcSubscriptionsUrl),
             },
           },
         },

@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { DateTime } from "luxon";
 import { TokenTopUpModal } from "~/components/payment/TokenTopUpModal";
 import { ItemStoreModal } from "~/components/payment/ItemStoreModal";
+import { getPublicSolanaConfig } from "~/lib/solana/public-config";
 import * as schema from "~/db/schema";
 import { eq, asc, desc, inArray, and, gte, lt } from "drizzle-orm";
 
@@ -231,7 +232,7 @@ export default function ProfileScreen() {
   // 실시간 잔액 업데이트 (특히 내부 지갑용 및 에어드랍 확인용)
   useEffect(() => {
     if (activeAddress) {
-      const conn = new Connection("https://api.devnet.solana.com", "confirmed");
+      const conn = new Connection(getPublicSolanaConfig().rpcUrl, "confirmed");
       
       const fetchBalance = async () => {
         try {

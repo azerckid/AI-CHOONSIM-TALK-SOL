@@ -18,6 +18,7 @@ import { useLoaderData } from "react-router";
 import { BuyChocoPayCard } from "~/components/payment/BuyChocoPayCard";
 import { SolanaPayButton } from "~/components/payment/SolanaPayButton";
 import { CheckCircle, ArrowLeft } from "lucide-react";
+import { getPublicSolanaConfig } from "~/lib/solana/public-config";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -39,6 +40,7 @@ const CHOCO_PACKAGES = [
 ] as const;
 
 export default function BuyChocoPage() {
+  const { cluster: solanaCluster } = getPublicSolanaConfig();
   const { solanaWallet } = useLoaderData<typeof loader>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -165,7 +167,7 @@ export default function BuyChocoPage() {
         />
 
         <p className="text-center text-xs text-white/30 mt-4">
-          Devnet · Auto SOL price · Instant top-up after payment
+          {solanaCluster} · Auto SOL price · Instant top-up after payment
         </p>
       </div>
     </div>

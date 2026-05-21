@@ -19,6 +19,7 @@ import {
 } from "@lightprotocol/compressed-token";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { logger } from "~/lib/logger.server";
+import { getSolanaRpcUrl } from "~/lib/solana/config.server";
 
 const CHOCO_DECIMALS = 6;
 
@@ -29,7 +30,7 @@ function getAgentKeypair(): Keypair {
 }
 
 export function getZkRpc(): Rpc {
-  const rpcUrl = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
+  const rpcUrl = getSolanaRpcUrl();
   const compressionUrl = process.env.ZK_COMPRESSION_RPC_URL || rpcUrl;
   return createRpc(rpcUrl, compressionUrl);
 }

@@ -8,6 +8,7 @@ import {
   WalletProvider,
 } from "@solana/wallet-adapter-react";
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-phantom";
+import { getPublicSolanaConfig } from "~/lib/solana/public-config";
 
 interface Props {
   children: React.ReactNode;
@@ -20,11 +21,7 @@ export function SolanaWalletProvider({ children }: Props) {
     setMounted(true);
   }, []);
 
-  const endpoint =
-    typeof window !== "undefined"
-      ? (window as typeof window & { ENV?: { SOLANA_RPC_URL?: string } }).ENV
-          ?.SOLANA_RPC_URL || "https://api.devnet.solana.com"
-      : "https://api.devnet.solana.com";
+  const endpoint = getPublicSolanaConfig().rpcUrl;
 
   const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
 

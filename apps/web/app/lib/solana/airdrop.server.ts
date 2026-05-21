@@ -13,6 +13,7 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { logger } from "~/lib/logger.server";
+import { getSolanaRpcUrl } from "~/lib/solana/config.server";
 
 /** 신규 유저에게 지급할 SOL 양 (Devnet 테스트용) */
 const ONBOARDING_SOL = 0.5;
@@ -27,10 +28,7 @@ function getServerKeypair(): Keypair {
 }
 
 function getConnection(): Connection {
-  return new Connection(
-    process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com",
-    "confirmed"
-  );
+  return new Connection(getSolanaRpcUrl(), "confirmed");
 }
 
 /**

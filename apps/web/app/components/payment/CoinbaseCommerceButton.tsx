@@ -52,7 +52,6 @@ export function CoinbaseCommerceButton({
             }
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            console.error("Coinbase Payment Error:", error);
             toast.error(errorMessage || "암호화폐 결제 준비 중 오류가 발생했습니다.");
             if (onError) onError(errorMessage);
         } finally {

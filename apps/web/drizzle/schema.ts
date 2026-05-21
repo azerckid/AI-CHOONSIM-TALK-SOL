@@ -512,9 +512,12 @@ export const user = sqliteTable("User", {
 	heartsCount: integer().default(0).notNull(),
 	lastFreePresendAt: integer(),
 	solanaWallet: text(),
+	privyWallet: text(),
 },
 (table) => [
 	uniqueIndex("User_subscriptionId_unique").on(table.subscriptionId),
+	uniqueIndex("User_solanaWallet_unique").on(table.solanaWallet),
+	uniqueIndex("User_privyWallet_unique").on(table.privyWallet),
 ]);
 
 export const userContext = sqliteTable("UserContext", {
@@ -584,4 +587,3 @@ export const verification = sqliteTable("verification", {
 	createdAt: integer(),
 	updatedAt: integer(),
 });
-

@@ -14,6 +14,7 @@ import * as schema from "~/db/schema";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { z } from "zod";
 import { logger } from "~/lib/logger.server";
+import { getSolanaCluster, getSolanaRpcUrl } from "~/lib/solana/config.server";
 
 // Devnet 고정 가격: 1,000 CHOCO = 0.01 SOL
 const SOL_PER_CHOCO = 0.00001; // 1 CHOCO = 0.00001 SOL → 100 CHOCO = 0.001 SOL
@@ -56,6 +57,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const solAmount = parseFloat((choco * SOL_PER_CHOCO).toFixed(6));
   const lamports = Math.round(solAmount * 1e9);
+  const solanaCluster = getSolanaCluster();
 
   // 고유 reference 생성 (findReference로 온체인에서 추적)
   const reference = new Keypair().publicKey.toBase58();
@@ -76,7 +78,7 @@ export async function action({ request }: ActionFunctionArgs) {
       cryptoCurrency: "SOL",
       cryptoAmount: solAmount,
       exchangeRate: 1 / SOL_PER_CHOCO / 1000,
-      network: "devnet",
+      network: solanaCluster,
       description: `${choco} CHOCO (Phantom inline)`,
       updatedAt: new Date(),
     });
@@ -97,6 +99,6 @@ export async function action({ request }: ActionFunctionArgs) {
     solAmount: solAmount.toString(),
     reference,
     paymentId,
-    rpcUrl: process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com",
+    rpcUrl: getSolanaRpcUrl(),
   });
 }
