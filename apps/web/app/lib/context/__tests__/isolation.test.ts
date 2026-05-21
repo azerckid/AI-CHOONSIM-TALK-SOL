@@ -369,7 +369,7 @@ async function testUniqueConstraint(): Promise<void> {
 // Main Test Runner
 // =============================================================================
 
-async function runAllTests(): Promise<void> {
+export async function runAllTests(): Promise<void> {
     console.log("\n");
     console.log("═".repeat(60));
     console.log(" User Context Isolation Tests");
@@ -401,6 +401,6 @@ async function runAllTests(): Promise<void> {
 }
 
 // Run tests if this file is executed directly
-if (!process.env.VITEST) {
+if (!process.env.VITEST && !process.env.CONTEXT_TEST_DB_WRAPPER) {
     runAllTests();
 }

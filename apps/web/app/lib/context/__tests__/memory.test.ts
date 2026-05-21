@@ -24,7 +24,7 @@ async function cleanup(): Promise<void> {
     await db.delete(schema.userContext).where(eq(schema.userContext.userId, TEST_USER));
 }
 
-async function runTests(): Promise<void> {
+export async function runTests(): Promise<void> {
     console.log("Memory layer tests\n");
 
     try {
@@ -64,6 +64,6 @@ async function runTests(): Promise<void> {
     }
 }
 
-if (!process.env.VITEST) {
+if (!process.env.VITEST && !process.env.CONTEXT_TEST_DB_WRAPPER) {
     runTests();
 }
