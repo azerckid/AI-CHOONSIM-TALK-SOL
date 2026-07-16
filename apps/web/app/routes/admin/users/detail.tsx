@@ -59,10 +59,24 @@ export async function action({ params, request }: ActionFunctionArgs) {
     if (!id) return Response.json({ error: "ID missing" }, { status: 400 });
 
     if (actionType === "update_user") {
-        const role = formData.get("role") as string;
-        const tier = formData.get("tier") as string;
-        const status = formData.get("subscriptionStatus") as string;
-        const chocoBalance = formData.get("chocoBalance") as string | null;
+        const updateUserSchema = z.object({
+            role: z.enum(["user", "moderator", "admin"]),
+            tier: z.enum(["FREE", "BASIC", "PREMIUM", "ULTIMATE"]),
+            subscriptionStatus: z.enum(["active", "inactive", "expired", "canceled"]),
+            chocoBalance: z.string()
+                .refine((v) => Number.isFinite(Number(v)) && Number(v) >= 0, "Invalid CHOCO balance")
+                .nullable(),
+        });
+        const parsed = updateUserSchema.safeParse({
+            role: formData.get("role"),
+            tier: formData.get("tier"),
+            subscriptionStatus: formData.get("subscriptionStatus"),
+            chocoBalance: formData.get("chocoBalance"),
+        });
+        if (!parsed.success) {
+            return Response.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
+        }
+        const { role, tier, subscriptionStatus: status, chocoBalance } = parsed.data;
 
         // 1. 현재 사용자 정보 조회
         const currentUser = await db.query.user.findFirst({

@@ -59,7 +59,7 @@
     "@vercel/react-router": "^1.2.5",
     "ai": "^6.0.78",
     "axios": "^1.13.2",
-    "better-auth": "^1.6.11",
+    "better-auth": "^1.6.23",
     "bignumber.js": "^9.3.1",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.8.0",
