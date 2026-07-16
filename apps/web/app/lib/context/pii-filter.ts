@@ -39,16 +39,8 @@ export function maskPII(text: string): string {
 
     // 2. 신용카드 -> [CREDIT_CARD]
     // 주민번호와 겹칠 수 있으므로 순서 중요 (주민번호 먼저)
-    markedCreditCard: {
-        // 정규식이 겹칠 수 있어 단순 치환만 수행
-        // 실제로는 Luhn 알고리즘 등을 써야 정확하나, 여기서는 패턴 매칭만 수행
-        masked = masked.replace(PII_PATTERNS.CREDIT_CARD, match => {
-            // 1년(YYYY) 등 단순 숫자는 제외하기 위해 길이 체크 등 추가 가능하나
-            // 일단 패턴 매칭되면 마스킹
-            // 4자리 숫자 3개 이상 반복되는 경우만 필터링하도록 정규식이 되어 있음
-            return "[CREDIT_CARD]";
-        });
-    }
+    // 정규식이 겹칠 수 있어 단순 치환만 수행 (Luhn 알고리즘 등 정확한 검증은 미적용)
+    masked = masked.replace(PII_PATTERNS.CREDIT_CARD, "[CREDIT_CARD]");
 
     // 3. 전화번호 -> [PHONE]
     masked = masked.replace(PII_PATTERNS.PHONE_NUMBER, "[PHONE]");
@@ -70,10 +62,12 @@ export function maskPII(text: string): string {
  * PII가 포함되어 있는지 검사
  */
 export function containsPII(text: string): boolean {
+    // .test()는 g 플래그 정규식의 lastIndex를 반복 호출 간에 공유해 결과가
+    // 들쭉날쭉해진다. match()는 매 호출마다 lastIndex를 리셋하므로 안전하다.
     return (
-        PII_PATTERNS.RESIDENT_ID.test(text) ||
-        PII_PATTERNS.CREDIT_CARD.test(text) ||
-        PII_PATTERNS.PHONE_NUMBER.test(text)
+        !!text.match(PII_PATTERNS.RESIDENT_ID) ||
+        !!text.match(PII_PATTERNS.CREDIT_CARD) ||
+        !!text.match(PII_PATTERNS.PHONE_NUMBER)
     );
 }
 

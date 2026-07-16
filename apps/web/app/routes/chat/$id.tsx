@@ -172,7 +172,8 @@ export default function ChatRoom() {
   const revalidator = useRevalidator();
   const navigate = useNavigate();
 
-  const conversationId = conversation?.id || useParams().id;
+  const params = useParams();
+  const conversationId = conversation?.id || params.id;
   const dbCharacter = conversation?.character;
   const characterName = dbCharacter?.name || "AI";
   // Priority: Always try to find the MAIN AVATAR first based on sortOrder

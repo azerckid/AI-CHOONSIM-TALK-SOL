@@ -147,6 +147,37 @@ export function MessageBubble({
     return null;
   }
 
+  const messageActionButtons = (
+    <>
+      {showVoiceButton && messageId && onPlayVoice && (
+        <button
+          type="button"
+          onClick={() => onPlayVoice(messageId)}
+          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 dark:text-gray-600 hover:text-primary dark:hover:text-primary"
+          title="목소리로 들기"
+        >
+          <span className="material-symbols-outlined text-[18px]">record_voice_over</span>
+        </button>
+      )}
+      {messageId && onLike && (
+        <button
+          onClick={handleLike}
+          className={cn(
+            "opacity-0 group-hover:opacity-100 transition-opacity p-1",
+            isLiked
+              ? "opacity-100 text-primary"
+              : "text-gray-400 dark:text-gray-600 hover:text-primary dark:hover:text-primary"
+          )}
+        >
+          <span className={cn(
+            "material-symbols-outlined text-[18px]",
+            isLiked && "fill"
+          )}>favorite</span>
+        </button>
+      )}
+    </>
+  );
+
   return (
     <div className={cn("flex items-end gap-3 group", className)}>
       {showAvatar && (
@@ -191,13 +222,7 @@ export function MessageBubble({
               const choco = chocoMatch
                 ? parseInt(chocoMatch[1].replace(/,/g, ""), 10)
                 : 100;
-              return (
-                <SwapTxCard
-                  paymentId={swapMatch[1]}
-                  txBase64={swapMatch[2]}
-                  choco={choco}
-                />
-              );
+              return <SwapTxCard choco={choco} />;
             }
             return phantomMatch ? (
               <ChocoPayCard choco={parseInt(phantomMatch[1], 10)} />
@@ -209,62 +234,12 @@ export function MessageBubble({
             <span className="text-[11px] text-gray-400 dark:text-white/30">
               {timestamp}
             </span>
-            {showVoiceButton && messageId && onPlayVoice && (
-              <button
-                type="button"
-                onClick={() => onPlayVoice(messageId)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 dark:text-gray-600 hover:text-primary dark:hover:text-primary"
-                title="목소리로 들기"
-              >
-                <span className="material-symbols-outlined text-[18px]">record_voice_over</span>
-              </button>
-            )}
-            {messageId && onLike && (
-              <button
-                onClick={handleLike}
-                className={cn(
-                  "opacity-0 group-hover:opacity-100 transition-opacity p-1",
-                  isLiked
-                    ? "opacity-100 text-primary"
-                    : "text-gray-400 dark:text-gray-600 hover:text-primary dark:hover:text-primary"
-                )}
-              >
-                <span className={cn(
-                  "material-symbols-outlined text-[18px]",
-                  isLiked && "fill"
-                )}>favorite</span>
-              </button>
-            )}
+            {messageActionButtons}
           </div>
         )}
         {!timestamp && (showVoiceButton && messageId && onPlayVoice || messageId && onLike) && (
           <div className="flex items-center gap-0 ml-1">
-            {showVoiceButton && messageId && onPlayVoice && (
-              <button
-                type="button"
-                onClick={() => onPlayVoice(messageId)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 dark:text-gray-600 hover:text-primary dark:hover:text-primary"
-                title="목소리로 들기"
-              >
-                <span className="material-symbols-outlined text-[18px]">record_voice_over</span>
-              </button>
-            )}
-            {messageId && onLike && (
-              <button
-                onClick={handleLike}
-                className={cn(
-                  "opacity-0 group-hover:opacity-100 transition-opacity p-1",
-                  isLiked
-                    ? "opacity-100 text-primary"
-                    : "text-gray-400 dark:text-gray-600 hover:text-primary dark:hover:text-primary"
-                )}
-              >
-                <span className={cn(
-                  "material-symbols-outlined text-[18px]",
-                  isLiked && "fill"
-                )}>favorite</span>
-              </button>
-            )}
+            {messageActionButtons}
           </div>
         )}
       </div>

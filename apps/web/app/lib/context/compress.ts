@@ -14,11 +14,8 @@ import { formatHeartbeatForPrompt } from "./heartbeat";
 import { compressIdentityForPrompt } from "./identity";
 import { compressSoulForPrompt } from "./soul";
 import { compressToolsForPrompt } from "./tools";
-import { truncateToTokenLimit } from "./token-budget";
+import { truncateToTokenLimit, CHARS_PER_TOKEN } from "./token-budget";
 import type { UserContextData } from "./types";
-
-/** 한글/영문 대략 1토큰 ≈ 2글자로 간이 계산 (token-budget.CHARS_PER_TOKEN과 동일) */
-const CHARS_PER_TOKEN = 2;
 
 /**
  * memory 계층을 프롬프트에 넣을 문자열로 압축

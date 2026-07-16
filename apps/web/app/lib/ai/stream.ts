@@ -141,7 +141,7 @@ export async function* streamAIResponse(
             return;
         }
         logger.error({ category: "SYSTEM", message: "Stream Error:", stackTrace: (error as Error).stack });
-        yield { type: "content" as const, content: "Oh... my head is spinning all of a sudden... I'm sorry, can you call me again in a bit?" };
+        yield { type: "error" as const, content: "Oh... my head is spinning all of a sudden... I'm sorry, can you call me again in a bit?" };
     }
 }
 
