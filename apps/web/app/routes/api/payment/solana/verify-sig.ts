@@ -132,7 +132,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const user = await db.query.user.findFirst({
     where: eq(schema.user.id, session.user.id),
-    columns: { solanaWallet: true, privyWallet: true },
+    columns: { solanaWallet: true },
   });
   const expectedPayer = payment.walletAddress ?? user?.solanaWallet ?? null;
   if (expectedPayer && payerAddress !== expectedPayer) {
@@ -215,7 +215,9 @@ export async function action({ request }: ActionFunctionArgs) {
   // 5. SPL CHOCO 전송 (지갑 등록된 경우)
   let splTransferMetadata: Record<string, unknown>;
   try {
-    const payoutWallet = user?.solanaWallet ?? user?.privyWallet ?? null;
+    // privyWallet은 소유권 서명 증명 없이 등록되므로 payout 대상에서 제외한다
+    // (SIWS로 증명된 solanaWallet만 신뢰).
+    const payoutWallet = user?.solanaWallet ?? null;
     if (payoutWallet) {
       const splResult = await transferChocoSPL(payoutWallet, chocoGranted);
       splTransferMetadata = {

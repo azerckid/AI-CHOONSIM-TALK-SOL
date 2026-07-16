@@ -2,6 +2,13 @@
  * PATCH /api/user/privy-wallet
  * Privy 임베디드 지갑 주소를 DB에 저장합니다.
  * 클라이언트(usePrivyWalletSync)에서 sessionStorage 플래그로 1회만 호출됩니다.
+ *
+ * 보안 참고: /api/user/wallet(Phantom)과 달리 이 엔드포인트는 서명 기반
+ * 소유권 증명을 요구하지 않는다 — 인증된 사용자라면 임의의 유효한 Solana
+ * 주소를 자신의 privyWallet으로 등록할 수 있다(다른 계정에 이미 연결된
+ * 주소만 차단). 따라서 CHOCO SPL payout 등 자금 이동 경로에서는 이 필드를
+ * 신뢰하지 않고 SIWS로 검증된 solanaWallet만 사용해야 한다
+ * (routes/api/payment/solana/verify.ts, verify-sig.ts 참고).
  */
 import type { ActionFunctionArgs } from "react-router";
 import { auth } from "~/lib/auth.server";

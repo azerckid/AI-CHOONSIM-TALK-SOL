@@ -5,6 +5,7 @@ import * as schema from "~/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { logger } from "~/lib/logger.server";
 import { BioSchema } from "~/lib/schemas/bio";
+import { requireAdmin } from "~/lib/auth.server";
 
 function readCronSecret(request: Request): string | null {
     const headerSecret = request.headers.get("x-cron-secret");
@@ -27,6 +28,10 @@ export async function action({ request }: ActionFunctionArgs) {
     if (!expectedSecret || providedSecret !== expectedSecret) {
         return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // 이 엔드포인트는 실제 스케줄 cron에 연결되어 있지 않은 수동 테스트/디버그용
+    // 트리거다 — 시크릿만으로 임의 userId를 신뢰하지 않도록 관리자 세션도 요구한다.
+    await requireAdmin(request);
 
     const formData = await request.formData();
     const userId = formData.get("userId") as string;
