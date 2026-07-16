@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { eq, and } from "drizzle-orm";
-import { deleteAllUserContexts } from "~/lib/context/db";
+import { deleteUserData } from "~/lib/account-delete.server";
 import { SUBSCRIPTION_PLANS } from "~/lib/subscription-plans";
 import { BigNumber } from "bignumber.js";
 import { DateTime } from "luxon";
@@ -182,8 +182,10 @@ export async function action({ params, request }: ActionFunctionArgs) {
     }
 
     if (actionType === "delete_user") {
-        await deleteAllUserContexts(id);
-        await db.delete(schema.user).where(eq(schema.user.id, id));
+        const result = await deleteUserData(id);
+        if (!result.success) {
+            return Response.json({ error: result.error || "Failed to delete user" }, { status: 500 });
+        }
         return { success: true, deleted: true, message: "User deleted" };
     }
 

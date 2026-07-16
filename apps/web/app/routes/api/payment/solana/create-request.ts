@@ -6,13 +6,8 @@ import * as schema from "~/db/schema";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { encodeURL } from "@solana/pay";
 import BigNumber from "bignumber.js";
-import axios from "axios";
 import { logger } from "~/lib/logger.server";
-
-// SOL 가격 캐싱을 위한 메모리 저장소
-let cachedSolPrice: number | null = null;
-let lastFetchTime = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5분 캐시
+import { getSolPrice } from "~/lib/paysh.server";
 
 const createRequestSchema = z.object({
     amount: z.number().positive(), // USD amount
@@ -49,20 +44,12 @@ export async function action({ request }: ActionFunctionArgs) {
         const { amount, credits, description } = result.data;
         const userId = session.user.id;
 
-        // 1. SOL 가격 가져오기 (캐싱 적용)
-        let solPrice = cachedSolPrice || 150;
-        const now = Date.now();
-
-        if (!cachedSolPrice || (now - lastFetchTime > CACHE_DURATION)) {
-            try {
-                const priceRes = await axios.get("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd");
-                solPrice = priceRes.data.solana.usd;
-                cachedSolPrice = solPrice;
-                lastFetchTime = now;
-                logger.info({ category: "PAYMENT", message: `[SolanaPay] Updated SOL price: $${solPrice}` });
-            } catch (e) {
-                logger.error({ category: "PAYMENT", message: "Failed to fetch SOL price, using cached/fallback:", stackTrace: (e as Error).stack });
-            }
+        // 1. SOL 가격 가져오기 (paysh.server.ts의 공유 캐시 사용)
+        let solPrice = 150; // fallback
+        try {
+            solPrice = (await getSolPrice()).usd;
+        } catch (e) {
+            logger.error({ category: "PAYMENT", message: "Failed to fetch SOL price, using fallback:", stackTrace: (e as Error).stack });
         }
 
         // 2. SOL 수량 계산 (USD / SOL Price)

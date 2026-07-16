@@ -4,7 +4,7 @@ import { db } from "~/lib/db.server";
 import { DateTime } from "luxon";
 import { toast } from "sonner";
 import { cn } from "~/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -148,11 +148,13 @@ export default function SubscriptionManagementPage() {
     fetcher.submit({}, { method: "POST", action: "/api/payment/cancel-subscription" });
   };
 
-  if (fetcher.data?.success && isActive) {
-    toast.success("구독이 취소되었습니다.");
-  } else if (fetcher.data?.error) {
-    toast.error(fetcher.data.error);
-  }
+  useEffect(() => {
+    if (fetcher.data?.success && isActive) {
+      toast.success("구독이 취소되었습니다.");
+    } else if (fetcher.data?.error) {
+      toast.error(fetcher.data.error);
+    }
+  }, [fetcher.data, isActive]);
 
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark text-foreground flex flex-col max-w-md mx-auto relative shadow-2xl overflow-hidden">

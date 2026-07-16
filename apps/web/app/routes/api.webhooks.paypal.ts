@@ -7,6 +7,25 @@ import * as schema from "~/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { BigNumber } from "bignumber.js";
 import { logger } from "~/lib/logger.server";
+import { z } from "zod";
+
+const WebhookEnvelopeSchema = z.object({
+    event_type: z.string(),
+    resource: z.record(z.string(), z.unknown()),
+});
+
+const SubscriptionPaymentResourceSchema = z.object({
+    billing_agreement_id: z.string(),
+    id: z.string(),
+    amount: z.object({
+        total: z.string(),
+        currency: z.string(),
+    }),
+});
+
+const SubscriptionIdResourceSchema = z.object({
+    id: z.string(),
+});
 
 export async function action({ request }: ActionFunctionArgs) {
     if (request.method !== "POST") {
@@ -26,18 +45,29 @@ export async function action({ request }: ActionFunctionArgs) {
         return new Response("Invalid Signature", { status: 400 });
     }
 
-    const eventType = body.event_type;
-    const resource = body.resource;
+    const envelope = WebhookEnvelopeSchema.safeParse(body);
+    if (!envelope.success) {
+        logger.error({ category: "PAYMENT", message: "Malformed webhook body" });
+        return new Response("Malformed Body", { status: 400 });
+    }
+
+    const { event_type: eventType, resource } = envelope.data;
 
     logger.info({ category: "PAYMENT", message: `[PayPal Webhook] Received event: ${eventType}` });
 
     try {
         switch (eventType) {
             case "BILLING.SUBSCRIPTION.PAYMENT.SUCCEEDED": {
+                const parsedResource = SubscriptionPaymentResourceSchema.safeParse(resource);
+                if (!parsedResource.success) {
+                    logger.error({ category: "PAYMENT", message: "Malformed SUBSCRIPTION.PAYMENT.SUCCEEDED resource" });
+                    return new Response("Malformed Resource", { status: 400 });
+                }
+
                 // 구독 갱신 결제 성공
-                const subscriptionId = resource.billing_agreement_id;
-                const transactionId = resource.id;
-                const amount = resource.amount.total;
+                const subscriptionId = parsedResource.data.billing_agreement_id;
+                const transactionId = parsedResource.data.id;
+                const amount = parsedResource.data.amount.total;
 
                 // 1. 사용자 찾기
                 const user = await db.query.user.findFirst({
@@ -74,7 +104,7 @@ export async function action({ request }: ActionFunctionArgs) {
                         id: crypto.randomUUID(),
                         userId: user.id,
                         amount: parseFloat(amount),
-                        currency: resource.amount.currency,
+                        currency: parsedResource.data.amount.currency,
                         status: "COMPLETED",
                         type: "SUBSCRIPTION_RENEWAL",
                         provider: "PAYPAL",
@@ -114,7 +144,12 @@ export async function action({ request }: ActionFunctionArgs) {
             }
 
             case "BILLING.SUBSCRIPTION.CANCELLED": {
-                const subscriptionId = resource.id;
+                const parsedResource = SubscriptionIdResourceSchema.safeParse(resource);
+                if (!parsedResource.success) {
+                    logger.error({ category: "PAYMENT", message: "Malformed SUBSCRIPTION.CANCELLED resource" });
+                    return new Response("Malformed Resource", { status: 400 });
+                }
+                const subscriptionId = parsedResource.data.id;
 
                 await db.update(schema.user)
                     .set({ subscriptionStatus: "CANCELLED", updatedAt: new Date() })
@@ -125,7 +160,12 @@ export async function action({ request }: ActionFunctionArgs) {
             }
 
             case "BILLING.SUBSCRIPTION.SUSPENDED": {
-                const subscriptionId = resource.id;
+                const parsedResource = SubscriptionIdResourceSchema.safeParse(resource);
+                if (!parsedResource.success) {
+                    logger.error({ category: "PAYMENT", message: "Malformed SUBSCRIPTION.SUSPENDED resource" });
+                    return new Response("Malformed Resource", { status: 400 });
+                }
+                const subscriptionId = parsedResource.data.id;
 
                 await db.update(schema.user)
                     .set({ subscriptionStatus: "SUSPENDED", updatedAt: new Date() })

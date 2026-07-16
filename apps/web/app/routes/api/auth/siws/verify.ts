@@ -35,7 +35,12 @@ async function signCookieValue(value: string, secret: string): Promise<string> {
 
 /** 기존 유저에 대해 세션을 DB에 직접 생성하고 Better Auth 쿠키를 설정한 Response 반환 */
 async function createSessionResponse(userId: string): Promise<Response> {
-  const secret = (auth as any).options?.secret || process.env.BETTER_AUTH_SECRET || "";
+  // Better Auth는 명시적 secret 설정이 없으면 BETTER_AUTH_SECRET을 그대로 사용하므로
+  // 인스턴스 내부(options)를 any로 들여다볼 필요 없이 env를 직접 읽는다.
+  const secret = process.env.BETTER_AUTH_SECRET;
+  if (!secret) {
+    throw new Error("BETTER_AUTH_SECRET 환경 변수가 설정되지 않았습니다.");
+  }
   const isProduction = (process.env.BETTER_AUTH_URL || "").startsWith("https://");
 
   const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");

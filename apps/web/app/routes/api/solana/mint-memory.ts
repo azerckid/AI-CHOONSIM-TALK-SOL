@@ -8,7 +8,7 @@ import type { ActionFunctionArgs } from "react-router";
 import { auth } from "~/lib/auth.server";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { mintMemoryNFT, getDefaultImageUri } from "~/lib/solana/cnft.server";
 import { z } from "zod";
 
@@ -53,6 +53,25 @@ export async function action({ request }: ActionFunctionArgs) {
   const { ownerAddress, name, description, characterId } = parsed.data;
   const imageUri = parsed.data.imageUri ?? getDefaultImageUri();
 
+  // CHOCO 원자적 차감 (레이스 방지) — 잔액 조건을 WHERE에 걸어 동시 요청의 초과 사용을 막는다
+  const deductResult = await db
+    .update(schema.user)
+    .set({
+      chocoBalance: sql`CAST(CAST(${schema.user.chocoBalance} AS REAL) - ${MINT_COST_CHOCO} AS TEXT)`,
+      updatedAt: new Date(),
+    })
+    .where(and(
+      eq(schema.user.id, userId),
+      sql`CAST(${schema.user.chocoBalance} AS REAL) >= ${MINT_COST_CHOCO}`
+    ));
+
+  if (deductResult.rowsAffected === 0) {
+    return Response.json(
+      { error: `cNFT 각인에는 ${MINT_COST_CHOCO} CHOCO가 필요합니다.` },
+      { status: 402 }
+    );
+  }
+
   try {
     // cNFT 발행
     const result = await mintMemoryNFT({
@@ -64,21 +83,21 @@ export async function action({ request }: ActionFunctionArgs) {
       userId,
     });
 
-    // CHOCO 차감
-    await db
-      .update(schema.user)
-      .set({
-        chocoBalance: sql`CAST(CAST(${schema.user.chocoBalance} AS REAL) - ${MINT_COST_CHOCO} AS TEXT)`,
-        updatedAt: new Date(),
-      })
-      .where(eq(schema.user.id, userId));
-
     return Response.json({
       success: true,
       signature: result.signature,
       message: `🎖️ 메모리 NFT가 온체인에 각인되었습니다! (${MINT_COST_CHOCO} CHOCO 소모)`,
     });
   } catch (err) {
+    // 민팅 실패 시 이미 차감된 CHOCO 환불
+    await db
+      .update(schema.user)
+      .set({
+        chocoBalance: sql`CAST(CAST(${schema.user.chocoBalance} AS REAL) + ${MINT_COST_CHOCO} AS TEXT)`,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.user.id, userId));
+
     console.error("[mint-memory] error:", err);
     return Response.json(
       { error: "NFT 발행 중 오류가 발생했습니다." },

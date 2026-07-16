@@ -5,7 +5,7 @@ import { deductChocoForTokens } from "~/lib/chat/choco.server";
 import { auth } from "~/lib/auth.server";
 import { z } from "zod";
 import type { ActionFunctionArgs } from "react-router";
-import { streamAIResponse, extractPhotoMarker, extractEmotionMarker } from "~/lib/ai.server";
+import { streamAIResponse, extractPhotoMarker, extractEmotionMarker, type PersonaMode, type SubscriptionTier } from "~/lib/ai.server";
 import { HumanMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
 import * as schema from "~/db/schema";
 import { eq, and, sql, desc, gte, count } from "drizzle-orm";
@@ -100,7 +100,7 @@ export async function action({ request }: ActionFunctionArgs) {
         const fullContext = await getFullContextData(session.user.id, characterId);
         const recentText = history
             .slice(0, 3)
-            .map((m) => (m as any).content || "")
+            .map((m) => m.content || "")
             .join(" ");
         const conversationType = classifyConversation({
             messageCount: history.length,
@@ -113,7 +113,7 @@ export async function action({ request }: ActionFunctionArgs) {
             compressMemoryForPrompt(session.user.id, characterId, budget.memory),
             compressHeartbeatForPrompt(session.user.id, characterId, budget.heartbeat, fullContext),
             compressIdentityForPrompt(session.user.id, characterId, budget.identity, fullContext),
-            compressSoulForPrompt(session.user.id, characterId, (currentUser?.subscriptionTier as any) || "FREE", budget.soul, fullContext),
+            compressSoulForPrompt(session.user.id, characterId, (currentUser?.subscriptionTier as SubscriptionTier) || "FREE", budget.soul, fullContext),
             compressToolsForPrompt(session.user.id, characterId, budget.tools, fullContext),
         ]);
 
@@ -166,7 +166,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     // 페르소나 모드 결정 (DB 우선)
-    const personality = ((currentConversation as any)?.personaMode || "lover") as any;
+    const personality = (currentConversation.personaMode || "lover") as PersonaMode;
 
     // 1.5 선물 연속성 확인 (최근 10분 이내 선물 횟수 조회)
     let giftCountInSession = 0;
@@ -229,7 +229,7 @@ export async function action({ request }: ActionFunctionArgs) {
                 }
 
                 // 2단계: AI 응답 스트리밍 및 토큰 사용량 집계
-                const subscriptionTier = (currentUser?.subscriptionTier as any) || "FREE";
+                const subscriptionTier = (currentUser?.subscriptionTier as SubscriptionTier) || "FREE";
                 let tokenUsage: { promptTokens: number; completionTokens: number; totalTokens: number } | null = null;
 
                 const streamSource = streamAIResponse(
@@ -243,8 +243,8 @@ export async function action({ request }: ActionFunctionArgs) {
                     subscriptionTier,
                     giftContext ? { ...giftContext, countInSession: giftCountInSession } : undefined,
                     request.signal,
-                    (currentConversation as any)?.character?.name,
-                    (currentConversation as any)?.character?.personaPrompt,
+                    currentConversation.character?.name,
+                    currentConversation.character?.personaPrompt,
                     conversationId
                 );
 
@@ -254,6 +254,13 @@ export async function action({ request }: ActionFunctionArgs) {
                     if (item.type === 'content') {
                         fullContent += item.content;
                         // 청크를 즉시 클라이언트로 전달 (타자 치는 효과)
+                        if (!isClosed) {
+                            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk: item.content })}\n\n`));
+                        }
+                    } else if (item.type === 'error') {
+                        // 스트리밍 중 오류 — 이미 누적된 부분 응답을 버리고 사과 메시지로 교체
+                        // (그렇지 않으면 잘린 부분 응답 + 사과 문구가 뒤섞여 저장된다)
+                        fullContent = item.content;
                         if (!isClosed) {
                             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk: item.content })}\n\n`));
                         }

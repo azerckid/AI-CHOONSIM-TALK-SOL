@@ -35,7 +35,7 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
-import { eq, sql, count, desc } from "drizzle-orm";
+import { eq, sql, count, desc, and } from "drizzle-orm";
 import { mintMemoryNFT, getDefaultImageUri } from "~/lib/solana/cnft.server";
 import { getRandomIllustration, buildIllustrationWithOverlay } from "~/lib/cloudinary.server";
 import { model } from "~/lib/ai/model";
@@ -44,6 +44,8 @@ import { DateTime } from "luxon";
 import { getSolPrice } from "~/lib/paysh.server";
 import { solanaConnection } from "~/lib/solana/connection.server";
 import { getSolanaCluster, getSolanaExplorerSuffix, getSolanaRpcUrl } from "~/lib/solana/config.server";
+import { getAgentKeypair } from "~/lib/solana/keypair.server";
+import { SOL_PER_CHOCO } from "~/lib/economics";
 
 const CHOCO_DECIMALS = 6;
 const MINT_COST_CHOCO = 200;
@@ -61,26 +63,14 @@ let _agentKit: SolanaAgentKit | null = null;
 function getAgentKit(): SolanaAgentKit {
   if (_agentKit) return _agentKit;
 
-  const agentKeyRaw = process.env.SOLANA_AGENT_PRIVATE_KEY;
   const rpcUrl = getSolanaRpcUrl();
-
-  if (!agentKeyRaw) throw new Error("SOLANA_AGENT_PRIVATE_KEY is not set");
-
-  const agentKeyArray = JSON.parse(agentKeyRaw) as number[];
-  const agentKeypair = Keypair.fromSecretKey(Uint8Array.from(agentKeyArray));
-  const wallet = new KeypairWallet(agentKeypair, rpcUrl);
+  const wallet = new KeypairWallet(getAgentKeypair(), rpcUrl);
 
   _agentKit = new SolanaAgentKit(wallet, rpcUrl, {
     OPENAI_API_KEY: process.env.GEMINI_API_KEY || "",
   });
 
   return _agentKit;
-}
-
-function getAgentKeypair(): Keypair {
-  const agentKeyRaw = process.env.SOLANA_AGENT_PRIVATE_KEY;
-  if (!agentKeyRaw) throw new Error("SOLANA_AGENT_PRIVATE_KEY is not set");
-  return Keypair.fromSecretKey(Uint8Array.from(JSON.parse(agentKeyRaw) as number[]));
 }
 
 // ── 독립 함수: SPL CHOCO 전송 ───────────────────────────────────────────────
@@ -405,25 +395,47 @@ export function getChoonsimSolanaTools(userId: string, conversationId?: string) 
             ...(keyword ? [{ trait_type: "keyword", value: keyword }] : []),
           ];
 
-          // ── cNFT 발행 ─────────────────────────────────────────────────────
-          const result = await mintMemoryNFT({
-            ownerAddress: user.solanaWallet,
-            name: nftName,
-            description: `A precious moment with Choonsim — ${dateStr}`,
-            imageUri,
-            characterId: "choonsim",
-            userId,
-            extraAttributes,
-          });
-
-          // DB CHOCO 차감
-          await db
+          // ── CHOCO 원자적 차감 (레이스 방지, 민팅 직전 확정) ─────────────────
+          const deductResult = await db
             .update(schema.user)
             .set({
               chocoBalance: sql`CAST(CAST(${schema.user.chocoBalance} AS REAL) - ${MINT_COST_CHOCO} AS TEXT)`,
               updatedAt: new Date(),
             })
-            .where(eq(schema.user.id, userId));
+            .where(and(
+              eq(schema.user.id, userId),
+              sql`CAST(${schema.user.chocoBalance} AS REAL) >= ${MINT_COST_CHOCO}`
+            ));
+
+          if (deductResult.rowsAffected === 0) {
+            return (
+              `Not enough CHOCO... Engraving a memory costs ${MINT_COST_CHOCO} CHOCO!`
+            );
+          }
+
+          // ── cNFT 발행 ─────────────────────────────────────────────────────
+          let result;
+          try {
+            result = await mintMemoryNFT({
+              ownerAddress: user.solanaWallet,
+              name: nftName,
+              description: `A precious moment with Choonsim — ${dateStr}`,
+              imageUri,
+              characterId: "choonsim",
+              userId,
+              extraAttributes,
+            });
+          } catch (mintErr) {
+            // 민팅 실패 시 이미 차감된 CHOCO 환불
+            await db
+              .update(schema.user)
+              .set({
+                chocoBalance: sql`CAST(CAST(${schema.user.chocoBalance} AS REAL) + ${MINT_COST_CHOCO} AS TEXT)`,
+                updatedAt: new Date(),
+              })
+              .where(eq(schema.user.id, userId));
+            throw mintErr;
+          }
 
           const explorerUrl = `https://explorer.solana.com/tx/${result.signature}${getSolanaExplorerSuffix()}`;
           return (
@@ -458,7 +470,6 @@ export function getChoonsimSolanaTools(userId: string, conversationId?: string) 
      */
     tool(
       async ({ amount }) => {
-        const SOL_PER_CHOCO = 0.00001;
         const solAmount = parseFloat((amount * SOL_PER_CHOCO).toFixed(6));
 
         return (

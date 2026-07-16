@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import bs58 from "bs58";
 import { QRCodeSVG } from "qrcode.react";
 import { getPublicSolanaConfig } from "~/lib/solana/public-config";
+import { SOL_PER_CHOCO, getSolDisplay } from "~/lib/economics";
 
 interface Props {
   choco: number;
@@ -26,21 +27,7 @@ interface Props {
 
 type Status = "idle" | "building" | "signing" | "verifying" | "done" | "error";
 
-const CHOCO_SOL: Record<number, string> = {
-  100: "0.001",
-  500: "0.005",
-  1000: "0.010",
-  5000: "0.050",
-};
-function getSolDisplay(choco: number): string {
-  const nearest = [100, 500, 1000, 5000].reduce((p, c) =>
-    Math.abs(c - choco) < Math.abs(p - choco) ? c : p
-  );
-  return CHOCO_SOL[nearest] ?? (choco * 0.00001).toFixed(6);
-}
-
-const SOL_PER_CHOCO = 0.00001; // create-tx.ts와 동일
-const FEE_BUFFER = 0.000005;   // 트랜잭션 수수료 여유분
+const FEE_BUFFER = 0.000005; // 트랜잭션 수수료 여유분
 
 function PrivyChocoPayCardInner({ choco, compact }: Props) {
   const {

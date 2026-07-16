@@ -23,12 +23,15 @@ export async function uploadImage(file: string) {
 
 export async function deleteImage(url: string) {
     try {
-        // URL에서 public_id 추출
-        // 예: https://res.cloudinary.com/cloudname/image/upload/v12345678/folder/public_id.jpg
-        const parts = url.split("/");
-        const filename = parts[parts.length - 1]; // public_id.jpg
-        const folder = parts[parts.length - 2];   // folder
-        const publicId = `${folder}/${filename.split(".")[0]}`;
+        // URL에서 public_id 추출 (버전 세그먼트 유무, 폴더 중첩 깊이에 관계없이 동작)
+        // 예: https://res.cloudinary.com/cloudname/image/upload/v12345678/folder/sub/public_id.jpg
+        //  → public_id = "folder/sub/public_id"
+        const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/);
+        if (!match) {
+            logger.error({ category: "SYSTEM", message: `Could not parse Cloudinary public_id from URL: ${url}` });
+            return;
+        }
+        const publicId = match[1];
 
         await cloudinary.uploader.destroy(publicId);
         logger.info({ category: "SYSTEM", message: `Deleted from Cloudinary: ${publicId}` });

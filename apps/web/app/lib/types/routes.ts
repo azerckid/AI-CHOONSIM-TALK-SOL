@@ -50,7 +50,7 @@ export type SExchangeLog = Serial<ExchangeLogRow>;
 // ─── Route별 Loader Data 타입 ─────────────────────────────────────────────────
 
 export type SettingsLoaderData = {
-    user: Pick<SUser, "id" | "name" | "email" | "image" | "chocoBalance"> | undefined;
+    user: Pick<SUser, "id" | "name" | "email" | "image" | "chocoBalance" | "subscriptionTier"> | undefined;
 };
 
 export type ProfileEditLoaderData = {

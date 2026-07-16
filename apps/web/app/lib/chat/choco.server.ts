@@ -33,7 +33,7 @@ export async function deductChocoForTokens(
     }
 
     const currentBalance = userForDeduction.chocoBalance ? parseFloat(userForDeduction.chocoBalance) : 0;
-    const newBalance = new BigNumber(currentBalance).minus(chocoToDeduct).toString();
+    const newBalance = BigNumber.max(0, new BigNumber(currentBalance).minus(chocoToDeduct)).toString();
 
     await db.update(schema.user)
         .set({ chocoBalance: newBalance, updatedAt: new Date() })

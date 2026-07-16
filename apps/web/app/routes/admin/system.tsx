@@ -199,36 +199,54 @@ export default function AdminSystem() {
                         </div>
 
                         {/* 5. System Integrity (The Real Truth) */}
-                        <div className={cn(
-                            "rounded-[32px] p-5 space-y-3 shadow-[0_0_30px_rgba(0,0,0,0.3)] border transition-all duration-500",
-                            new BigNumber(economy.serviceWallet.totalSupplyRaw).isEqualTo(1000000000 * 1e18)
-                                ? "bg-primary border-primary/20"
-                                : "bg-red-500 border-red-400"
-                        )}>
-                            <div className="space-y-1">
-                                <p className="text-[9px] font-black text-[#0B0A10] uppercase tracking-widest">Calculated Grand Total</p>
-                                <p className="text-2xl font-black italic text-[#0B0A10] tracking-tighter">
-                                    {/* 실제 계산: 온체인 발행량 그대로 표시하되 오차 분석 */}
-                                    {new BigNumber(economy.serviceWallet.totalSupplyRaw)
-                                        .dividedBy(new BigNumber(10).pow(18))
-                                        .toFormat(0)
-                                    }
-                                </p>
-                            </div>
-                            <div className="pt-3 border-t border-[#0B0A10]/10">
-                                <div className="flex justify-between items-center bg-[#0B0A10]/20 px-2 py-1.5 rounded-lg border border-[#0B0A10]/10">
-                                    <span className="text-[8px] font-black text-[#0B0A10] uppercase">Drift / Loss</span>
-                                    <span className="text-[9px] font-black text-[#0B0A10] uppercase">
-                                        {(() => {
-                                            const expected = new BigNumber(1000000000);
-                                            const actual = new BigNumber(economy.serviceWallet.totalSupplyRaw).dividedBy(new BigNumber(10).pow(18));
-                                            const delta = actual.minus(expected);
-                                            return delta.isZero() ? "None (Perfect)" : `${delta.toFormat(0)} CHOCO`;
-                                        })()}
-                                    </span>
+                        {(() => {
+                            // getServiceWalletStats()는 Phase 0-4까지 스텁(totalSupplyRaw="0")이므로
+                            // 이 상태를 "무결성 위반(빨강)"이 아니라 "미설정(중립)"으로 표시한다.
+                            const isConfigured = economy.serviceWallet.totalSupplyRaw !== "0";
+
+                            if (!isConfigured) {
+                                return (
+                                    <div className="rounded-[32px] p-5 space-y-3 shadow-[0_0_30px_rgba(0,0,0,0.3)] border border-white/10 bg-[#1A1821]">
+                                        <div className="space-y-1">
+                                            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Calculated Grand Total</p>
+                                            <p className="text-2xl font-black italic text-white/40 tracking-tighter">N/A</p>
+                                        </div>
+                                        <div className="pt-3 border-t border-white/5">
+                                            <div className="flex justify-between items-center bg-black/20 px-2 py-1.5 rounded-lg border border-white/5">
+                                                <span className="text-[8px] font-black text-white/30 uppercase">Drift / Loss</span>
+                                                <span className="text-[9px] font-black text-white/30 uppercase">Not configured (Phase 0-4)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            const expected = new BigNumber(1000000000);
+                            const actual = new BigNumber(economy.serviceWallet.totalSupplyRaw).dividedBy(new BigNumber(10).pow(18));
+                            const delta = actual.minus(expected);
+
+                            return (
+                                <div className={cn(
+                                    "rounded-[32px] p-5 space-y-3 shadow-[0_0_30px_rgba(0,0,0,0.3)] border transition-all duration-500",
+                                    delta.isZero() ? "bg-primary border-primary/20" : "bg-red-500 border-red-400"
+                                )}>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black text-[#0B0A10] uppercase tracking-widest">Calculated Grand Total</p>
+                                        <p className="text-2xl font-black italic text-[#0B0A10] tracking-tighter">
+                                            {actual.toFormat(0)}
+                                        </p>
+                                    </div>
+                                    <div className="pt-3 border-t border-[#0B0A10]/10">
+                                        <div className="flex justify-between items-center bg-[#0B0A10]/20 px-2 py-1.5 rounded-lg border border-[#0B0A10]/10">
+                                            <span className="text-[8px] font-black text-[#0B0A10] uppercase">Drift / Loss</span>
+                                            <span className="text-[9px] font-black text-[#0B0A10] uppercase">
+                                                {delta.isZero() ? "None (Perfect)" : `${delta.toFormat(0)} CHOCO`}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
+                            );
+                        })()}
                     </div>
 
                     {/* Secondary Metrics */}

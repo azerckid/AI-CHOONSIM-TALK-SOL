@@ -1,22 +1,18 @@
 /**
  * LangGraph 워크플로우 — 춘심 AI 대화 그래프
  */
-import { HumanMessage, SystemMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
+import { SystemMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
 import { StateGraph, END, Annotation, START } from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { db } from "../db.server";
-import * as schema from "../../db/schema";
-import { eq } from "drizzle-orm";
-import { logger } from "../logger.server";
 import {
     PERSONA_PROMPTS,
     removeEmojis,
-    applyCharacterName,
     buildStreamSystemInstruction,
     type SubscriptionTier,
 } from "./prompts";
-import { bindModelTools, model, urlToBase64 } from "./model";
+import { bindModelTools, model } from "./model";
 import { getChoonsimSolanaTools } from "../solana/agent-kit.server";
+import { generateSummary } from "./memory";
 
 // 그래프 상태 정의
 const ChatStateAnnotation = Annotation.Root({
@@ -162,15 +158,19 @@ function sanitizeTools<T>(tools: T[]): T[] {
  * 노드 2: AI 응답 생성
  * Solana 도구는 LangGraph ToolNode 경로로 실행된다.
  */
+/** userId가 있을 때만 Solana 도구를 로드하고 Gemini 호환 스키마로 정리한다. */
+function getSanitizedTools(userId: string | null, conversationId: string | null) {
+    if (!userId) return [];
+    return sanitizeTools(getChoonsimSolanaTools(userId, conversationId ?? undefined));
+}
+
 const callModelNode = async (state: typeof ChatStateAnnotation.State) => {
     const messages: BaseMessage[] = [
         new SystemMessage(state.systemInstruction),
         ...state.messages,
     ];
 
-    const tools = state.userId
-        ? sanitizeTools(getChoonsimSolanaTools(state.userId, state.conversationId ?? undefined))
-        : [];
+    const tools = getSanitizedTools(state.userId, state.conversationId);
     const chatModel = tools.length > 0 ? bindModelTools(tools) : model;
     const response = await chatModel.invoke(messages);
 
@@ -184,10 +184,7 @@ const callModelNode = async (state: typeof ChatStateAnnotation.State) => {
 const executeToolsNode = async (state: typeof ChatStateAnnotation.State) => {
     if (!state.userId) return {};
 
-    const tools = sanitizeTools(
-        getChoonsimSolanaTools(state.userId, state.conversationId ?? undefined)
-    );
-    const toolNode = new ToolNode(tools);
+    const toolNode = new ToolNode(getSanitizedTools(state.userId, state.conversationId));
 
     return await toolNode.invoke({ messages: state.messages });
 };
@@ -207,17 +204,9 @@ const shouldContinueAfterModel = (state: typeof ChatStateAnnotation.State) => {
 const summarizeNode = async (state: typeof ChatStateAnnotation.State) => {
     if (state.messages.length < 10) return {};
 
-    const summaryPrompt = `
-다음은 춘심이와 사용자의 대화 내역입니다.
-지금까지의 대화에서 중요한 내용(사용자의 기분, 언급된 장소, 취향 등)을 한 문장으로 요약해 주세요.
-반드시 한국어로 요약해야 합니다.
-
-대화 내역:
-${state.messages.map(m => `${m._getType()}: ${m.content}`).join("\n")}
-  `;
-
-    const res = await model.invoke([new HumanMessage(summaryPrompt)]);
-    return { summary: res.content.toString() };
+    const summary = await generateSummary(state.messages);
+    if (!summary) return {};
+    return { summary };
 };
 
 const _chatGraph = new StateGraph(ChatStateAnnotation)
@@ -239,88 +228,4 @@ export interface HistoryMessage {
     content: string;
     mediaUrl?: string | null;
     isInterrupted?: boolean;
-}
-
-/**
- * AI 응답 생성 (요약 데이터 포함)
- */
-export async function generateAIResponse(
-    userMessage: string,
-    history: HistoryMessage[],
-    personaMode: keyof typeof PERSONA_PROMPTS = "hybrid",
-    currentSummary: string = "",
-    mediaUrl: string | null = null,
-    userId: string | null = null,
-    characterId: string = "choonsim",
-    subscriptionTier: SubscriptionTier = "FREE",
-    giftContext?: { amount: number; itemId: string; countInSession?: number },
-    characterName?: string | null,
-    personaPrompt?: string | null
-) {
-    const graph = createChatGraph();
-
-    const toBaseMessage = async (msg: HistoryMessage): Promise<BaseMessage> => {
-        let content = msg.content || (msg.mediaUrl ? "이 사진(그림)을 확인해줘." : " ");
-
-        if (msg.role === "assistant" && msg.isInterrupted && content.endsWith("...")) {
-            content = content.slice(0, -3).trim();
-        }
-
-        if (msg.role === "user") {
-            if (msg.mediaUrl) {
-                const base64Data = await urlToBase64(msg.mediaUrl);
-                return new HumanMessage({
-                    content: [
-                        { type: "text", text: content },
-                        { type: "image_url", image_url: { url: base64Data } },
-                    ]
-                });
-            }
-            return new HumanMessage(content);
-        } else {
-            return new AIMessage(content);
-        }
-    };
-
-    const inputMessages: BaseMessage[] = await Promise.all([
-        ...history.map(toBaseMessage),
-        toBaseMessage({ role: "user", content: userMessage, mediaUrl }),
-    ]);
-
-    try {
-        const result = await graph.invoke({
-            messages: inputMessages,
-            personaMode,
-            summary: currentSummary,
-            mediaUrl,
-            userId,
-            characterId,
-            characterName: characterName || null,
-            personaPrompt: personaPrompt || null,
-            subscriptionTier,
-            giftContext,
-        });
-
-        const lastMsg = result.messages[result.messages.length - 1];
-        let content = lastMsg.content.toString();
-
-        if (!content.trim()) {
-            content = "미안해... 갑자기 생각이 잘 안 나네. 우리 잠시만 쉬었다가 다시 얘기하자, 응?";
-        }
-
-        if (characterName) {
-            content = applyCharacterName(content, characterName);
-        }
-
-        return {
-            content,
-            summary: result.summary,
-        };
-    } catch (error) {
-        logger.error({ category: "SYSTEM", message: "Graph Error:", stackTrace: (error as Error).stack });
-        return {
-            content: "미안해... 갑자기 생각이 잘 안 나네. 우리 잠시만 쉬었다가 다시 얘기하자, 응?",
-            summary: currentSummary
-        };
-    }
 }

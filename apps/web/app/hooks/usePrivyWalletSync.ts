@@ -5,6 +5,7 @@
  */
 import { useEffect } from "react";
 import { usePrivy } from "@privy-io/react-auth";
+import { syncPrivyWallet } from "~/lib/solana/privy-wallet-sync";
 
 const SESSION_KEY = "privyWalletSynced";
 
@@ -21,12 +22,8 @@ export function usePrivyWalletSync() {
     if (!embedded?.address) return;
 
     sessionStorage.setItem(SESSION_KEY, "1");
-    fetch("/api/user/privy-wallet", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ privyWallet: embedded.address }),
-    }).catch(() => {
-      sessionStorage.removeItem(SESSION_KEY);
+    syncPrivyWallet(embedded.address).then((result) => {
+      if (!result.ok) sessionStorage.removeItem(SESSION_KEY);
     });
   }, [ready, authenticated, user]);
 }

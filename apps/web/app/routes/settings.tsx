@@ -22,8 +22,6 @@ import { toast } from "sonner";
 import { BottomNavigation } from "~/components/layout/BottomNavigation";
 import * as schema from "~/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { Input } from "~/components/ui/input";
-import { Copy, AlertTriangle, Wallet } from "lucide-react";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -40,6 +38,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       email: true,
       image: true,
       chocoBalance: true,
+      subscriptionTier: true,
     },
   });
 
@@ -55,11 +54,6 @@ export default function SettingsScreen() {
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [deleteAccountDialogOpen, setDeleteAccountDialogOpen] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-  const [exportWalletDialogOpen, setExportWalletDialogOpen] = useState(false);
-
-  const [privateKey, setPrivateKey] = useState<string | null>(null);
-  const [isLoadingPrivateKey, setIsLoadingPrivateKey] = useState(false);
-  const [exportError, setExportError] = useState<string | null>(null);
 
   const handleLogout = async () => {
     try {
@@ -101,40 +95,6 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleExportWallet = async () => {
-    setIsLoadingPrivateKey(true);
-    setExportError(null);
-    setPrivateKey(null);
-
-    try {
-      const response = await fetch("/api/wallet/export-private-key");
-      const data = await response.json();
-
-      if (!response.ok) {
-        setExportError(data.message || data.error || "Failed to retrieve the private key.");
-        return;
-      }
-
-      setPrivateKey(data.privateKey);
-      toast.success("Private key loaded. Keep it in a safe place.");
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      setExportError(errorMessage || "Failed to retrieve the private key.");
-    } finally {
-      setIsLoadingPrivateKey(false);
-    }
-  };
-
-  const handleCopyPrivateKey = async () => {
-    if (!privateKey) return;
-    try {
-      await navigator.clipboard.writeText(privateKey);
-      toast.success("Private key copied to clipboard.");
-    } catch (error) {
-      toast.error("Copy failed.");
-    }
-  };
-
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white min-h-screen selection:bg-primary selection:text-white">
       <div className="relative flex h-full w-full flex-col max-w-md mx-auto overflow-x-hidden min-h-screen pb-20 md:max-w-lg lg:max-w-xl">
@@ -173,7 +133,7 @@ export default function SettingsScreen() {
                 {user?.name || "User"}
               </p>
               <p className="text-primary text-sm font-medium leading-normal truncate">
-                {user?.id?.includes('-') ? "VVIP Fan Membership" : "Basic Member"}
+                {user?.subscriptionTier && user.subscriptionTier !== "FREE" ? "VVIP Fan Membership" : "Basic Member"}
               </p>
             </div>
           </div>
@@ -217,126 +177,18 @@ export default function SettingsScreen() {
           </div>
         </div>
 
-        {/* --- Wallet Management (Legacy) --- */}
+        {/* --- Wallet Management --- */}
         <div className="px-4 pt-4 pb-2">
           <h3 className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pb-2">
             Advanced
           </h3>
           <div className="flex flex-col overflow-hidden rounded-2xl bg-surface-light dark:bg-surface-dark shadow-sm dark:shadow-none border border-black/5 dark:border-white/5">
-            <Dialog open={exportWalletDialogOpen} onOpenChange={setExportWalletDialogOpen}>
-              <button
-                onClick={() => setExportWalletDialogOpen(true)}
-                className="flex items-center gap-4 p-4 min-h-14 justify-between border-b border-black/5 dark:border-white/5 last:border-0 hover:bg-black/5 dark:hover:bg-white/5 transition-colors w-full text-left"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="text-slate-500 flex items-center justify-center rounded-full bg-slate-100 shrink-0 size-8">
-                    <Wallet className="w-4 h-4" />
-                  </div>
-                  <div className="flex flex-col">
-                    <p className="text-slate-900 dark:text-white text-base font-medium">
-                      Wallet Key Management
-                    </p>
-                  </div>
-                </div>
-                <span className="material-symbols-outlined text-slate-400 dark:text-slate-500">chevron_right</span>
-              </button>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Export Wallet</DialogTitle>
-                  <DialogDescription>
-                    View and export your wallet's private key.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <h4 className="text-sm font-semibold text-red-900 dark:text-red-100 mb-1">
-                          Security Warning
-                        </h4>
-                        <p className="text-xs text-red-800 dark:text-red-200">
-                          Your private key is strictly confidential. Never share it and keep it in a safe place.
-                          Anyone who knows this key can control all assets in your wallet.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {!privateKey && !isLoadingPrivateKey && !exportError && (
-                    <Button
-                      onClick={handleExportWallet}
-                      className="w-full"
-                      variant="outline"
-                    >
-                      Load Private Key
-                    </Button>
-                  )}
-
-                  {isLoadingPrivateKey && (
-                    <div className="text-center py-4">
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Loading private key...</p>
-                    </div>
-                  )}
-
-                  {exportError && (
-                    <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                      <div className="flex items-start gap-2">
-                        <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-                        <div className="flex-1">
-                          <h4 className="text-sm font-semibold text-red-900 dark:text-red-100 mb-1">
-                            Error
-                          </h4>
-                          <p className="text-xs text-red-800 dark:text-red-200">
-                            {exportError}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {privateKey && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium text-slate-900 dark:text-white">
-                          Private Key
-                        </label>
-                        <Button
-                          onClick={handleCopyPrivateKey}
-                          size="sm"
-                          variant="outline"
-                          className="h-7"
-                        >
-                          <Copy className="w-3 h-3 mr-1" />
-                          Copy
-                        </Button>
-                      </div>
-                      <Input
-                        type="text"
-                        value={privateKey}
-                        readOnly
-                        className="font-mono text-xs"
-                      />
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Copy your private key and store it in a safe place. You can use this key to transfer assets to another wallet.
-                      </p>
-                    </div>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setExportWalletDialogOpen(false);
-                      setPrivateKey(null);
-                      setExportError(null);
-                    }}
-                  >
-                    Close
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <SettingsItem
+              icon="account_balance_wallet"
+              iconBgColor="bg-slate-500"
+              label="Wallet Key Management"
+              href="/profile"
+            />
           </div>
         </div>
 

@@ -10,13 +10,11 @@ import { auth } from "~/lib/auth.server";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { eq, sql } from "drizzle-orm";
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { logger } from "~/lib/logger.server";
 import { transferChocoSPL } from "~/lib/solana/agent-kit.server";
 import { z } from "zod";
-import { getSolanaRpcUrl } from "~/lib/solana/config.server";
-
-const connection = new Connection(getSolanaRpcUrl(), "confirmed");
+import { solanaConnection, getTransactionWithRetry } from "~/lib/solana/connection.server";
 
 const bodySchema = z.object({
   signature: z.string().min(1),
@@ -95,15 +93,7 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   // 2. 온체인 트랜잭션 확인 (최대 5회 재시도)
-  let txInfo = null;
-  for (let i = 0; i < 5; i++) {
-    txInfo = await connection.getTransaction(signature, {
-      commitment: "confirmed",
-      maxSupportedTransactionVersion: 0,
-    });
-    if (txInfo) break;
-    await new Promise((r) => setTimeout(r, 2000));
-  }
+  const txInfo = await getTransactionWithRetry(solanaConnection, signature);
 
   if (!txInfo) {
     return Response.json({ status: "PENDING", message: "Transaction not confirmed yet" });

@@ -5,7 +5,7 @@
  *   - prompts.ts   — 페르소나 프롬프트, Guardrail 상수
  *   - markers.ts   — [PHOTO:n], [EMOTION:CODE] 마커 파싱
  *   - model.ts     — Gemini 모델 인스턴스
- *   - graph.ts     — LangGraph 워크플로우, generateAIResponse
+ *   - graph.ts     — LangGraph 워크플로우
  *   - stream.ts    — buildStreamSystemInstruction, streamAIResponse
  *   - memory.ts    — extractMemoryCandidates, generateSummary, generateProactiveMessage
  */
@@ -23,7 +23,7 @@ export { extractPhotoMarker, extractEmotionMarker } from "./ai/markers";
 export { model, urlToBase64 } from "./ai/model";
 
 export type { HistoryMessage } from "./ai/graph";
-export { createChatGraph, generateAIResponse } from "./ai/graph";
+export { createChatGraph } from "./ai/graph";
 
 export type { TokenUsage, StreamSystemInstructionParams } from "./ai/stream";
 export { buildStreamSystemInstruction, streamAIResponse } from "./ai/stream";

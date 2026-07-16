@@ -5,6 +5,47 @@ import * as schema from "../db/schema";
 import { eq } from "drizzle-orm";
 import { logger } from "./logger.server";
 
+/**
+ * 소셜 로그인 account 생성/갱신 시 User.provider/avatarUrl을 동기화한다.
+ * account.create.after / account.update.after 훅이 공유하는 로직.
+ */
+async function syncUserProviderInfo(
+    account: { userId: string; providerId?: string | null },
+    hookName: "create" | "update"
+): Promise<void> {
+    try {
+        const user = await db.query.user.findFirst({
+            where: eq(schema.user.id, account.userId),
+        });
+
+        if (!user || !account.providerId) return;
+
+        const updateData: { provider: string; updatedAt: Date; avatarUrl?: string } = {
+            provider: account.providerId,
+            updatedAt: new Date(),
+        };
+
+        // image 필드가 있고, provider와 일치하는 경우에만 avatarUrl 업데이트
+        if (user.image && account.providerId === "twitter") {
+            if (user.image.includes("pbs.twimg.com") || user.image.includes("twitter.com")) {
+                updateData.avatarUrl = user.image;
+            }
+        } else if (user.image && account.providerId === "google") {
+            if (user.image.includes("googleusercontent.com") || user.image.includes("google.com")) {
+                updateData.avatarUrl = user.image;
+            }
+        } else if (user.image) {
+            updateData.avatarUrl = user.image;
+        }
+
+        await db.update(schema.user)
+            .set(updateData)
+            .where(eq(schema.user.id, account.userId));
+    } catch (error) {
+        logger.error({ category: "AUTH", message: `Error updating user in account ${hookName} hook`, stackTrace: (error as Error).stack });
+    }
+}
+
 export const auth = betterAuth({
     baseURL: process.env.BETTER_AUTH_URL,
     basePath: "/auth",
@@ -177,85 +218,14 @@ export const auth = betterAuth({
         account: {
             create: {
                 after: async (account) => {
-                    // 새 account가 생성될 때 (소셜 로그인 시)
-                    // 해당 provider의 정보로 User 테이블 업데이트
-                    try {
-                        const user = await db.query.user.findFirst({
-                            where: eq(schema.user.id, account.userId),
-                        });
-
-                        if (user && account.providerId) {
-                            // provider에 따라 다른 처리
-                            const updateData: { provider: string; updatedAt: Date; avatarUrl?: string } = {
-                                provider: account.providerId,
-                                updatedAt: new Date(),
-                            };
-
-                            // image 필드가 있고, provider와 일치하는 경우에만 avatarUrl 업데이트
-                            // Twitter인 경우 image가 Twitter 이미지여야 함
-                            if (user.image && account.providerId === "twitter") {
-                                // image가 Twitter 이미지인지 확인 (Twitter 이미지 URL 패턴)
-                                if (user.image.includes("pbs.twimg.com") || user.image.includes("twitter.com")) {
-                                    updateData.avatarUrl = user.image;
-                                }
-                            } else if (user.image && account.providerId === "google") {
-                                // Google 이미지인 경우
-                                if (user.image.includes("googleusercontent.com") || user.image.includes("google.com")) {
-                                    updateData.avatarUrl = user.image;
-                                }
-                            } else if (user.image) {
-                                // 다른 provider인 경우 그대로 사용
-                                updateData.avatarUrl = user.image;
-                            }
-
-                            await db.update(schema.user)
-                                .set(updateData)
-                                .where(eq(schema.user.id, account.userId));
-                        }
-                    } catch (error) {
-                        logger.error({ category: "AUTH", message: "Error updating user in account create hook", stackTrace: (error as Error).stack });
-                    }
+                    // 새 account가 생성될 때 (소셜 로그인 시) User.provider/avatarUrl 동기화
+                    await syncUserProviderInfo(account, "create");
                 },
             },
             update: {
                 after: async (account) => {
-                    // account가 업데이트될 때 (재로그인 시)
-                    // 해당 provider의 정보로 User 테이블 업데이트
-                    try {
-                        const user = await db.query.user.findFirst({
-                            where: eq(schema.user.id, account.userId),
-                        });
-
-                        if (user && account.providerId) {
-                            // provider에 따라 다른 처리
-                            const updateData: { provider: string; updatedAt: Date; avatarUrl?: string } = {
-                                provider: account.providerId,
-                                updatedAt: new Date(),
-                            };
-
-                            // image 필드가 있고, provider와 일치하는 경우에만 avatarUrl 업데이트
-                            if (user.image && account.providerId === "twitter") {
-                                // image가 Twitter 이미지인지 확인
-                                if (user.image.includes("pbs.twimg.com") || user.image.includes("twitter.com")) {
-                                    updateData.avatarUrl = user.image;
-                                }
-                            } else if (user.image && account.providerId === "google") {
-                                // Google 이미지인 경우
-                                if (user.image.includes("googleusercontent.com") || user.image.includes("google.com")) {
-                                    updateData.avatarUrl = user.image;
-                                }
-                            } else if (user.image) {
-                                // 다른 provider인 경우 그대로 사용
-                                updateData.avatarUrl = user.image;
-                            }
-
-                            await db.update(schema.user)
-                                .set(updateData)
-                                .where(eq(schema.user.id, account.userId));
-                        }
-                    } catch (error) {
-                        logger.error({ category: "AUTH", message: "Error updating user in account update hook", stackTrace: (error as Error).stack });
-                    }
+                    // account가 업데이트될 때 (재로그인 시) User.provider/avatarUrl 동기화
+                    await syncUserProviderInfo(account, "update");
                 },
             },
         },

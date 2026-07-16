@@ -13,6 +13,8 @@ import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { PrivyChocoPayCard } from "./PrivyChocoPayCard";
 import { getPublicSolanaConfig } from "~/lib/solana/public-config";
+import { getSolDisplay } from "~/lib/economics";
+import { createSolanaPayment, verifySolanaPayment, payWithPhantomTransfer } from "~/lib/solana/phantom-payment";
 
 /** Privy 임베디드 지갑 에러 시 페이지 전체 크래시 방지 */
 class PrivyErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -29,21 +31,6 @@ interface Props {
 }
 
 type Status = "idle" | "connecting" | "signing" | "verifying" | "done" | "error";
-
-const CHOCO_SOL: Record<number, string> = {
-  100: "0.001",
-  500: "0.005",
-  1000: "0.010",
-  5000: "0.050",
-};
-
-function getSolDisplay(choco: number): string {
-  const presets = [100, 500, 1000, 5000];
-  const nearest = presets.reduce((p, c) =>
-    Math.abs(c - choco) < Math.abs(p - choco) ? c : p
-  );
-  return CHOCO_SOL[nearest] ?? (choco * 0.00001).toFixed(6);
-}
 
 export function ChocoPayCard({ choco }: Props) {
   const { cluster: solanaCluster } = getPublicSolanaConfig();
@@ -76,46 +63,22 @@ export function ChocoPayCard({ choco }: Props) {
       const userPubkeyStr: string = connectResult.publicKey.toString();
 
       // 2. 서버에서 트랜잭션 파라미터 가져오기
-      const res = await fetch("/api/payment/solana/create-tx", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ choco }),
-      });
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.error || `서버 오류 (${res.status})`);
-      }
-      const { recipient, lamports, paymentId, rpcUrl } = await res.json();
+      const { recipient, lamports, paymentId, rpcUrl, reference } = await createSolanaPayment(choco);
 
-      // 3. @solana/web3.js 동적 import
-      const { Transaction, SystemProgram, PublicKey, Connection } =
-        await import("@solana/web3.js");
-
-      const connection = new Connection(rpcUrl, "confirmed");
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-
-      const fromPubkey = new PublicKey(userPubkeyStr);
-      const toPubkey = new PublicKey(recipient);
-
-      const tx = new Transaction({
-        recentBlockhash: blockhash,
-        feePayer: fromPubkey,
-      }).add(
-        SystemProgram.transfer({ fromPubkey, toPubkey, lamports })
-      );
-
-      // 4. Phantom 서명 + 전송
+      // 3~4. 트랜잭션 빌드 + Phantom 서명·전송·컨펌 (reference 포함 — verify-sig가 이걸로 결제를 식별)
       setStatus("signing");
-      const { signature } = await phantom.signAndSendTransaction(tx);
+      const signature = await payWithPhantomTransfer({
+        phantom,
+        payer: userPubkeyStr,
+        recipient,
+        lamports,
+        reference,
+        rpcUrl,
+      });
 
       // 5. verify-sig로 결제 확인 + CHOCO 지급
       setStatus("verifying");
-      const verifyRes = await fetch("/api/payment/solana/verify-sig", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signature, paymentId }),
-      });
-      const verifyData = await verifyRes.json();
+      const verifyData = await verifySolanaPayment(signature, paymentId);
 
       if (verifyData.status === "COMPLETED") {
         setGrantedChoco(verifyData.chocoGranted ?? choco);

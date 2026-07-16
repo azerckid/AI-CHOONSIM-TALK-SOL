@@ -23,8 +23,8 @@ export const paypalClient = new paypal.core.PayPalHttpClient(environment);
 // Webhook 서명 검증 함수
 export async function verifyWebhookSignature(headers: Record<string, string>, body: unknown) {
     if (!webhookId) {
-        logger.warn({ category: "PAYMENT", message: "PAYPAL_WEBHOOK_ID is not set in env. Skipping signature verification (NOT RECOMMENDED for production)." });
-        return true;
+        logger.error({ category: "PAYMENT", message: "PAYPAL_WEBHOOK_ID is not set in env. Rejecting webhook because signature cannot be verified." });
+        return false;
     }
 
     const request = {
@@ -57,6 +57,20 @@ export async function verifyWebhookSignature(headers: Record<string, string>, bo
         logger.error({ category: "PAYMENT", message: "PayPal Webhook Verification Failed", stackTrace: (error as Error).stack });
         return false;
     }
+}
+
+// 구독 상세 조회 함수 (activate-subscription에서 클라이언트가 보낸 구독을 서버에서 재검증하는 데 사용)
+export async function getPayPalSubscription(subscriptionId: string) {
+    const request = {
+        path: `/v1/billing/subscriptions/${subscriptionId}`,
+        verb: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    };
+
+    const response = await paypalClient.execute(request);
+    return response.result as { id: string; status: string; plan_id: string };
 }
 
 // 구독 취소 함수
