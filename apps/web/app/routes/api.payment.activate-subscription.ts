@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "~/lib/db.server";
 import { SUBSCRIPTION_PLANS } from "~/lib/subscription-plans";
 import { requireUserId } from "~/lib/auth.server";
+import { getPayPalSubscription } from "~/lib/paypal.server";
 import { DateTime } from "luxon";
 import * as schema from "~/db/schema";
 import { eq, sql } from "drizzle-orm";
@@ -49,6 +50,17 @@ export async function action({ request }: ActionFunctionArgs) {
                 return data({ success: true, message: "Subscription already active" });
             }
             return data({ error: "Subscription ID already in use" }, { status: 409 });
+        }
+
+        // PayPal에 실제 구독 상태를 재확인 (클라이언트가 보낸 subscriptionId/planId를 그대로 신뢰하지 않음)
+        const subscription = await getPayPalSubscription(subscriptionId);
+
+        if (subscription.status !== "ACTIVE") {
+            return data({ error: "Subscription is not active on PayPal" }, { status: 400 });
+        }
+
+        if (subscription.plan_id !== planId) {
+            return data({ error: "Subscription plan does not match" }, { status: 400 });
         }
 
         // 1. 사용자 정보 조회

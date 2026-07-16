@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import type { OnApproveData, OnApproveActions } from "@paypal/paypal-js";
 import {
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useRevalidator } from "react-router";
 import { HEART_PACKAGES, type ItemPackage } from "~/lib/items";
 import { cn } from "~/lib/utils";
+import { useRegionDefaultPaymentMethod, useTossPayment } from "~/hooks/useTossPayment";
 
 interface ItemStoreModalProps {
     open: boolean;
@@ -32,51 +33,24 @@ export function ItemStoreModal({
     const [selectedPackageId, setSelectedPackageId] = useState<string>(
         HEART_PACKAGES[1].id
     );
-    const [paymentMethod, setPaymentMethod] = useState<"PAYPAL" | "TOSS">("TOSS");
-    const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useRegionDefaultPaymentMethod();
     const revalidator = useRevalidator();
+    const { isProcessing: isTossProcessing, payWithToss } = useTossPayment(tossClientKey);
+    const [isPayPalProcessing, setIsPayPalProcessing] = useState(false);
+    const isProcessing = isTossProcessing || isPayPalProcessing;
 
     const packages = HEART_PACKAGES; // Can filter by itemId in future
     const selectedPackage = packages.find(p => p.id === selectedPackageId) || packages[1];
 
-    useEffect(() => {
-        if (typeof window !== "undefined" && window.navigator) {
-            const isKorean = window.navigator.language.startsWith("ko");
-            setPaymentMethod(isKorean ? "TOSS" : "PAYPAL");
-        }
-    }, []);
-
-    const handleTossPayment = async () => {
-        if (!tossClientKey || isProcessing) {
-            if (!tossClientKey) toast.error("결제 시스템 설정 오류");
-            return;
-        }
-
-        setIsProcessing(true);
-
-        try {
-            const { loadTossPayments } = await import("@tosspayments/payment-sdk");
-            const tossPayments = await loadTossPayments(tossClientKey);
-
-            const orderId = `item_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-            await tossPayments.requestPayment("카드", {
-                amount: selectedPackage.priceKRW,
-                orderId: orderId,
-                orderName: `${selectedPackage.name} (${selectedPackage.quantity}개)`,
-                successUrl: `${window.location.origin}/payment/toss/success?type=ITEM&itemId=${selectedPackage.itemId}&quantity=${selectedPackage.quantity}&packageId=${selectedPackage.id}&amount=${selectedPackage.priceKRW}`,
-                failUrl: `${window.location.origin}/payment/toss/fail?from=store`,
-                windowTarget: isMobile ? "self" : undefined,
-            });
-        } catch {
-            toast.error("결제 준비 중 오류가 발생했습니다.");
-            setIsProcessing(false);
-        }
-    };
+    const handleTossPayment = () => payWithToss({
+        amount: selectedPackage.priceKRW,
+        orderName: `${selectedPackage.name} (${selectedPackage.quantity}개)`,
+        successUrl: `${window.location.origin}/payment/toss/success?type=ITEM&itemId=${selectedPackage.itemId}&quantity=${selectedPackage.quantity}&packageId=${selectedPackage.id}&amount=${selectedPackage.priceKRW}`,
+        failUrl: `${window.location.origin}/payment/toss/fail?from=store`,
+    });
 
     const handlePayPalApprove = async (data: OnApproveData, _actions: OnApproveActions) => {
-        setIsProcessing(true);
+        setIsPayPalProcessing(true);
         try {
             const response = await fetch("/api/payment/item/capture-order", {
                 method: "POST",
@@ -99,7 +73,7 @@ export function ItemStoreModal({
         } catch {
             toast.error("결제 승인 처리 중 오류가 발생했습니다.");
         } finally {
-            setIsProcessing(false);
+            setIsPayPalProcessing(false);
         }
     };
 

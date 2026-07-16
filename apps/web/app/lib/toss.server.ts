@@ -3,6 +3,7 @@ import * as schema from "~/db/schema";
 import { eq, sql, and } from "drizzle-orm";
 import { BigNumber } from "bignumber.js";
 import { logger } from "~/lib/logger.server";
+import { krwToChoco } from "~/lib/economics";
 import crypto from "crypto";
 
 const TOSS_SECRET_KEY = process.env.TOSS_SECRET_KEY;
@@ -41,6 +42,17 @@ export async function confirmTossPayment(paymentKey: string, orderId: string, am
 }
 
 /**
+ * orderId(transactionId) 기준으로 이미 처리된 결제인지 확인한다.
+ * Toss 승인 API 재시도, 성공 페이지 재방문/재검증 등으로 동일 orderId가
+ * 두 번 들어와도 CHOCO가 중복 지급되지 않도록 하는 멱등성 가드.
+ */
+async function findExistingTossPayment(orderId: string) {
+    return db.query.payment.findFirst({
+        where: eq(schema.payment.transactionId, orderId),
+    });
+}
+
+/**
  * 결제 내역 DB 기록 및 CHOCO 전송 (환전)
  */
 export async function processSuccessfulTossPayment(
@@ -48,6 +60,13 @@ export async function processSuccessfulTossPayment(
     paymentData: { totalAmount: number; orderId: string; paymentKey: string },
     creditsGranted: number
 ) {
+    const existing = await findExistingTossPayment(paymentData.orderId);
+    if (existing) {
+        logger.warn({ category: "PAYMENT", message: "Duplicate Toss top-up processing ignored", metadata: { orderId: paymentData.orderId } });
+        const user = await db.query.user.findFirst({ where: eq(schema.user.id, userId) });
+        return { user, payment: existing };
+    }
+
     // 1. 사용자 정보 조회
     const user = await db.query.user.findFirst({
         where: eq(schema.user.id, userId),
@@ -58,9 +77,9 @@ export async function processSuccessfulTossPayment(
         throw new Error("User not found");
     }
 
-    // 2. KRW → CHOCO 계산 (1 USD = 1,300 KRW, 1 USD = 1,000 CHOCO)
+    // 2. KRW → CHOCO 계산
     const krwAmount = paymentData.totalAmount;
-    const chocoAmount = Math.floor((krwAmount / 1300) * 1000);
+    const chocoAmount = krwToChoco(krwAmount);
 
     // 3. DB 트랜잭션
     return await db.transaction(async (tx) => {
@@ -111,6 +130,13 @@ export async function processSuccessfulTossSubscription(
     paymentData: { totalAmount: number; orderId: string; paymentKey: string },
     tier: string
 ) {
+    const existing = await findExistingTossPayment(paymentData.orderId);
+    if (existing) {
+        logger.warn({ category: "PAYMENT", message: "Duplicate Toss subscription processing ignored", metadata: { orderId: paymentData.orderId } });
+        const user = await db.query.user.findFirst({ where: eq(schema.user.id, userId) });
+        return { user, payment: existing };
+    }
+
     // 1. 사용자 정보 및 플랜 정보 조회
     const user = await db.query.user.findFirst({
         where: eq(schema.user.id, userId),
@@ -182,6 +208,15 @@ export async function processSuccessfulTossItemPayment(
     itemId: string,
     quantity: number
 ) {
+    const existing = await findExistingTossPayment(paymentData.orderId);
+    if (existing) {
+        logger.warn({ category: "PAYMENT", message: "Duplicate Toss item purchase processing ignored", metadata: { orderId: paymentData.orderId } });
+        const inventory = await db.query.userInventory.findFirst({
+            where: and(eq(schema.userInventory.userId, userId), eq(schema.userInventory.itemId, itemId)),
+        });
+        return { inventory, payment: existing };
+    }
+
     return await db.transaction(async (tx) => {
         // 1. 인벤토리 업데이트
         await tx.insert(schema.userInventory).values({

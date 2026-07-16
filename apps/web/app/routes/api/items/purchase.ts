@@ -3,7 +3,7 @@ import { auth } from "~/lib/auth.server";
 import { db } from "~/lib/db.server";
 import { z } from "zod";
 import * as schema from "~/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { BigNumber } from "bignumber.js";
 
 const purchaseSchema = z.object({
@@ -53,11 +53,19 @@ export async function action({ request }: ActionFunctionArgs) {
     try {
         // DB 트랜잭션
         await db.transaction(async (tx) => {
-            // CHOCO 차감
+            // CHOCO 차감 — 위에서 읽은 잔액(user.chocoBalance)을 조건으로 걸어
+            // 동시 요청이 같은 잔액을 기준으로 중복 차감하지 못하도록 낙관적 동시성 제어(CAS) 적용
             const newChocoBalance = new BigNumber(userChocoBalance).minus(totalCost).toString();
-            await tx.update(schema.user)
+            const updateResult = await tx.update(schema.user)
                 .set({ chocoBalance: newChocoBalance, updatedAt: new Date() })
-                .where(eq(schema.user.id, session.user.id));
+                .where(and(
+                    eq(schema.user.id, session.user.id),
+                    eq(schema.user.chocoBalance, user.chocoBalance ?? "0")
+                ));
+
+            if (updateResult.rowsAffected === 0) {
+                throw new Error("BALANCE_CHANGED");
+            }
 
             // 인벤토리 추가
             await tx.insert(schema.userInventory).values({
@@ -92,6 +100,10 @@ export async function action({ request }: ActionFunctionArgs) {
 
         return Response.json({ success: true, chocoSpent: totalCost });
     } catch (error: unknown) {
+        if (error instanceof Error && error.message === "BALANCE_CHANGED") {
+            return Response.json({ error: "Balance changed, please try again" }, { status: 409 });
+        }
+
         const { logger } = await import("~/lib/logger.server");
         logger.error({
             category: "PAYMENT",

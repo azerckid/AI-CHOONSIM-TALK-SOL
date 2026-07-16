@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useFetcher, useRevalidator } from "react-router";
 import { CREDIT_PACKAGES } from "~/lib/subscription-plans";
 import { cn } from "~/lib/utils";
+import { useRegionDefaultPaymentMethod, useTossPayment } from "~/hooks/useTossPayment";
 
 interface TokenTopUpModalProps {
     open?: boolean;
@@ -34,20 +35,12 @@ export function TokenTopUpModal({
     const [selectedPackageId, setSelectedPackageId] = useState<string>(
         CREDIT_PACKAGES[1].id
     ); // Default to Medium pack
-    const [paymentMethod, setPaymentMethod] = useState<"PAYPAL" | "TOSS">("TOSS");
+    const [paymentMethod, setPaymentMethod] = useRegionDefaultPaymentMethod();
     const fetcher = useFetcher<{ success: boolean; newCredits?: number; error?: string }>();
     const revalidator = useRevalidator();
-    const [isProcessing, setIsProcessing] = useState(false);
+    const { isProcessing, payWithToss } = useTossPayment(tossClientKey);
 
     const selectedPackage = CREDIT_PACKAGES.find(p => p.id === selectedPackageId) || CREDIT_PACKAGES[1];
-
-    // 지역 기반 자동 결제 수단 선택 (Phase 8)
-    useEffect(() => {
-        if (typeof window !== "undefined" && window.navigator) {
-            const isKorean = window.navigator.language.startsWith("ko");
-            setPaymentMethod(isKorean ? "TOSS" : "PAYPAL");
-        }
-    }, []);
 
     // fetcher 결과 모니터링 및 처리
     useEffect(() => {
@@ -71,38 +64,12 @@ export function TokenTopUpModal({
         });
     };
 
-    const handleTossPayment = async () => {
-        if (!tossClientKey || isProcessing) {
-            if (!tossClientKey) toast.error("토스페이먼츠 설정 오류");
-            return;
-        }
-
-        setIsProcessing(true);
-
-        try {
-            const { loadTossPayments } = await import("@tosspayments/payment-sdk");
-            const tossPayments = await loadTossPayments(tossClientKey);
-
-            // 유니크한 orderId 생성을 위해 타임스탬프 활용
-            const orderId = `order_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-
-            // 태블릿/모바일 여부 확인 (스마트 타운 목표 설정)
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-            // 결제 요청
-            await tossPayments.requestPayment("카드", {
-                amount: selectedPackage.priceKRW,
-                orderId: orderId,
-                orderName: selectedPackage.name,
-                successUrl: `${window.location.origin}/payment/toss/success?creditsGranted=${selectedPackage.credits + selectedPackage.bonus}&packageId=${selectedPackage.id}&amount=${selectedPackage.priceKRW}`,
-                failUrl: `${window.location.origin}/payment/toss/fail?from=topup`,
-                windowTarget: isMobile ? "self" : undefined,
-            });
-        } catch {
-            toast.error("결제 준비 중 오류가 발생했습니다.");
-            setIsProcessing(false);
-        }
-    };
+    const handleTossPayment = () => payWithToss({
+        amount: selectedPackage.priceKRW,
+        orderName: selectedPackage.name,
+        successUrl: `${window.location.origin}/payment/toss/success?creditsGranted=${selectedPackage.credits + selectedPackage.bonus}&packageId=${selectedPackage.id}&amount=${selectedPackage.priceKRW}`,
+        failUrl: `${window.location.origin}/payment/toss/fail?from=topup`,
+    });
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>

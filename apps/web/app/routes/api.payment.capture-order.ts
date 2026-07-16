@@ -8,6 +8,7 @@ import * as schema from "~/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { BigNumber } from "bignumber.js";
 import { logger } from "~/lib/logger.server";
+import { usdToChoco } from "~/lib/economics";
 
 const CaptureOrderSchema = z.object({
     orderId: z.string(),
@@ -45,9 +46,15 @@ export async function action({ request }: ActionFunctionArgs) {
             return data({ error: "Payment not completed" }, { status: 400 });
         }
 
-        // 결제 검증 (금액 일치 여부 등)
+        // 결제 검증 (금액 및 통화 일치 여부)
         const purchaseUnit = result.purchase_units[0];
-        const amountPaid = parseFloat(purchaseUnit.payments.captures[0].amount.value);
+        const capturedAmount = purchaseUnit.payments.captures[0].amount;
+        const amountPaid = parseFloat(capturedAmount.value);
+
+        if (capturedAmount.currency_code !== "USD") {
+            logger.error({ category: "PAYMENT", message: `Currency mismatch: expected USD, got ${capturedAmount.currency_code}` });
+            return data({ error: "Payment currency mismatch. Please contact support." }, { status: 400 });
+        }
 
         if (Math.abs(amountPaid - creditPackage.price) > 0.01) {
             logger.error({ category: "PAYMENT", message: `Amount mismatch: expected ${creditPackage.price}, paid ${amountPaid}` });
@@ -64,8 +71,8 @@ export async function action({ request }: ActionFunctionArgs) {
             return data({ error: "User not found" }, { status: 404 });
         }
 
-        // 2. USD → CHOCO 계산 (1 USD = 1,000 CHOCO)
-        const chocoAmount = Math.floor(creditPackage.price * 1000);
+        // 2. USD → CHOCO 계산
+        const chocoAmount = usdToChoco(creditPackage.price);
 
         // 3. 트랜잭션으로 DB 업데이트
         const totalCredits = creditPackage.credits + creditPackage.bonus; // 호환성을 위해 유지
