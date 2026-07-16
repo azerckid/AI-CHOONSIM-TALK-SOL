@@ -1,6 +1,7 @@
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
+import { BigNumber } from "bignumber.js";
 import { auth } from "~/lib/auth.server";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { useLoaderData, useNavigate, useFetcher } from "react-router";
@@ -75,8 +76,9 @@ export async function action({ request }: ActionFunctionArgs) {
                 columns: { chocoBalance: true },
             });
 
-            const currentChocoBalance = user?.chocoBalance ? parseFloat(user.chocoBalance) : 0;
-            const newChocoBalance = (currentChocoBalance + userMission.mission.rewardCredits).toString();
+            const newChocoBalance = new BigNumber(user?.chocoBalance || "0")
+                .plus(userMission.mission.rewardCredits)
+                .toString();
 
             await tx.update(schema.user)
                 .set({ chocoBalance: newChocoBalance, updatedAt: new Date() })
