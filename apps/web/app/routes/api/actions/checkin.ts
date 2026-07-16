@@ -16,16 +16,13 @@ import {
   TransactionInstruction,
   SystemProgram,
 } from "@solana/web3.js";
-import { solanaConnection, ACTIONS_CORS_HEADERS } from "~/lib/solana/connection.server";
+import { solanaConnection, ACTIONS_CORS_HEADERS, CHOONSIM_ICON } from "~/lib/solana/connection.server";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { count, eq, and, gte } from "drizzle-orm";
 
 const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
 const DAILY_CHOCO_REWARD = 50;
-
-const CHOONSIM_ICON =
-  "https://res.cloudinary.com/dpmw96p8k/image/upload/v1774674780/choonsim/choonsim.png";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   if (request.method === "OPTIONS") {

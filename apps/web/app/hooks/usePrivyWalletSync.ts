@@ -5,7 +5,7 @@
  */
 import { useEffect } from "react";
 import { usePrivy } from "@privy-io/react-auth";
-import { syncPrivyWallet } from "~/lib/solana/privy-wallet-sync";
+import { syncPrivyWallet, findPrivySolanaEmbeddedWallet } from "~/lib/solana/privy-wallet-sync";
 
 const SESSION_KEY = "privyWalletSynced";
 
@@ -16,8 +16,7 @@ export function usePrivyWalletSync() {
     if (!ready || !authenticated) return;
     if (sessionStorage.getItem(SESSION_KEY)) return;
 
-    const embedded = (user?.linkedAccounts as Array<{ chainType: string; walletClientType: string; address: string }> | undefined)
-      ?.find((a) => a.chainType === "solana" && a.walletClientType === "privy");
+    const embedded = findPrivySolanaEmbeddedWallet(user);
 
     if (!embedded?.address) return;
 

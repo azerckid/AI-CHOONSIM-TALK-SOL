@@ -9,7 +9,7 @@ import { useRevalidator } from "react-router";
 import { usePrivy } from "@privy-io/react-auth";
 import { useCreateWallet, useExportWallet } from "@privy-io/react-auth/solana";
 import { toast } from "sonner";
-import { syncPrivyWallet } from "~/lib/solana/privy-wallet-sync";
+import { syncPrivyWallet, findPrivySolanaEmbeddedWallet } from "~/lib/solana/privy-wallet-sync";
 
 function EmbeddedWalletSectionInner() {
   const { user, authenticated, ready, login } = usePrivy();
@@ -19,9 +19,7 @@ function EmbeddedWalletSectionInner() {
   const [syncing, setSyncing] = useState(false);
 
   // 1. user 객체의 linkedAccounts에서 직접 찾기 (안전한 방식)
-  const embeddedWallet = (user?.linkedAccounts as any[])?.find(
-    (a) => a.chainType === "solana" && a.walletClientType === "privy"
-  ) || null;
+  const embeddedWallet = findPrivySolanaEmbeddedWallet(user);
 
   const { revalidate } = useRevalidator();
 

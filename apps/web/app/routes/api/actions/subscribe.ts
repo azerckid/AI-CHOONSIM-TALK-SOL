@@ -16,7 +16,7 @@ import {
   Transaction,
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
-import { solanaConnection, ACTIONS_CORS_HEADERS } from "~/lib/solana/connection.server";
+import { solanaConnection, ACTIONS_CORS_HEADERS, CHOONSIM_ICON } from "~/lib/solana/connection.server";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { count, ne } from "drizzle-orm";
@@ -27,9 +27,6 @@ const PLAN_PRICES: Record<string, { sol: number; label: string; choco: number }>
   monthly: { sol: 0.01, label: "월간 구독 (0.01 SOL)", choco: 3000 },
   yearly: { sol: 0.08, label: "연간 구독 (0.08 SOL)", choco: 36000 },
 };
-
-const CHOONSIM_ICON =
-  "https://res.cloudinary.com/dpmw96p8k/image/upload/v1774674780/choonsim/choonsim.png";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   if (request.method === "OPTIONS") {

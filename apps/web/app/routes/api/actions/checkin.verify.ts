@@ -172,16 +172,11 @@ export async function action({ request }: ActionFunctionArgs) {
     });
 
     // ZK Compression — 지갑이 등록된 유저에게 압축 CHOCO 온체인 민팅
+    // (user.solanaWallet은 상단에서 이미 조회·null 체크됨)
     let zkSignature: string | null = null;
     try {
-      const user = await db.query.user.findFirst({
-        where: eq(schema.user.id, userId),
-        columns: { solanaWallet: true },
-      });
-      if (user?.solanaWallet) {
-        const zkResult = await mintCompressedChoco(user.solanaWallet, CHECKIN_CHOCO_REWARD);
-        zkSignature = zkResult.signature;
-      }
+      const zkResult = await mintCompressedChoco(user.solanaWallet, CHECKIN_CHOCO_REWARD);
+      zkSignature = zkResult.signature;
     } catch (zkErr) {
       // ZK 민팅 실패는 체크인 성공에 영향 없음
       console.warn("[checkin/verify] ZK compression mint failed (non-critical):", zkErr);

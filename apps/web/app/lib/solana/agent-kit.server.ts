@@ -17,10 +17,7 @@
  * 독립 함수 (서버 내부 호출용):
  *   - transferChocoSPL: 서버 지갑 → 유저 지갑 SPL CHOCO 전송
  */
-import { SolanaAgentKit, KeypairWallet } from "solana-agent-kit";
 import {
-  Keypair,
-  Connection,
   PublicKey,
   Transaction,
 } from "@solana/web3.js";
@@ -43,7 +40,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import { DateTime } from "luxon";
 import { getSolPrice } from "~/lib/paysh.server";
 import { solanaConnection } from "~/lib/solana/connection.server";
-import { getSolanaCluster, getSolanaExplorerSuffix, getSolanaRpcUrl } from "~/lib/solana/config.server";
+import { getSolanaCluster, getSolanaExplorerSuffix } from "~/lib/solana/config.server";
 import { getAgentKeypair } from "~/lib/solana/keypair.server";
 import { SOL_PER_CHOCO } from "~/lib/economics";
 
@@ -56,23 +53,6 @@ const PHANTOM_GUIDE =
   "3️⃣ Go to Profile → Wallet and register your address\n\n" +
   "Once you're set up, we can do this right away! 💕";
 
-// ── Agent Kit 싱글턴 ────────────────────────────────────────────────────────
-
-let _agentKit: SolanaAgentKit | null = null;
-
-function getAgentKit(): SolanaAgentKit {
-  if (_agentKit) return _agentKit;
-
-  const rpcUrl = getSolanaRpcUrl();
-  const wallet = new KeypairWallet(getAgentKeypair(), rpcUrl);
-
-  _agentKit = new SolanaAgentKit(wallet, rpcUrl, {
-    OPENAI_API_KEY: process.env.GEMINI_API_KEY || "",
-  });
-
-  return _agentKit;
-}
-
 // ── 독립 함수: SPL CHOCO 전송 ───────────────────────────────────────────────
 
 /**
@@ -83,11 +63,10 @@ export async function transferChocoSPL(
   toWalletAddress: string,
   amount: number
 ): Promise<{ signature: string }> {
-  const rpcUrl = getSolanaRpcUrl();
   const mintAddress = process.env.CHOCO_TOKEN_MINT_ADDRESS;
   if (!mintAddress) throw new Error("CHOCO_TOKEN_MINT_ADDRESS is not set");
 
-  const connection = new Connection(rpcUrl, "confirmed");
+  const connection = solanaConnection;
   const agentKeypair = getAgentKeypair();
   const mintPubkey = new PublicKey(mintAddress);
   const toPubkey = new PublicKey(toWalletAddress);
@@ -190,9 +169,8 @@ export function getChoonsimSolanaTools(userId: string, conversationId?: string) 
     tool(
       async ({ walletAddress }) => {
         try {
-          const connection = new Connection(getSolanaRpcUrl(), "confirmed");
           const pubkey = new PublicKey(walletAddress);
-          const balance = await connection.getBalance(pubkey);
+          const balance = await solanaConnection.getBalance(pubkey);
           return `SOL balance of ${walletAddress}: ${(balance / 1e9).toFixed(4)} SOL (${getSolanaCluster()})`;
         } catch {
           return "Invalid wallet address.";

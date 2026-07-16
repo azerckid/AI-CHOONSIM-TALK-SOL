@@ -6,7 +6,6 @@
  * PATCH /api/user/wallet은 SIWS 서명이 필요합니다.
  */
 import { useState } from "react";
-import { toast } from "sonner";
 import { Copy, Check } from "lucide-react";
 import { WalletButton } from "./WalletButton";
 import { PrivyEmbeddedWalletButton } from "./PrivyEmbeddedWalletButton";
@@ -18,9 +17,6 @@ interface Props {
 }
 
 export function WalletAddressForm({ currentWallet }: Props) {
-  const [editing, setEditing] = useState(false);
-  const [input, setInput] = useState("");
-  const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
   function copyAddress() {
@@ -31,15 +27,9 @@ export function WalletAddressForm({ currentWallet }: Props) {
     });
   }
 
-  async function save() {
-    const trimmed = input.trim();
-    if (!trimmed) return;
-    setSaving(false);
-    toast.error("Wallet changes require a Phantom signature. Please use Connect Wallet.");
-  }
-
-  // 이미 등록된 지갑이 있고 편집 모드가 아닐 때
-  if (currentWallet && !editing) {
+  // 이미 등록된 지갑이 있을 때: 주소 표시 + 복사 + export
+  // (지갑 변경은 SIWS 서명이 필요해 Connect Wallet 재연결로만 가능하다)
+  if (currentWallet) {
     return (
       <div className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2">
         <div className="flex items-center gap-2 min-w-0">
@@ -59,66 +49,29 @@ export function WalletAddressForm({ currentWallet }: Props) {
           </button>
           {/* 프라이빗 키 내보내기 (Privy 임베디드 지갑만 해당) */}
           <ExportWalletButton address={currentWallet} />
-          {/* 주소 변경 */}
-          <button
-            onClick={() => { setInput(currentWallet); setEditing(true); }}
-            className="text-xs text-white/40 hover:text-white/70 transition-colors"
-          >
-            Change
-          </button>
         </div>
       </div>
     );
   }
 
-  // 등록 안 됨 or 편집 모드
+  // 등록 안 됨: Phantom 또는 Privy 임베디드 지갑으로 연결
   return (
-    <div className="space-y-3">
-      {!currentWallet && (
-        <div className="bg-[#9945FF]/10 border border-[#9945FF]/20 rounded-xl p-3 space-y-2">
-          <p className="text-xs font-semibold text-[#9945FF]">Connect Your Wallet</p>
-          <p className="text-xs text-white/50 leading-relaxed">
-            Connect Phantom to receive CHOCO and mint memory NFTs. Your address is saved automatically.
-          </p>
-          {/* 옵션 1: Phantom 원클릭 연결 (자동 저장) */}
-          <WalletButton />
+    <div className="bg-[#9945FF]/10 border border-[#9945FF]/20 rounded-xl p-3 space-y-2">
+      <p className="text-xs font-semibold text-[#9945FF]">Connect Your Wallet</p>
+      <p className="text-xs text-white/50 leading-relaxed">
+        Connect Phantom to receive CHOCO and mint memory NFTs. Your address is saved automatically.
+      </p>
+      {/* 옵션 1: Phantom 원클릭 연결 (자동 저장) */}
+      <WalletButton />
 
-          <div className="flex items-center gap-2 py-1">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-xs text-white/30">or</span>
-            <div className="flex-1 h-px bg-white/10" />
-          </div>
-
-          {/* 옵션 2: Privy 임베디드 지갑 (Phantom 불필요) */}
-          <PrivyEmbeddedWalletButton />
-        </div>
-      )}
-
-      {/* 수동 입력 (폴백 / 편집 모드) */}
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Or paste your Solana wallet address"
-          className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-[#9945FF]/50 transition-colors font-mono"
-        />
-        <button
-          onClick={save}
-          disabled={saving || !input.trim()}
-          className="shrink-0 bg-[#9945FF] text-white text-xs font-semibold px-3 py-2 rounded-xl disabled:opacity-40 hover:bg-[#7b35d9] transition-colors"
-        >
-          {saving ? "..." : "Save"}
-        </button>
-        {editing && (
-          <button
-            onClick={() => setEditing(false)}
-            className="shrink-0 text-xs text-white/40 hover:text-white/70 px-2 py-2 transition-colors"
-          >
-            Cancel
-          </button>
-        )}
+      <div className="flex items-center gap-2 py-1">
+        <div className="flex-1 h-px bg-white/10" />
+        <span className="text-xs text-white/30">or</span>
+        <div className="flex-1 h-px bg-white/10" />
       </div>
+
+      {/* 옵션 2: Privy 임베디드 지갑 (Phantom 불필요) */}
+      <PrivyEmbeddedWalletButton />
     </div>
   );
 }

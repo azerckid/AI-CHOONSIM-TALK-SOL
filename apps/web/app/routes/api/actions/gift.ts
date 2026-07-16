@@ -21,15 +21,12 @@ import {
   createAssociatedTokenAccountInstruction,
   TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
-import { solanaConnection, ACTIONS_CORS_HEADERS } from "~/lib/solana/connection.server";
+import { solanaConnection, ACTIONS_CORS_HEADERS, CHOONSIM_ICON } from "~/lib/solana/connection.server";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { count, isNotNull } from "drizzle-orm";
 
 const CHOCO_DECIMALS = 6;
-
-const CHOONSIM_ICON =
-  "https://res.cloudinary.com/dpmw96p8k/image/upload/v1774674780/choonsim/choonsim.png";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   if (request.method === "OPTIONS") {
