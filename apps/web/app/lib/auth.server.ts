@@ -237,7 +237,7 @@ export const auth = betterAuth({
  */
 function getAdminEmails(): string[] {
     const emails = process.env.ADMIN_EMAILS || "";
-    return emails.split(",").map(e => e.trim()).filter(Boolean);
+    return emails.split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
 }
 
 /**
@@ -245,7 +245,7 @@ function getAdminEmails(): string[] {
  */
 export function isAdminEmail(email: string | undefined): boolean {
     if (!email) return false;
-    return getAdminEmails().includes(email);
+    return getAdminEmails().includes(email.toLowerCase());
 }
 
 /**
@@ -296,33 +296,30 @@ export async function requireAdmin(request: Request): Promise<string> {
     };
 
     if (!session || !session.user) {
-        console.warn(JSON.stringify({
-            event: "admin_access_denied",
-            reason: "unauthenticated",
-            ...logBase,
-        }));
+        logger.warn({
+            category: "AUTH",
+            message: "admin_access_denied: unauthenticated",
+            metadata: { event: "admin_access_denied", reason: "unauthenticated", ...logBase },
+        });
         throw new Response("Unauthorized", { status: 401 });
     }
 
     const hasAdminAccess = await isAdmin(session.user.id);
 
     if (!hasAdminAccess) {
-        console.warn(JSON.stringify({
-            event: "admin_access_denied",
-            reason: "forbidden",
-            userId: session.user.id,
-            email: session.user.email,
-            ...logBase,
-        }));
+        logger.warn({
+            category: "AUTH",
+            message: `admin_access_denied: forbidden (${session.user.email})`,
+            metadata: { event: "admin_access_denied", reason: "forbidden", userId: session.user.id, email: session.user.email, ...logBase },
+        });
         throw new Response("Forbidden", { status: 403 });
     }
 
-    console.info(JSON.stringify({
-        event: "admin_access_granted",
-        userId: session.user.id,
-        email: session.user.email,
-        ...logBase,
-    }));
+    logger.audit({
+        category: "AUTH",
+        message: `admin_access_granted (${session.user.email})`,
+        metadata: { event: "admin_access_granted", userId: session.user.id, email: session.user.email, ...logBase },
+    });
 
     return session.user.id;
 }
