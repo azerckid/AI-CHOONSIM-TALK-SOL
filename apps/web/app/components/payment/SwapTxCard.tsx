@@ -14,27 +14,25 @@ import { useRevalidator } from "react-router";
 import { toast } from "sonner";
 import { PrivyChocoPayCard } from "./PrivyChocoPayCard";
 import { getPublicSolanaConfig } from "~/lib/solana/public-config";
+import { SOL_PER_CHOCO } from "~/lib/economics";
+import { createSolanaPayment, verifySolanaPayment, payWithPhantomTransfer } from "~/lib/solana/phantom-payment";
 
 interface Props {
-  paymentId: string;
-  txBase64: string;
   /** CHOCO amount parsed from the chat message. */
   choco: number;
 }
 
 type Status = "idle" | "connecting" | "signing" | "verifying" | "done" | "error";
 
-export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
+export function SwapTxCard({ choco }: Props) {
   const { cluster: solanaCluster } = getPublicSolanaConfig();
   const [status, setStatus] = useState<Status>("idle");
   const [grantedChoco, setGrantedChoco] = useState(0);
   const [hasPhantom, setHasPhantom] = useState(false);
   const [tab, setTab] = useState<"phantom" | "internal">("internal");
   const revalidator = useRevalidator();
-  void paymentId;
-  void txBase64;
 
-  const solAmount = (choco * 0.00001).toFixed(6);
+  const solAmount = (choco * SOL_PER_CHOCO).toFixed(6);
 
   useEffect(() => {
     const phantom = (window as any).phantom?.solana;
@@ -57,67 +55,20 @@ export function SwapTxCard({ paymentId, txBase64, choco }: Props) {
       const connectResult = await phantom.connect();
       const payer = connectResult.publicKey.toString();
 
-      const createRes = await fetch("/api/payment/solana/create-tx", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ choco, payer }),
-      });
-      if (!createRes.ok) {
-        const err = await createRes.json().catch(() => ({}));
-        throw new Error(err.error || `Server error (${createRes.status})`);
-      }
-      const { recipient, lamports, paymentId: phantomPaymentId, rpcUrl, reference } = await createRes.json();
-
-      const {
-        SystemProgram,
-        PublicKey,
-        Connection,
-        VersionedTransaction,
-        TransactionMessage,
-      } = await import("@solana/web3.js");
-
-      const connection = new Connection(rpcUrl, "confirmed");
-      const latestBlockhash = await connection.getLatestBlockhash();
-      const fromPubkey = new PublicKey(payer);
-      const toPubkey = new PublicKey(recipient);
-      const referencePubkey = new PublicKey(reference);
-      const transferInstruction = SystemProgram.transfer({ fromPubkey, toPubkey, lamports });
-      transferInstruction.keys.push({
-        pubkey: referencePubkey,
-        isSigner: false,
-        isWritable: false,
-      });
-
-      const message = new TransactionMessage({
-        payerKey: fromPubkey,
-        recentBlockhash: latestBlockhash.blockhash,
-        instructions: [transferInstruction],
-      }).compileToV0Message();
-
-      const tx = new VersionedTransaction(message);
+      const { recipient, lamports, paymentId, rpcUrl, reference } = await createSolanaPayment(choco, payer);
 
       setStatus("signing");
-      const signedTx = await phantom.signTransaction(tx);
-      const signature = await connection.sendRawTransaction(signedTx.serialize(), {
-        skipPreflight: false,
-        preflightCommitment: "confirmed",
+      const signature = await payWithPhantomTransfer({
+        phantom,
+        payer,
+        recipient,
+        lamports,
+        reference,
+        rpcUrl,
       });
-      await connection.confirmTransaction(
-        {
-          signature,
-          blockhash: latestBlockhash.blockhash,
-          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-        },
-        "confirmed",
-      );
 
       setStatus("verifying");
-      const verifyRes = await fetch("/api/payment/solana/verify-sig", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signature, paymentId: phantomPaymentId }),
-      });
-      const verifyData = await verifyRes.json();
+      const verifyData = await verifySolanaPayment(signature, paymentId);
 
       if (verifyData.status === "COMPLETED") {
         setGrantedChoco(verifyData.chocoGranted ?? choco);
