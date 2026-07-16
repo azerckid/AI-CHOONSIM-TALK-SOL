@@ -79,8 +79,12 @@ const analyzePersonaNode = async (state: typeof ChatStateAnnotation.State) => {
             : Array.isArray(lastMsg.content)
                 ? ((lastMsg.content.find((p: unknown) => (p as { type: string }).type === "text") as { text: string } | undefined)?.text ?? "")
                 : "";
-        const travelKeywords = ["여행", "비행기", "호텔", "숙소", "일정", "가고 싶어", "추천해줘", "도쿄", "오사카", "제주도"];
-        if (travelKeywords.some(kw => lastText.includes(kw))) {
+        const travelKeywords = [
+            "여행", "비행기", "호텔", "숙소", "일정", "가고 싶어", "추천해줘", "도쿄", "오사카", "제주도",
+            "travel", "trip", "flight", "hotel", "itinerary", "vacation", "tokyo", "osaka",
+        ];
+        const lowerLastText = lastText.toLowerCase();
+        if (travelKeywords.some(kw => lowerLastText.includes(kw.toLowerCase()))) {
             effectiveMode = "concierge";
         }
     }

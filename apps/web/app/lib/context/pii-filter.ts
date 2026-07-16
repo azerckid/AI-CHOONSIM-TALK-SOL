@@ -21,9 +21,6 @@ export const PII_PATTERNS = {
 
     // 이메일: basic email pattern
     EMAIL: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
-
-    // 계좌번호 (관대항 패턴): 10~14자리 숫자, 대시 포함
-    BANK_ACCOUNT: /\b\d{3,6}[-\s]?\d{2,6}[-\s]?\d{3,6}\b/g
 };
 
 /**
@@ -45,15 +42,8 @@ export function maskPII(text: string): string {
     // 3. 전화번호 -> [PHONE]
     masked = masked.replace(PII_PATTERNS.PHONE_NUMBER, "[PHONE]");
 
-    // 4. 계좌번호 -> [ACCOUNT]
-    // 전화번호/카드번호랑 겹칠 수 있어 가장 나중에, 그리고 매우 보수적으로 적용 필요
-    // 여기서는 간단히 10자리 이상 연속된 숫자에 대시 섞인 경우 등을 처리
-    // (현재 정규식은 오탐 가능성이 있어 실제 서비스에선 제외하거나 개선 필요)
-    // 안전을 위해 이메일 먼저
+    // 4. 이메일 -> [EMAIL]
     masked = masked.replace(PII_PATTERNS.EMAIL, "[EMAIL]");
-
-    // 계좌번호 패턴은 오탐이 많아 일단 주석 처리 또는 매우 명확한 경우만
-    // masked = masked.replace(PII_PATTERNS.BANK_ACCOUNT, "[ACCOUNT]");
 
     return masked;
 }

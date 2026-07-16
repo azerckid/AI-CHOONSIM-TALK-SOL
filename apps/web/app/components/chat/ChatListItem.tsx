@@ -29,21 +29,6 @@ export function ChatListItem({
   className,
 }: ChatListItemProps) {
   const navigate = useNavigate();
-  
-  const getMessageTypeIcon = () => {
-    switch (messageType) {
-      case "voice":
-        return "mic";
-      case "music":
-        return "music_note";
-      case "photo":
-        return "image";
-      default:
-        return null;
-    }
-  };
-
-  const icon = getMessageTypeIcon();
 
   const iconSettings = messageType === "voice"
     ? { icon: "mic", colors: "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300" }
@@ -52,6 +37,31 @@ export function ChatListItem({
       : null;
 
   const profileLink = characterId ? `/character/${characterId}` : null;
+
+  const avatarInner = (
+    <>
+      <div
+        className={cn(
+          "w-14 h-14 rounded-xl bg-cover bg-center",
+          isRead && "grayscale-[20%]"
+        )}
+        style={{ backgroundImage: `url("${avatarUrl}")` }}
+      />
+      {iconSettings && (
+        <div className="absolute -bottom-1 -right-1 bg-white dark:bg-surface-dark p-[2px] rounded-full">
+          <span
+            className={cn(
+              "material-symbols-outlined text-sm rounded-full p-0.5",
+              iconSettings.colors
+            )}
+            style={{ fontSize: "14px" }}
+          >
+            {iconSettings.icon}
+          </span>
+        </div>
+      )}
+    </>
+  );
 
   return (
     <div
@@ -67,49 +77,11 @@ export function ChatListItem({
           className="relative shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
-          <div
-            className={cn(
-              "w-14 h-14 rounded-xl bg-cover bg-center",
-              isRead && "grayscale-[20%]"
-            )}
-            style={{ backgroundImage: `url("${avatarUrl}")` }}
-          />
-          {iconSettings && (
-            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-surface-dark p-[2px] rounded-full">
-              <span
-                className={cn(
-                  "material-symbols-outlined text-sm rounded-full p-0.5",
-                  iconSettings.colors
-                )}
-                style={{ fontSize: "14px" }}
-              >
-                {iconSettings.icon}
-              </span>
-            </div>
-          )}
+          {avatarInner}
         </Link>
       ) : (
         <div className="relative shrink-0">
-          <div
-            className={cn(
-              "w-14 h-14 rounded-xl bg-cover bg-center",
-              isRead && "grayscale-[20%]"
-            )}
-            style={{ backgroundImage: `url("${avatarUrl}")` }}
-          />
-          {iconSettings && (
-            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-surface-dark p-[2px] rounded-full">
-              <span
-                className={cn(
-                  "material-symbols-outlined text-sm rounded-full p-0.5",
-                  iconSettings.colors
-                )}
-                style={{ fontSize: "14px" }}
-              >
-                {iconSettings.icon}
-              </span>
-            </div>
-          )}
+          {avatarInner}
         </div>
       )}
 

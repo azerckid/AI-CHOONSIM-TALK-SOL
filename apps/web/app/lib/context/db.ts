@@ -365,10 +365,11 @@ export async function getMemoryItems(
         .orderBy(
             desc(schema.userMemoryItem.importance),
             desc(schema.userMemoryItem.createdAt)
-        );
+        )
+        .$dynamic();
 
     if (options?.limit) {
-        query = query.limit(options.limit) as typeof query;
+        query = query.limit(options.limit);
     }
 
     return await query.all();
