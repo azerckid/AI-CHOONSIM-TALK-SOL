@@ -17,17 +17,12 @@ import {
   mintTo,
   transfer as compressedTransfer,
 } from "@lightprotocol/compressed-token";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { logger } from "~/lib/logger.server";
 import { getSolanaRpcUrl } from "~/lib/solana/config.server";
+import { getAgentKeypair } from "~/lib/solana/keypair.server";
 
 const CHOCO_DECIMALS = 6;
-
-function getAgentKeypair(): Keypair {
-  const raw = process.env.SOLANA_AGENT_PRIVATE_KEY;
-  if (!raw) throw new Error("SOLANA_AGENT_PRIVATE_KEY not set");
-  return Keypair.fromSecretKey(Uint8Array.from(JSON.parse(raw)));
-}
 
 export function getZkRpc(): Rpc {
   const rpcUrl = getSolanaRpcUrl();

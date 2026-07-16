@@ -6,9 +6,10 @@
  */
 import { useState, useEffect } from "react";
 import { useRevalidator } from "react-router";
-import { usePrivy, useExportWallet } from "@privy-io/react-auth";
-import { useCreateWallet } from "@privy-io/react-auth/solana";
+import { usePrivy } from "@privy-io/react-auth";
+import { useCreateWallet, useExportWallet } from "@privy-io/react-auth/solana";
 import { toast } from "sonner";
+import { syncPrivyWallet } from "~/lib/solana/privy-wallet-sync";
 
 function EmbeddedWalletSectionInner() {
   const { user, authenticated, ready, login } = usePrivy();
@@ -30,21 +31,11 @@ function EmbeddedWalletSectionInner() {
       const syncWallet = async () => {
         setSyncing(true);
         try {
-          const res = await fetch("/api/user/privy-wallet", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ privyWallet: embeddedWallet.address }),
-          });
-
-          if (res.ok) {
-            const data = await res.json();
-            if (data.isNew) {
-              toast.success("내부 지갑 등록 완료");
-              revalidate();
-            }
+          const result = await syncPrivyWallet(embeddedWallet.address);
+          if (result.ok && result.isNew) {
+            toast.success("내부 지갑 등록 완료");
+            revalidate();
           }
-        } catch (e) {
-          toast.error("내부 지갑 동기화 실패");
         } finally {
           setSyncing(false);
         }

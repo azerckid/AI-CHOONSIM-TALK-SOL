@@ -11,6 +11,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { useCreateWallet } from "@privy-io/react-auth/solana";
 import { toast } from "sonner";
 import { Wallet, Loader2, Check } from "lucide-react";
+import { syncPrivyWallet } from "~/lib/solana/privy-wallet-sync";
 
 interface Props {
   onSaved?: (address: string) => void;
@@ -31,22 +32,15 @@ export function PrivyEmbeddedWalletButton({ onSaved }: Props) {
   useEffect(() => {
     if (!authenticated || !embeddedWallet || done) return;
 
-    fetch("/api/user/privy-wallet", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ privyWallet: embeddedWallet.address }),
-    }).then(async (res) => {
-      if (res.ok) {
+    syncPrivyWallet(embeddedWallet.address).then((result) => {
+      if (result.ok) {
         setDone(true);
         toast.success("Embedded wallet saved!");
         onSaved?.(embeddedWallet.address);
         setTimeout(() => window.location.reload(), 1200);
       } else {
-        const data = await res.json().catch(() => ({}));
-        toast.error(data.error ?? "Failed to save wallet address");
+        toast.error(result.error ?? "Failed to save wallet address");
       }
-    }).catch(() => {
-      toast.error("Network error. Please try again.");
     });
   }, [authenticated, embeddedWallet, done, onSaved]);
 

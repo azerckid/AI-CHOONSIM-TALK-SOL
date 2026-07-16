@@ -8,7 +8,7 @@ import { auth } from "~/lib/auth.server";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { and, eq, sql } from "drizzle-orm";
-import { solanaConnection } from "~/lib/solana/connection.server";
+import { solanaConnection, getTransactionWithRetry } from "~/lib/solana/connection.server";
 import { mintCompressedChoco } from "~/lib/solana/zk-compression.server";
 import { PublicKey } from "@solana/web3.js";
 import { getSolanaExplorerSuffix } from "~/lib/solana/config.server";
@@ -84,11 +84,8 @@ export async function action({ request }: ActionFunctionArgs) {
       );
     }
 
-    // 온체인 트랜잭션 확인
-    const tx = await solanaConnection.getTransaction(txSignature, {
-      commitment: "confirmed",
-      maxSupportedTransactionVersion: 0,
-    });
+    // 온체인 트랜잭션 확인 (인덱싱 지연 대비 재시도)
+    const tx = await getTransactionWithRetry(solanaConnection, txSignature);
 
     if (!tx) {
       return Response.json(

@@ -5,15 +5,14 @@
  * - 실패해도 호출부에 영향 없도록 내부에서 catch
  */
 import {
-  Connection,
-  Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
   Transaction,
 } from "@solana/web3.js";
 import { logger } from "~/lib/logger.server";
-import { getSolanaRpcUrl } from "~/lib/solana/config.server";
+import { solanaConnection } from "~/lib/solana/connection.server";
+import { getAgentKeypair } from "~/lib/solana/keypair.server";
 
 /** 신규 유저에게 지급할 SOL 양 (Devnet 테스트용) */
 const ONBOARDING_SOL = 0.5;
@@ -21,23 +20,13 @@ const ONBOARDING_SOL = 0.5;
 /** 이미 이 이상 SOL이 있으면 지급 스킵 */
 const SKIP_THRESHOLD_SOL = 0.1;
 
-function getServerKeypair(): Keypair {
-  const raw = process.env.SOLANA_AGENT_PRIVATE_KEY;
-  if (!raw) throw new Error("SOLANA_AGENT_PRIVATE_KEY is not set");
-  return Keypair.fromSecretKey(Uint8Array.from(JSON.parse(raw) as number[]));
-}
-
-function getConnection(): Connection {
-  return new Connection(getSolanaRpcUrl(), "confirmed");
-}
-
 /**
  * 신규 유저 지갑에 테스트 SOL을 전송합니다.
  * fire-and-forget 용도 — await 없이 호출해도 됩니다.
  */
 export async function sendOnboardingSol(recipientAddress: string): Promise<void> {
   try {
-    const connection = getConnection();
+    const connection = solanaConnection;
     const recipient = new PublicKey(recipientAddress);
 
     // 잔액 확인 — 이미 SOL이 있으면 스킵
@@ -50,7 +39,7 @@ export async function sendOnboardingSol(recipientAddress: string): Promise<void>
       return;
     }
 
-    const serverKeypair = getServerKeypair();
+    const serverKeypair = getAgentKeypair();
 
     // 서버 지갑 잔액 확인
     const serverBalance = await connection.getBalance(serverKeypair.publicKey);

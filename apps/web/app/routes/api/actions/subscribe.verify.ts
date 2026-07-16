@@ -9,7 +9,7 @@ import { auth } from "~/lib/auth.server";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { eq, sql } from "drizzle-orm";
-import { solanaConnection, ACTIONS_CORS_HEADERS } from "~/lib/solana/connection.server";
+import { solanaConnection, getTransactionWithRetry, ACTIONS_CORS_HEADERS } from "~/lib/solana/connection.server";
 import { getSolanaCluster } from "~/lib/solana/config.server";
 
 const PLAN_CHOCO: Record<string, { choco: number; tier: string; months: number; lamports: number }> = {
@@ -64,11 +64,8 @@ export async function action({ request }: ActionFunctionArgs) {
       columns: { solanaWallet: true },
     });
 
-    // 온체인 트랜잭션 확인
-    const tx = await solanaConnection.getTransaction(txSignature, {
-      commitment: "confirmed",
-      maxSupportedTransactionVersion: 0,
-    });
+    // 온체인 트랜잭션 확인 (인덱싱 지연 대비 재시도)
+    const tx = await getTransactionWithRetry(solanaConnection, txSignature);
 
     if (!tx) {
       return Response.json(

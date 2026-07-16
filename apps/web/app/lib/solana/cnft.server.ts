@@ -18,18 +18,12 @@ import {
 import type { MetadataArgsArgs } from "@metaplex-foundation/mpl-bubblegum";
 import { uploadNFTMetadata } from "~/lib/cloudinary.server";
 import { getSolanaRpcUrl } from "~/lib/solana/config.server";
+import { getAgentKeypair } from "~/lib/solana/keypair.server";
 
 function getUmi() {
   const rpcUrl = getSolanaRpcUrl();
-  const agentKeyRaw = process.env.SOLANA_AGENT_PRIVATE_KEY;
-
-  if (!agentKeyRaw) throw new Error("SOLANA_AGENT_PRIVATE_KEY is not set");
-
-  const agentKeyArray = JSON.parse(agentKeyRaw) as number[];
   const umi = createUmi(rpcUrl).use(mplBubblegum());
-  const agentKeypair = umi.eddsa.createKeypairFromSecretKey(
-    Uint8Array.from(agentKeyArray)
-  );
+  const agentKeypair = umi.eddsa.createKeypairFromSecretKey(getAgentKeypair().secretKey);
   umi.use(keypairIdentity(agentKeypair));
   return umi;
 }

@@ -15,9 +15,7 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import { z } from "zod";
 import { logger } from "~/lib/logger.server";
 import { getSolanaCluster, getSolanaRpcUrl } from "~/lib/solana/config.server";
-
-// Devnet 고정 가격: 1,000 CHOCO = 0.01 SOL
-const SOL_PER_CHOCO = 0.00001; // 1 CHOCO = 0.00001 SOL → 100 CHOCO = 0.001 SOL
+import { SOL_PER_CHOCO } from "~/lib/economics";
 
 const bodySchema = z.object({
   choco: z.number().int().positive(),
