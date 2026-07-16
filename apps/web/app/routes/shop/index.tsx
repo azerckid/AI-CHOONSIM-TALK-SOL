@@ -65,7 +65,7 @@ export default function ShopPage() {
   // Watch fetcher for success/error and close modal
   useEffect(() => {
     if (fetcher.state === "idle" && fetcher.data) {
-      const result = fetcher.data as any;
+      const result = fetcher.data as { success?: boolean; chocoSpent?: number; error?: string };
       if (result.success) {
         toast.success(`${selectedItem?.name} 구매 완료!`);
         setLocalBalance((prev) => prev - (result.chocoSpent ?? 0));
