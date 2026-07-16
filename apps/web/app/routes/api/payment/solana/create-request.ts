@@ -8,10 +8,10 @@ import { encodeURL } from "@solana/pay";
 import BigNumber from "bignumber.js";
 import { logger } from "~/lib/logger.server";
 import { getSolPrice } from "~/lib/paysh.server";
+import { usdToChoco } from "~/lib/economics";
 
 const createRequestSchema = z.object({
     amount: z.number().positive(), // USD amount
-    credits: z.number().int().positive(),
     description: z.string().optional(),
 });
 
@@ -41,7 +41,10 @@ export async function action({ request }: ActionFunctionArgs) {
             );
         }
 
-        const { amount, credits, description } = result.data;
+        const { amount, description } = result.data;
+        // credits는 클라이언트가 보내지 않는다 — USD 금액에서 서버가 고정 환율로 직접 계산한다.
+        // (그렇지 않으면 소액 결제 후 임의로 큰 credits를 받아갈 수 있다)
+        const credits = usdToChoco(amount);
         const userId = session.user.id;
 
         // 1. SOL 가격 가져오기 (paysh.server.ts의 공유 캐시 사용)

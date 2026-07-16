@@ -2,6 +2,7 @@ import type { LoaderFunctionArgs } from "react-router";
 import { redirect, useNavigate, useLoaderData } from "react-router";
 import { requireUserId } from "~/lib/auth.server";
 import { confirmTossPayment, processSuccessfulTossPayment } from "~/lib/toss.server";
+import { HEART_PACKAGES } from "~/lib/items";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
@@ -34,10 +35,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
             await import("~/lib/toss.server").then(m => m.processSuccessfulTossSubscription(userId, paymentData, tier));
             return { success: true, type: "SUBSCRIPTION", tier };
         } else if (type === "ITEM") {
-            const itemId = url.searchParams.get("itemId") || "heart";
-            const quantity = Number(url.searchParams.get("quantity")) || 0;
-            await import("~/lib/toss.server").then(m => m.processSuccessfulTossItemPayment(userId, paymentData, itemId, quantity));
-            return { success: true, type: "ITEM", itemId, quantity };
+            const packageId = url.searchParams.get("packageId");
+            const pkg = packageId ? HEART_PACKAGES.find((p) => p.id === packageId) : undefined;
+            if (!pkg) {
+                return { error: "Missing package information" };
+            }
+            await import("~/lib/toss.server").then(m => m.processSuccessfulTossItemPayment(userId, paymentData, packageId!));
+            return { success: true, type: "ITEM", quantity: pkg.quantity };
         } else if (creditsGranted) {
             await processSuccessfulTossPayment(userId, paymentData, creditsGranted);
             return { success: true, type: "TOPUP", creditsGranted };

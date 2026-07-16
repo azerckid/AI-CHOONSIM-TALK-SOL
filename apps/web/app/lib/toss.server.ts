@@ -149,7 +149,14 @@ export async function processSuccessfulTossSubscription(
 
     const { SUBSCRIPTION_PLANS } = await import("./subscription-plans");
     const plan = SUBSCRIPTION_PLANS[tier as keyof typeof SUBSCRIPTION_PLANS];
-    const creditsPerMonth = plan?.creditsPerMonth || 0;
+
+    // tier는 클라이언트가 성공 페이지 URL로 보낸 값 — Toss는 결제 금액만 검증하고
+    // tier를 모르므로, 실제 결제된 금액이 해당 tier의 정가와 일치하는지 서버에서 재검증한다.
+    if (!plan || plan.monthlyPriceKRW !== paymentData.totalAmount) {
+        throw new Error("Subscription tier does not match the paid amount");
+    }
+
+    const creditsPerMonth = plan.creditsPerMonth;
 
     // 2. 멤버십 보상 CHOCO 계산 (1 Credit = 1 CHOCO)
     const chocoAmount = creditsPerMonth.toString();
@@ -201,13 +208,22 @@ export async function processSuccessfulTossSubscription(
 
 /**
  * 아이템 구매 처리 (토스 결제 완료 후)
+ * itemId/quantity는 클라이언트가 아니라 packageId로 조회한 서버 가격표(HEART_PACKAGES)에서
+ * 파생한다 — 결제된 금액이 그 패키지의 정가와 일치하는지도 함께 검증한다.
  */
 export async function processSuccessfulTossItemPayment(
     userId: string,
     paymentData: { totalAmount: number; orderId: string; paymentKey: string },
-    itemId: string,
-    quantity: number
+    packageId: string
 ) {
+    const { HEART_PACKAGES } = await import("./items");
+    const pkg = HEART_PACKAGES.find((p) => p.id === packageId);
+    if (!pkg || pkg.priceKRW !== paymentData.totalAmount) {
+        throw new Error("Item package does not match the paid amount");
+    }
+    const itemId = pkg.itemId;
+    const quantity = pkg.quantity;
+
     const existing = await findExistingTossPayment(paymentData.orderId);
     if (existing) {
         logger.warn({ category: "PAYMENT", message: "Duplicate Toss item purchase processing ignored", metadata: { orderId: paymentData.orderId } });
