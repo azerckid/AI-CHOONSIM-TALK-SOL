@@ -41,6 +41,15 @@ const chatSchema = z.object({
 
 const PAYMENT_MARKER_PATTERN = /\[(?:SWAP_TX|PHANTOM):[^\]]+\]/;
 
+/** 선물 연속성(콤보) 판단 기준 시간 */
+const GIFT_SESSION_WINDOW_MS = 10 * 60 * 1000;
+/** SSE 스트리밍 최대 대기 시간 — 이후 자동 종료 */
+const STREAM_TIMEOUT_MS = 120_000;
+/** 이 길이를 넘는 단일 응답은 여러 말풍선으로 쪼갠다 */
+const LONG_MESSAGE_SPLIT_THRESHOLD = 100;
+/** 말풍선 분할 시 목표 청크 크기 */
+const MESSAGE_CHUNK_SIZE = 80;
+
 export async function action({ request }: ActionFunctionArgs) {
     const { logger } = await import("~/lib/logger.server");
     const session = await auth.api.getSession({ headers: request.headers });
@@ -171,7 +180,7 @@ export async function action({ request }: ActionFunctionArgs) {
     // 1.5 선물 연속성 확인 (최근 10분 이내 선물 횟수 조회)
     let giftCountInSession = 0;
     if (giftContext) {
-        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+        const tenMinutesAgo = new Date(Date.now() - GIFT_SESSION_WINDOW_MS);
         const [giftCountRes] = await db.select({ value: count() })
             .from(schema.giftLog)
             .where(and(
@@ -207,7 +216,7 @@ export async function action({ request }: ActionFunctionArgs) {
                     isClosed = true;
                     controller.close();
                 }
-            }, 120_000);
+            }, STREAM_TIMEOUT_MS);
 
             const abortHandler = () => {
                 isAborted = true;
@@ -311,8 +320,8 @@ export async function action({ request }: ActionFunctionArgs) {
                     : contentWithoutPhotoMarker.split('---').map(p => p.trim()).filter(p => p.length > 0);
 
                 const hasUrl = /https?:\/\//.test(contentWithoutPhotoMarker);
-                if (!hasPaymentMarker && messageParts.length <= 1 && contentWithoutPhotoMarker.length > 100 && !hasUrl) {
-                    const chunkSize = 80;
+                if (!hasPaymentMarker && messageParts.length <= 1 && contentWithoutPhotoMarker.length > LONG_MESSAGE_SPLIT_THRESHOLD && !hasUrl) {
+                    const chunkSize = MESSAGE_CHUNK_SIZE;
                     messageParts = [];
                     let currentPart = "";
                     const sentences = contentWithoutPhotoMarker.split(/[.!?。！？]\s*/).filter(s => s.trim());

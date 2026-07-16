@@ -100,7 +100,7 @@ export default function AdminSystem() {
                 {/* Health Indicators */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     {[
-                        { label: "Postgres DB", status: health.database, color: "text-primary" },
+                        { label: "Turso DB", status: health.database, color: "text-primary" },
                         { label: "Cloudinary", status: health.storage, color: "text-blue-400" },
                         { label: "Gemini API", status: health.api, color: "text-purple-400" },
                         { label: "System Uptime", status: formatUptime(health.uptime), color: "text-white" }

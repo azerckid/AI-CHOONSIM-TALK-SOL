@@ -3,6 +3,7 @@
  */
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatOpenAI } from "@langchain/openai";
+import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import { HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import axios from "axios";
 import { logger } from "../logger.server";
@@ -45,15 +46,15 @@ export const model = openAiFallbackModel
     ? geminiModel.withFallbacks({ fallbacks: [openAiFallbackModel] })
     : geminiModel;
 
-export function bindModelTools(tools: unknown[]) {
-    const primaryWithTools = geminiModel.bindTools(tools as never[]);
+export function bindModelTools(tools: BindToolsInput[]) {
+    const primaryWithTools = geminiModel.bindTools(tools);
 
     if (!openAiFallbackModel) {
         return primaryWithTools;
     }
 
     return primaryWithTools.withFallbacks({
-        fallbacks: [openAiFallbackModel.bindTools(tools as never[])],
+        fallbacks: [openAiFallbackModel.bindTools(tools)],
     });
 }
 

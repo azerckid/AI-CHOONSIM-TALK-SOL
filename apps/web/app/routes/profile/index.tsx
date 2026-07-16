@@ -204,8 +204,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function ProfileScreen() {
   const { user: dbUser, stats, todayUsage, mainCharacterName, albumTickets, paypalClientId, tossClientKey, solBalance: initialSolBalance } = useLoaderData<typeof loader>() as {
-    user: any;
-    stats: any;
+    user: typeof schema.user.$inferSelect | undefined;
+    stats: { daysTogether: number; affinityLevel: number; hearts: number };
     todayUsage: { totalTokens: number; promptTokens: number; completionTokens: number; messageCount: number };
     mainCharacterName: string;
     albumTickets?: number;

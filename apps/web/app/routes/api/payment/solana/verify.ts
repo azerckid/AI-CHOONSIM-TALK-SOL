@@ -2,17 +2,14 @@ import type { ActionFunctionArgs } from "react-router";
 import { auth } from "~/lib/auth.server";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { findReference, validateTransfer } from "@solana/pay";
 import { and, eq, sql } from "drizzle-orm";
 import BigNumber from "bignumber.js";
 import { logger } from "~/lib/logger.server";
 import { transferChocoSPL } from "~/lib/solana/agent-kit.server";
 import { z } from "zod";
-import { getSolanaRpcUrl } from "~/lib/solana/config.server";
-
-const SOLANA_RPC_ENDPOINT = getSolanaRpcUrl();
-const connection = new Connection(SOLANA_RPC_ENDPOINT, "confirmed");
+import { solanaConnection as connection } from "~/lib/solana/connection.server";
 
 const verifySchema = z.object({
     reference: z.string().min(1),

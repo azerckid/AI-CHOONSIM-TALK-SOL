@@ -48,7 +48,6 @@ export async function verifyWebhookSignature(headers: Record<string, string>, bo
         const response = await paypalClient.execute({
             ...request,
             headers: request.headers,
-            // @ts-ignore
             body: request.body
         });
 

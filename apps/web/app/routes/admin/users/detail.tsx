@@ -62,7 +62,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
         const role = formData.get("role") as string;
         const tier = formData.get("tier") as string;
         const status = formData.get("subscriptionStatus") as string;
-        const chocoBalance = formData.get("chocoBalance") as string;
+        const chocoBalance = formData.get("chocoBalance") as string | null;
 
         // 1. 현재 사용자 정보 조회
         const currentUser = await db.query.user.findFirst({
@@ -177,7 +177,10 @@ export async function action({ params, request }: ActionFunctionArgs) {
 
     if (actionType === "remove_item") {
         const inventoryId = formData.get("inventoryId") as string;
-        await db.delete(schema.userInventory).where(eq(schema.userInventory.id, inventoryId));
+        await db.delete(schema.userInventory).where(and(
+            eq(schema.userInventory.id, inventoryId),
+            eq(schema.userInventory.userId, id)
+        ));
         return { success: true, message: "Item removed from inventory" };
     }
 
@@ -263,7 +266,7 @@ export default function UserDetail() {
                             <div className="flex flex-wrap justify-center gap-2">
                                 <span className={cn(
                                     "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest",
-                                    user.role === "admin" ? "bg-red-500 text-white shadow-lg shadow-red-500/20" : "bg-white/10 text-white/40"
+                                    user.role?.toUpperCase() === "ADMIN" ? "bg-red-500 text-white shadow-lg shadow-red-500/20" : "bg-white/10 text-white/40"
                                 )}>
                                     {user.role}
                                 </span>

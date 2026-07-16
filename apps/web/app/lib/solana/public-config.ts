@@ -1,12 +1,8 @@
-export type PublicSolanaCluster = "devnet" | "testnet" | "mainnet-beta";
+import { type SolanaCluster, DEFAULT_RPC_BY_CLUSTER, parseSolanaCluster } from "./cluster";
+
+export type PublicSolanaCluster = SolanaCluster;
 
 const DEFAULT_DEMO_PRIVY_APP_ID = "cmna1dkit01d70cju3sygcjvd";
-const DEFAULT_CLUSTER: PublicSolanaCluster = "devnet";
-const DEFAULT_RPC_BY_CLUSTER: Record<PublicSolanaCluster, string> = {
-  devnet: "https://api.devnet.solana.com",
-  testnet: "https://api.testnet.solana.com",
-  "mainnet-beta": "https://api.mainnet-beta.solana.com",
-};
 const PRIVY_CHAIN_BY_CLUSTER: Record<PublicSolanaCluster, string> = {
   devnet: "solana:devnet",
   testnet: "solana:testnet",
@@ -16,11 +12,6 @@ const PRIVY_CHAIN_BY_CLUSTER: Record<PublicSolanaCluster, string> = {
 function readPublicEnv(name: string): string | undefined {
   const value = import.meta.env[name];
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
-}
-
-function parseCluster(value: string | undefined): PublicSolanaCluster {
-  if (value === "devnet" || value === "testnet" || value === "mainnet-beta") return value;
-  return DEFAULT_CLUSTER;
 }
 
 function toWebSocketRpcUrl(rpcUrl: string): string {
@@ -39,7 +30,7 @@ export function getPrivyAppId(): string {
 }
 
 export function getPublicSolanaConfig() {
-  const cluster = parseCluster(readPublicEnv("VITE_SOLANA_CLUSTER"));
+  const cluster = parseSolanaCluster(readPublicEnv("VITE_SOLANA_CLUSTER"));
   const rpcUrl = readPublicEnv("VITE_SOLANA_RPC_URL") ?? DEFAULT_RPC_BY_CLUSTER[cluster];
   const rpcSubscriptionsUrl =
     readPublicEnv("VITE_SOLANA_RPC_WS_URL") ?? toWebSocketRpcUrl(rpcUrl);

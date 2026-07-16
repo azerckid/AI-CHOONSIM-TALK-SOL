@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import bs58 from "bs58";
 import { QRCodeSVG } from "qrcode.react";
 import { getPublicSolanaConfig } from "~/lib/solana/public-config";
+import { findPrivySolanaEmbeddedWallet } from "~/lib/solana/privy-wallet-sync";
 import { SOL_PER_CHOCO, getSolDisplay } from "~/lib/economics";
 
 interface Props {
@@ -44,9 +45,7 @@ function PrivyChocoPayCardInner({ choco, compact }: Props) {
   const [checkingBalance, setCheckingBalance] = useState(false);
 
   // linkedAccounts: 주소 확인용 (메타데이터)
-  const embeddedWalletAccount = (user?.linkedAccounts as any[])?.find(
-    (a) => a.chainType === "solana" && a.walletClientType === "privy"
-  ) || null;
+  const embeddedWalletAccount = findPrivySolanaEmbeddedWallet(user);
 
   // useSolanaStandardWallets(): Privy 임베디드 지갑 포함 모든 standard 지갑
   const privyStandardWallet = walletsReady

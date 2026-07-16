@@ -65,6 +65,12 @@ const TIERS = [
 ] as const;
 
 const TIER_ORDER = ["FREE", "BASIC", "PREMIUM", "ULTIMATE"] as const;
+type Tier = (typeof TIER_ORDER)[number];
+
+/** DB의 subscriptionTier(임의 문자열일 수 있음)를 알려진 등급으로 좁힌다. */
+function toTier(value: string): Tier {
+  return (TIER_ORDER as readonly string[]).includes(value) ? (value as Tier) : "FREE";
+}
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -291,7 +297,7 @@ export default function SubscriptionManagementPage() {
           <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
             {TIERS.map((t) => {
               const isCurrent = tier === t.id;
-              const isUnlocked = TIER_ORDER.indexOf(tier as any) >= TIER_ORDER.indexOf(t.id as any);
+              const isUnlocked = TIER_ORDER.indexOf(toTier(tier)) >= TIER_ORDER.indexOf(t.id);
               return (
                 <div
                   key={t.id}
@@ -359,7 +365,7 @@ export default function SubscriptionManagementPage() {
 
           {/* Next Tier Upgrade Banner */}
           {tier !== "ULTIMATE" && (() => {
-            const nextIdx = TIER_ORDER.indexOf(tier as any) + 1;
+            const nextIdx = TIER_ORDER.indexOf(toTier(tier)) + 1;
             const next = TIERS[nextIdx];
             if (!next) return null;
             return (

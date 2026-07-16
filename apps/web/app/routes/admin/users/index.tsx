@@ -93,7 +93,7 @@ export default function AdminUsers() {
                                                 <div className="flex flex-col gap-1">
                                                     <span className={cn(
                                                         "text-[10px] font-black px-2 py-0.5 rounded w-fit",
-                                                        user.role === "admin" ? "bg-red-500/10 text-red-500" : "bg-white/5 text-white/40"
+                                                        user.role?.toUpperCase() === "ADMIN" ? "bg-red-500/10 text-red-500" : "bg-white/5 text-white/40"
                                                     )}>
                                                         {user.role?.toUpperCase()}
                                                     </span>

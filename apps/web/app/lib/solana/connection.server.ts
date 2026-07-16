@@ -24,6 +24,10 @@ export async function getTransactionWithRetry(
   return null;
 }
 
+/** Blinks(checkin/gift/subscribe) 액션 아이콘 — 춘심 로고 */
+export const CHOONSIM_ICON =
+  "https://res.cloudinary.com/dpmw96p8k/image/upload/v1774674780/choonsim/choonsim.png";
+
 /** CORS 헤더 — Solana Actions 스펙 필수 */
 export const ACTIONS_CORS_HEADERS: HeadersInit = {
   "Access-Control-Allow-Origin": "*",

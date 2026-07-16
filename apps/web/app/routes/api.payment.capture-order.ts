@@ -36,7 +36,9 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     const requestBody = new paypal.orders.OrdersCaptureRequest(orderId);
-    requestBody.requestBody({} as any);
+    // payment_source는 @types 패키지상 필수로 표기되지만 PayPal REST API 문서상
+    // 클라이언트 SDK로 이미 승인된 주문의 캡처에는 필요하지 않다 (빈 바디로 충분).
+    requestBody.requestBody({} as Parameters<typeof requestBody.requestBody>[0]);
 
     try {
         const capture = await paypalClient.execute(requestBody);

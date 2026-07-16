@@ -29,7 +29,7 @@ export interface TokenUsage {
 export async function* streamAIResponse(
     userMessage: string,
     history: HistoryMessage[],
-    personaMode: keyof typeof PERSONA_PROMPTS = "hybrid",
+    personaMode: keyof typeof PERSONA_PROMPTS = "lover", // conversation.personaMode DB 기본값과 동일
     currentSummary: string = "",
     mediaUrl: string | null = null,
     userId: string | null = null,
