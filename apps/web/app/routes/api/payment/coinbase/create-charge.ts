@@ -4,12 +4,12 @@ import { z } from "zod";
 import { db } from "~/lib/db.server";
 import * as schema from "~/db/schema";
 import { logger } from "~/lib/logger.server";
+import { usdToChoco } from "~/lib/economics";
 
 const COINBASE_API_KEY = process.env.COINBASE_COMMERCE_API_KEY || "";
 
 const createChargeSchema = z.object({
     amount: z.number().positive(),
-    credits: z.number().int().positive(),
     description: z.string().optional(),
 });
 
@@ -38,7 +38,9 @@ export async function action({ request }: ActionFunctionArgs) {
             );
         }
 
-        const { amount, credits, description } = result.data;
+        const { amount, description } = result.data;
+        // credits는 클라이언트가 보내지 않는다 — USD 금액에서 서버가 고정 환율로 직접 계산한다.
+        const credits = usdToChoco(amount);
         const userId = session.user.id;
 
         // Coinbase API를 사용하여 Charge 생성 (Fetch 방식)

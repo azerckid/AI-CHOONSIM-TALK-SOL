@@ -135,10 +135,12 @@ export async function action({ request }: ActionFunctionArgs) {
                 try {
                     const user = await db.query.user.findFirst({
                         where: eq(schema.user.id, paymentRecord.userId),
-                        columns: { solanaWallet: true, privyWallet: true },
+                        columns: { solanaWallet: true },
                     });
 
-                    const payoutWallet = user?.solanaWallet ?? user?.privyWallet ?? null;
+                    // privyWallet은 소유권 서명 증명 없이 등록되므로 payout 대상에서 제외한다
+                    // (SIWS로 증명된 solanaWallet만 신뢰).
+                    const payoutWallet = user?.solanaWallet ?? null;
                     if (payoutWallet) {
                         const result = await transferChocoSPL(payoutWallet, chocoGranted);
                         chocoTxSignature = result.signature;
